@@ -44,6 +44,21 @@ class FilesService {
     await api.delete(`/files/${id}`);
   }
 
+  // PATCH /files/:id, body: { name }.
+  async rename(id: string, name: string): Promise<ZDriveFile> {
+    const { data } = await api.patch(`/files/${id}`, { name });
+    return data;
+  }
+
+  // PATCH /files/:id/move, body: { folderId }. Pass undefined/omit
+  // to move back to root - MoveFileDto's folderId is optional.
+  async move(id: string, folderId?: string): Promise<ZDriveFile> {
+    const { data } = await api.patch(`/files/${id}/move`, {
+      folderId,
+    });
+    return data;
+  }
+
   async restore(id: string): Promise<void> {
     await api.patch(`/files/${id}/restore`);
   }

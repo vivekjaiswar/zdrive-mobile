@@ -6,6 +6,7 @@ import {
   StyleSheet,
   Text,
 } from 'react-native';
+import { useFocusEffect, useRouter } from 'expo-router';
 
 import Screen from '@/components/Layout/Screen';
 import Colors from '@/theme/colors';
@@ -19,6 +20,8 @@ import { useTabBarHeight } from '@/hooks/useTabBarHeight';
 import { ZDriveFile } from '@/types/file';
 
 export default function FilesScreen() {
+  const router = useRouter();
+
   const [files, setFiles] = useState<ZDriveFile[]>([]);
   const [filteredFiles, setFilteredFiles] = useState<ZDriveFile[]>([]);
   const [loading, setLoading] = useState(true);
@@ -28,9 +31,15 @@ export default function FilesScreen() {
   const { uploading, pickAndUpload } = useFileUpload();
   const tabBarHeight = useTabBarHeight();
 
-  useEffect(() => {
-    loadFiles();
-  }, []);
+  // Refresh every time this tab regains focus - not just on first
+  // mount - so renaming/moving/deleting a file from the details
+  // screen (or uploading from the Dashboard) is reflected here
+  // without a manual pull-to-refresh.
+  useFocusEffect(
+    useCallback(() => {
+      loadFiles();
+    }, []),
+  );
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -117,7 +126,7 @@ export default function FilesScreen() {
         renderItem={({ item }) => (
           <FileCard
             file={item}
-            onPress={() => console.log(item.id)}
+            onPress={() => router.push(`/files/${item.id}`)}
           />
         )}
         ListEmptyComponent={<EmptyFiles />}
