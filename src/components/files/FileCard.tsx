@@ -7,6 +7,7 @@ import { ZDriveFile } from '@/types/file';
 interface Props {
   file: ZDriveFile;
   onPress: () => void;
+  onLongPress?: () => void;
 }
 
 function formatSize(size: string) {
@@ -27,9 +28,14 @@ function icon(mime?: string){
   return 'file-outline';
 }
 
-export default function FileCard({file,onPress}:Props){
+export default function FileCard({ file, onPress, onLongPress }: Props){
   return (
-    <Pressable style={styles.card} onPress={onPress}>
+    <Pressable
+      style={({ pressed }) => [styles.card, pressed && styles.pressed]}
+      onPress={onPress}
+      onLongPress={onLongPress}
+      delayLongPress={350}
+    >
       <View style={styles.icon}>
         <MaterialCommunityIcons name={icon(file.mimeType) as any} size={28} color={Colors.primary}/>
       </View>
@@ -44,6 +50,7 @@ export default function FileCard({file,onPress}:Props){
 
 const styles=StyleSheet.create({
  card:{backgroundColor:'#fff',borderRadius:18,padding:16,marginBottom:12,flexDirection:'row',alignItems:'center'},
+ pressed:{opacity:0.85},
  icon:{width:52,height:52,borderRadius:26,backgroundColor:'#EEF5FF',justifyContent:'center',alignItems:'center'},
  content:{flex:1,marginLeft:14},
  name:{fontSize:16,fontWeight:'600',color:Colors.text},

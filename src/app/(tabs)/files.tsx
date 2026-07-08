@@ -14,8 +14,12 @@ import FileCard from '@/components/files/FileCard';
 import SearchBar from '@/components/files/SearchBar';
 import EmptyFiles from '@/components/files/EmptyFiles';
 import UploadFAB from '@/components/files/UploadFAB';
+import FileActionSheet from '@/components/files/FileActionSheet';
+import TextPromptModal from '@/components/common/TextPromptModal';
+import FolderPickerModal from '@/components/files/FolderPickerModal';
 import filesService from '@/services/files.service';
 import { useFileUpload } from '@/hooks/useFileUpload';
+import { useFileActions } from '@/hooks/useFileActions';
 import { useTabBarHeight } from '@/hooks/useTabBarHeight';
 import { ZDriveFile } from '@/types/file';
 
@@ -28,13 +32,31 @@ export default function FilesScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [query, setQuery] = useState('');
 
+  // File currently open in the long-press action sheet, and the
+  // follow-on rename/move modals it can launch.
+  const [actionFile, setActionFile] = useState<ZDriveFile | null>(null);
+  const [renameFile, setRenameFile] = useState<ZDriveFile | null>(null);
+  const [renaming, setRenaming] = useState(false);
+  const [moveFile, setMoveFile] = useState<ZDriveFile | null>(null);
+  const [moving, setMoving] = useState(false);
+
   const { uploading, pickAndUpload } = useFileUpload();
   const tabBarHeight = useTabBarHeight();
 
+  const {
+    download,
+    share,
+    rename,
+    move,
+    confirmDelete,
+    downloadingId,
+    sharingId,
+    deletingId,
+  } = useFileActions(loadFiles);
+
   // Refresh every time this tab regains focus - not just on first
-  // mount - so renaming/moving/deleting a file from the details
-  // screen (or uploading from the Dashboard) is reflected here
-  // without a manual pull-to-refresh.
+  // mount - so a rename/move/delete or an upload from the Dashboard
+  // is reflected here without a manual pull-to-refresh.
   useFocusEffect(
     useCallback(() => {
       loadFiles();
@@ -88,6 +110,26 @@ export default function FilesScreen() {
     }
   }
 
+  async function handleConfirmRename(name: string) {
+    if (!renameFile) return;
+
+    setRenaming(true);
+    const ok = await rename(renameFile, name);
+    setRenaming(false);
+
+    if (ok) setRenameFile(null);
+  }
+
+  async function handleConfirmMove(folderId: string | undefined) {
+    if (!moveFile) return;
+
+    setMoving(true);
+    const ok = await move(moveFile, folderId);
+    setMoving(false);
+
+    if (ok) setMoveFile(null);
+  }
+
   if (loading) {
     return (
       <Screen edges={['top', 'left', 'right']}>
@@ -127,12 +169,52 @@ export default function FilesScreen() {
           <FileCard
             file={item}
             onPress={() => router.push(`/files/${item.id}`)}
+            onLongPress={() => setActionFile(item)}
           />
         )}
         ListEmptyComponent={<EmptyFiles />}
       />
 
       <UploadFAB onPress={handleUpload} loading={uploading} />
+
+      <FileActionSheet
+        file={actionFile}
+        downloading={actionFile?.id === downloadingId}
+        sharing={actionFile?.id === sharingId}
+        deleting={actionFile?.id === deletingId}
+        onClose={() => setActionFile(null)}
+        onDownload={(file) => download(file)}
+        onShare={(file) => share(file)}
+        onRename={(file) => {
+          setActionFile(null);
+          setRenameFile(file);
+        }}
+        onMove={(file) => {
+          setActionFile(null);
+          setMoveFile(file);
+        }}
+        onDelete={(file) => {
+          setActionFile(null);
+          confirmDelete(file);
+        }}
+      />
+
+      <TextPromptModal
+        visible={!!renameFile}
+        title="Rename File"
+        initialValue={renameFile?.name ?? ''}
+        confirmLabel="Rename"
+        loading={renaming}
+        onCancel={() => setRenameFile(null)}
+        onConfirm={handleConfirmRename}
+      />
+
+      <FolderPickerModal
+        visible={!!moveFile}
+        submitting={moving}
+        onCancel={() => setMoveFile(null)}
+        onSelect={handleConfirmMove}
+      />
     </Screen>
   );
 }

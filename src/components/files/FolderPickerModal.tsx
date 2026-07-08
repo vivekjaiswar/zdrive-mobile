@@ -18,6 +18,9 @@ interface Props {
   visible: boolean;
   // The file's current folder, if any - highlighted in the list.
   currentFolderId?: string | null;
+  // True while a move request triggered from onSelect is in flight -
+  // disables the list so a second tap can't fire a duplicate move.
+  submitting?: boolean;
   onCancel: () => void;
   onSelect: (folderId: string | undefined) => void;
 }
@@ -25,6 +28,7 @@ interface Props {
 export default function FolderPickerModal({
   visible,
   currentFolderId,
+  submitting = false,
   onCancel,
   onSelect,
 }: Props) {
@@ -60,7 +64,12 @@ export default function FolderPickerModal({
         <Pressable style={styles.sheet} onPress={(e) => e.stopPropagation()}>
           <View style={styles.handle} />
 
-          <Text style={styles.title}>Move to</Text>
+          <View style={styles.titleRow}>
+            <Text style={styles.title}>Move to</Text>
+            {submitting && (
+              <ActivityIndicator size="small" color={Colors.primary} />
+            )}
+          </View>
 
           {/*
             NOTE: this only lists root-level folders - GET /folders
@@ -80,9 +89,11 @@ export default function FolderPickerModal({
               data={folders}
               keyExtractor={(item) => item.id}
               style={styles.list}
+              scrollEnabled={!submitting}
               ListHeaderComponent={
                 <Pressable
-                  style={styles.row}
+                  style={[styles.row, submitting && styles.rowDisabled]}
+                  disabled={submitting}
                   onPress={() => onSelect(undefined)}
                 >
                   <View style={styles.iconCircle}>
@@ -104,7 +115,8 @@ export default function FolderPickerModal({
               }
               renderItem={({ item }) => (
                 <Pressable
-                  style={styles.row}
+                  style={[styles.row, submitting && styles.rowDisabled]}
+                  disabled={submitting}
                   onPress={() => onSelect(item.id)}
                 >
                   <View style={styles.iconCircle}>
@@ -169,11 +181,21 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
 
+  titleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 12,
+  },
+
   title: {
     fontSize: 20,
     fontWeight: '700',
     color: Colors.text,
-    marginBottom: 12,
+  },
+
+  rowDisabled: {
+    opacity: 0.4,
   },
 
   loading: {
