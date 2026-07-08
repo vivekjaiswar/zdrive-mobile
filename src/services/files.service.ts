@@ -40,6 +40,12 @@ class FilesService {
     return data;
   }
 
+  // DELETE /files/share/:shareId - shareId is the FileShare record's
+  // own id (SharedFileEntry.id), NOT the file's id or the token.
+  async revokeShare(shareId: string): Promise<void> {
+    await api.delete(`/files/share/${shareId}`);
+  }
+
   async delete(id: string): Promise<void> {
     await api.delete(`/files/${id}`);
   }
