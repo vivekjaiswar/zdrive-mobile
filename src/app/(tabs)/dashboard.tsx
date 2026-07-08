@@ -10,11 +10,13 @@ import dashboardService, {
   DashboardStats,
 } from '@/services/dashboard.service';
 import { useAuthStore } from '@/store/auth.store';
+import { useTabBarHeight } from '@/hooks/useTabBarHeight';
 
 import { useEffect, useState } from 'react';
 
 export default function DashboardScreen() {
   const user = useAuthStore((state) => state.user);
+  const tabBarHeight = useTabBarHeight();
 
   const [stats, setStats] =
     useState<DashboardStats | null>(null);
@@ -35,10 +37,13 @@ export default function DashboardScreen() {
   }
 
   return (
-    <Screen>
+    <Screen edges={['top', 'left', 'right']}>
       <ScrollView
         style={styles.scroll}
         showsVerticalScrollIndicator={false}
+        contentContainerStyle={{
+          paddingBottom: tabBarHeight + 24,
+        }}
       >
         <DashboardHeader
           username={

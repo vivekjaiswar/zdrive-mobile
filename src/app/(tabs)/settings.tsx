@@ -1,16 +1,20 @@
 import { View, Text, StyleSheet } from 'react-native';
 
+import Screen from '@/components/Layout/Screen';
+
 export default function SettingsScreen() {
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Settings</Text>
-      <Text>Coming Soon</Text>
-    </View>
+    <Screen edges={['top', 'left', 'right']}>
+      <View style={styles.center}>
+        <Text style={styles.title}>Settings</Text>
+        <Text>Coming Soon</Text>
+      </View>
+    </Screen>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  center: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',

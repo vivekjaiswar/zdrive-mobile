@@ -1,9 +1,16 @@
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Tabs } from 'expo-router';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import Colors from '@/theme/colors';
+import {
+  TAB_BAR_CONTENT_HEIGHT,
+  TAB_BAR_VERTICAL_PADDING,
+} from '@/hooks/useTabBarHeight';
 
 export default function TabsLayout() {
+  const insets = useSafeAreaInsets();
+
   return (
     <Tabs
       screenOptions={{
@@ -14,8 +21,15 @@ export default function TabsLayout() {
         tabBarInactiveTintColor: '#94A3B8',
 
         tabBarStyle: {
-          height: 72,
-          paddingBottom: 10,
+          // Height/padding derive from the device's actual bottom
+          // safe-area inset instead of a fixed guess, so the bar
+          // doesn't crowd (or leave a gap above) the gesture nav
+          // bar / home indicator on any given device.
+          height:
+            TAB_BAR_CONTENT_HEIGHT +
+            TAB_BAR_VERTICAL_PADDING +
+            insets.bottom,
+          paddingBottom: insets.bottom + 8,
           paddingTop: 8,
           borderTopWidth: 0,
           backgroundColor: '#FFFFFF',

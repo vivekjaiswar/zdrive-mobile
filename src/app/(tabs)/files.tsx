@@ -3,12 +3,11 @@ import {
   ActivityIndicator,
   FlatList,
   RefreshControl,
-  SafeAreaView,
   StyleSheet,
   Text,
-  View,
 } from 'react-native';
 
+import Screen from '@/components/Layout/Screen';
 import Colors from '@/theme/colors';
 import FileCard from '@/components/files/FileCard';
 import SearchBar from '@/components/files/SearchBar';
@@ -16,6 +15,7 @@ import EmptyFiles from '@/components/files/EmptyFiles';
 import UploadFAB from '@/components/files/UploadFAB';
 import filesService from '@/services/files.service';
 import { useFileUpload } from '@/hooks/useFileUpload';
+import { useTabBarHeight } from '@/hooks/useTabBarHeight';
 import { ZDriveFile } from '@/types/file';
 
 export default function FilesScreen() {
@@ -26,6 +26,7 @@ export default function FilesScreen() {
   const [query, setQuery] = useState('');
 
   const { uploading, pickAndUpload } = useFileUpload();
+  const tabBarHeight = useTabBarHeight();
 
   useEffect(() => {
     loadFiles();
@@ -80,15 +81,15 @@ export default function FilesScreen() {
 
   if (loading) {
     return (
-      <SafeAreaView style={styles.center}>
-        <ActivityIndicator size="large" color={Colors.primary} />
+      <Screen edges={['top', 'left', 'right']}>
+        <ActivityIndicator size="large" color={Colors.primary} style={styles.loadingSpinner} />
         <Text style={styles.loading}>Loading files...</Text>
-      </SafeAreaView>
+      </Screen>
     );
   }
 
   return (
-    <SafeAreaView style={styles.container}>
+    <Screen edges={['top', 'left', 'right']}>
       <Text style={styles.title}>Files</Text>
 
       <SearchBar value={query} onChangeText={setQuery} />
@@ -99,8 +100,12 @@ export default function FilesScreen() {
         style={{ marginTop: 20 }}
         contentContainerStyle={
           filteredFiles.length === 0
-            ? { flexGrow: 1, justifyContent: 'center', paddingBottom: 100 }
-            : { paddingBottom: 100 }
+            ? {
+                flexGrow: 1,
+                justifyContent: 'center',
+                paddingBottom: tabBarHeight + 40,
+              }
+            : { paddingBottom: tabBarHeight + 88 }
         }
         refreshControl={
           <RefreshControl
@@ -119,31 +124,24 @@ export default function FilesScreen() {
       />
 
       <UploadFAB onPress={handleUpload} loading={uploading} />
-    </SafeAreaView>
+    </Screen>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#F4F8FF',
-    paddingHorizontal: 20,
-    paddingTop: 20,
-  },
-  center: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#F4F8FF',
-  },
   title: {
     fontSize: 32,
     fontWeight: '800',
     color: Colors.text,
+    marginTop: 12,
     marginBottom: 20,
+  },
+  loadingSpinner: {
+    marginTop: 60,
   },
   loading: {
     marginTop: 16,
+    textAlign: 'center',
     color: Colors.textSecondary,
   },
 });

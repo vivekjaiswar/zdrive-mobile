@@ -22,8 +22,8 @@ export default function DashboardHeader({
         {greeting}
       </Text>
 
-      <Text style={styles.username}>
-        {username} !
+      <Text style={styles.username} numberOfLines={2}>
+        {username}!
       </Text>
 
       <Text style={styles.subtitle}>
