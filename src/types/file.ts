@@ -8,6 +8,10 @@ export interface ZDriveFile {
   size: string;
   mimeType?: string;
   createdAt: string;
+  // Present on every backend file response (files.service.ts maps
+  // straight off the Prisma File row) but was missing from this type
+  // until now - null means the file lives at root ("My Drive").
+  folderId: string | null;
 }
 
 // Matches FilesService.findOne()'s actual return shape.

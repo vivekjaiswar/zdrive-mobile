@@ -24,15 +24,9 @@ export default function QuickActions({ onUploaded }: Props) {
   }
 
   function handleCreateFolder() {
-    // Folder creation is intentionally not wired yet: there's no
-    // folder browsing screen to view the result in (that's the
-    // Folder Explorer feature). Wiring "create" without any way to
-    // see what you created isn't a complete feature - see it built
-    // together with the explorer instead of as a dead-end dialog now.
-    Alert.alert(
-      'Coming Soon',
-      'Folder creation is being built together with folder browsing.',
-    );
+    // Files screen picks this up via useLocalSearchParams and opens
+    // the create-folder sheet immediately (see files.tsx).
+    router.push('/(tabs)/files?createFolder=1');
   }
 
   function handleTrash() {

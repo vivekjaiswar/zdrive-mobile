@@ -1,33 +1,33 @@
 import { useCallback, useEffect, useState } from 'react';
-import {
-  ActivityIndicator,
-  FlatList,
-  RefreshControl,
-  StyleSheet,
-  Text,
-} from 'react-native';
-import { useFocusEffect, useRouter } from 'expo-router';
+import { ActivityIndicator, Alert, Pressable, StyleSheet, Text, View } from 'react-native';
+import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 import Screen from '@/components/Layout/Screen';
 import Colors from '@/theme/colors';
-import FileCard from '@/components/files/FileCard';
 import SearchBar from '@/components/files/SearchBar';
-import EmptyFiles from '@/components/files/EmptyFiles';
 import UploadFAB from '@/components/files/UploadFAB';
 import FileActionSheet from '@/components/files/FileActionSheet';
 import TextPromptModal from '@/components/common/TextPromptModal';
 import FolderPickerModal from '@/components/files/FolderPickerModal';
+import FolderContents from '@/components/folders/FolderContents';
+import FolderActionSheet from '@/components/folders/FolderActionSheet';
 import filesService from '@/services/files.service';
+import foldersService from '@/services/folders.service';
 import { useFileUpload } from '@/hooks/useFileUpload';
 import { useFileActions } from '@/hooks/useFileActions';
+import { useFolderActions } from '@/hooks/useFolderActions';
 import { useTabBarHeight } from '@/hooks/useTabBarHeight';
 import { ZDriveFile } from '@/types/file';
+import { ZDriveFolder } from '@/types/folder';
 
 export default function FilesScreen() {
   const router = useRouter();
+  const params = useLocalSearchParams<{ createFolder?: string }>();
 
+  const [folders, setFolders] = useState<ZDriveFolder[]>([]);
   const [files, setFiles] = useState<ZDriveFile[]>([]);
-  const [filteredFiles, setFilteredFiles] = useState<ZDriveFile[]>([]);
+  const [searchResults, setSearchResults] = useState<ZDriveFile[] | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [query, setQuery] = useState('');
@@ -39,6 +39,13 @@ export default function FilesScreen() {
   const [renaming, setRenaming] = useState(false);
   const [moveFile, setMoveFile] = useState<ZDriveFile | null>(null);
   const [moving, setMoving] = useState(false);
+
+  // Same, but for folders.
+  const [actionFolder, setActionFolder] = useState<ZDriveFolder | null>(null);
+  const [renameFolder, setRenameFolder] = useState<ZDriveFolder | null>(null);
+  const [renamingFolder, setRenamingFolder] = useState(false);
+  const [createFolderVisible, setCreateFolderVisible] = useState(false);
+  const [creatingFolder, setCreatingFolder] = useState(false);
 
   const { uploading, pickAndUpload } = useFileUpload();
   const tabBarHeight = useTabBarHeight();
@@ -52,34 +59,62 @@ export default function FilesScreen() {
     downloadingId,
     sharingId,
     deletingId,
-  } = useFileActions(loadFiles);
+  } = useFileActions(loadContents);
+
+  const {
+    rename: renameFolderAction,
+    confirmDelete: confirmDeleteFolder,
+    deletingId: deletingFolderId,
+  } = useFolderActions(loadContents);
 
   // Refresh every time this tab regains focus - not just on first
-  // mount - so a rename/move/delete or an upload from the Dashboard
-  // is reflected here without a manual pull-to-refresh.
+  // mount - so a rename/move/delete/create or an upload from the
+  // Dashboard is reflected here without a manual pull-to-refresh.
   useFocusEffect(
     useCallback(() => {
-      loadFiles();
+      loadContents();
     }, []),
   );
+
+  // The Dashboard's "Folder" quick action navigates here with
+  // ?createFolder=1 so the create sheet opens immediately instead of
+  // making the user find the button themselves. Clear the param
+  // straight away (router.setParams, not a ref-based "handled" flag)
+  // - the Files tab screen stays mounted across tab switches, so a
+  // ref guard would only ever fire once for the app's whole lifetime
+  // and silently do nothing on the second, third, etc. tap of the
+  // Dashboard action.
+  useEffect(() => {
+    if (params.createFolder) {
+      setCreateFolderVisible(true);
+      router.setParams({ createFolder: undefined });
+    }
+  }, [params.createFolder]);
 
   useEffect(() => {
     const timer = setTimeout(() => {
       if (!query.trim()) {
-        setFilteredFiles(files);
+        setSearchResults(null);
         return;
       }
       searchFiles(query);
     }, 300);
 
     return () => clearTimeout(timer);
-  }, [query, files]);
+  }, [query]);
 
-  async function loadFiles() {
+  async function loadContents() {
     try {
-      const data = await filesService.list();
-      setFiles(data);
-      setFilteredFiles(data);
+      const [folderList, fileList] = await Promise.all([
+        foldersService.list(),
+        filesService.list(),
+      ]);
+
+      setFolders(folderList);
+      // GET /files returns every file regardless of folder - there's
+      // no backend endpoint for "root files only," so filter for
+      // folderId === null client-side to build the root view.
+      setFiles(fileList.filter((file) => !file.folderId));
     } catch (e) {
       console.error(e);
     } finally {
@@ -91,7 +126,7 @@ export default function FilesScreen() {
   async function searchFiles(text: string) {
     try {
       const data = await filesService.search(text);
-      setFilteredFiles(data);
+      setSearchResults(data);
     } catch (e) {
       console.error(e);
     }
@@ -99,14 +134,14 @@ export default function FilesScreen() {
 
   const onRefresh = useCallback(() => {
     setRefreshing(true);
-    loadFiles();
+    loadContents();
   }, []);
 
   async function handleUpload() {
     const uploaded = await pickAndUpload();
 
     if (uploaded) {
-      await loadFiles();
+      await loadContents();
     }
   }
 
@@ -130,6 +165,33 @@ export default function FilesScreen() {
     if (ok) setMoveFile(null);
   }
 
+  async function handleConfirmRenameFolder(name: string) {
+    if (!renameFolder) return;
+
+    setRenamingFolder(true);
+    const ok = await renameFolderAction(renameFolder, name);
+    setRenamingFolder(false);
+
+    if (ok) setRenameFolder(null);
+  }
+
+  async function handleCreateFolder(name: string) {
+    try {
+      setCreatingFolder(true);
+      await foldersService.create(name);
+      setCreateFolderVisible(false);
+      await loadContents();
+    } catch (error: any) {
+      // Leave the sheet open so the user can fix the name and retry.
+      Alert.alert(
+        'Create Folder Failed',
+        error?.response?.data?.message ?? 'Unable to create this folder.',
+      );
+    } finally {
+      setCreatingFolder(false);
+    }
+  }
+
   if (loading) {
     return (
       <Screen edges={['top', 'left', 'right']}>
@@ -139,40 +201,34 @@ export default function FilesScreen() {
     );
   }
 
+  const isSearching = searchResults !== null;
+
   return (
     <Screen edges={['top', 'left', 'right']}>
-      <Text style={styles.title}>Files</Text>
+      <View style={styles.header}>
+        <Text style={styles.title}>Files</Text>
+
+        <Pressable
+          hitSlop={12}
+          onPress={() => setCreateFolderVisible(true)}
+          style={styles.newFolderButton}
+        >
+          <MaterialCommunityIcons name="folder-plus-outline" size={24} color={Colors.primary} />
+        </Pressable>
+      </View>
 
       <SearchBar value={query} onChangeText={setQuery} />
 
-      <FlatList
-        data={filteredFiles}
-        keyExtractor={(item) => item.id}
-        style={{ marginTop: 20 }}
-        contentContainerStyle={
-          filteredFiles.length === 0
-            ? {
-                flexGrow: 1,
-                justifyContent: 'center',
-                paddingBottom: tabBarHeight + 40,
-              }
-            : { paddingBottom: tabBarHeight + 88 }
-        }
-        refreshControl={
-          <RefreshControl
-            refreshing={refreshing}
-            onRefresh={onRefresh}
-            tintColor={Colors.primary}
-          />
-        }
-        renderItem={({ item }) => (
-          <FileCard
-            file={item}
-            onPress={() => router.push(`/files/${item.id}`)}
-            onLongPress={() => setActionFile(item)}
-          />
-        )}
-        ListEmptyComponent={<EmptyFiles />}
+      <FolderContents
+        folders={isSearching ? [] : folders}
+        files={isSearching ? searchResults! : files}
+        refreshing={refreshing}
+        onRefresh={onRefresh}
+        onFolderPress={(folder) => router.push(`/folders/${folder.id}`)}
+        onFolderLongPress={(folder) => setActionFolder(folder)}
+        onFilePress={(file) => router.push(`/files/${file.id}`)}
+        onFileLongPress={(file) => setActionFile(file)}
+        bottomSpacing={tabBarHeight + 88}
       />
 
       <UploadFAB onPress={handleUpload} loading={uploading} />
@@ -199,6 +255,20 @@ export default function FilesScreen() {
         }}
       />
 
+      <FolderActionSheet
+        folder={actionFolder}
+        deleting={actionFolder?.id === deletingFolderId}
+        onClose={() => setActionFolder(null)}
+        onRename={(folder) => {
+          setActionFolder(null);
+          setRenameFolder(folder);
+        }}
+        onDelete={(folder) => {
+          setActionFolder(null);
+          confirmDeleteFolder(folder);
+        }}
+      />
+
       <TextPromptModal
         visible={!!renameFile}
         title="Rename File"
@@ -207,6 +277,26 @@ export default function FilesScreen() {
         loading={renaming}
         onCancel={() => setRenameFile(null)}
         onConfirm={handleConfirmRename}
+      />
+
+      <TextPromptModal
+        visible={!!renameFolder}
+        title="Rename Folder"
+        initialValue={renameFolder?.name ?? ''}
+        confirmLabel="Rename"
+        loading={renamingFolder}
+        onCancel={() => setRenameFolder(null)}
+        onConfirm={handleConfirmRenameFolder}
+      />
+
+      <TextPromptModal
+        visible={createFolderVisible}
+        title="New Folder"
+        placeholder="Folder name"
+        confirmLabel="Create"
+        loading={creatingFolder}
+        onCancel={() => setCreateFolderVisible(false)}
+        onConfirm={handleCreateFolder}
       />
 
       <FolderPickerModal
@@ -220,12 +310,25 @@ export default function FilesScreen() {
 }
 
 const styles = StyleSheet.create({
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginTop: 12,
+    marginBottom: 20,
+  },
   title: {
     fontSize: 32,
     fontWeight: '800',
     color: Colors.text,
-    marginTop: 12,
-    marginBottom: 20,
+  },
+  newFolderButton: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: '#EEF5FF',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   loadingSpinner: {
     marginTop: 60,
