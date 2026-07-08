@@ -15,4 +15,46 @@ export const api = axios.create({
   },
 });
 
+// Registered-handler pattern: api.ts can't import auth.store.ts directly
+// (auth.store.ts already imports api.ts - that'd be a circular import),
+// so the app bootstrap calls setUnauthorizedHandler() once to wire this
+// up instead.
+let unauthorizedHandler: (() => void) | null = null;
+
+export function setUnauthorizedHandler(handler: () => void) {
+  unauthorizedHandler = handler;
+}
+
+// These auth endpoints can legitimately return 401 as a normal
+// business-logic response (wrong password, unverified email, expired
+// reset/verify token, etc.) - a 401 from any of these must NOT trigger
+// a global auto-logout, since there's no session to log out of yet.
+const AUTH_ENDPOINTS_EXCLUDED_FROM_AUTO_LOGOUT = [
+  '/auth/login',
+  '/auth/register',
+  '/auth/forgot-password',
+  '/auth/reset-password',
+  '/auth/verify-email',
+  '/auth/resend-verification',
+  '/auth/change-password',
+];
+
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    const status = error?.response?.status;
+    const url: string = error?.config?.url ?? '';
+
+    const isExcluded = AUTH_ENDPOINTS_EXCLUDED_FROM_AUTO_LOGOUT.some((path) =>
+      url.includes(path),
+    );
+
+    if (status === 401 && !isExcluded && unauthorizedHandler) {
+      unauthorizedHandler();
+    }
+
+    return Promise.reject(error);
+  },
+);
+
 export default api;
