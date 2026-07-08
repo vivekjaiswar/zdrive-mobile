@@ -115,7 +115,7 @@ export default function LoginScreen() {
                 onChangeText={setPassword}
               />
 
-              <Pressable>
+              <Pressable onPress={() => router.push('/(auth)/forgot-password')}>
                 <Text style={styles.forgot}>
                   Forgot Password?
                 </Text>
@@ -133,7 +133,7 @@ export default function LoginScreen() {
                 Don't have an account?
               </Text>
 
-              <Pressable>
+              <Pressable onPress={() => router.push('/(auth)/register')}>
                 <Text style={styles.register}>
                   Create Account
                 </Text>
