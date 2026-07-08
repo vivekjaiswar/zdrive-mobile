@@ -208,13 +208,23 @@ export default function FilesScreen() {
       <View style={styles.header}>
         <Text style={styles.title}>Files</Text>
 
-        <Pressable
-          hitSlop={12}
-          onPress={() => setCreateFolderVisible(true)}
-          style={styles.newFolderButton}
-        >
-          <MaterialCommunityIcons name="folder-plus-outline" size={24} color={Colors.primary} />
-        </Pressable>
+        <View style={styles.headerActions}>
+          <Pressable
+            hitSlop={12}
+            onPress={() => router.push('/trash')}
+            style={styles.newFolderButton}
+          >
+            <MaterialCommunityIcons name="trash-can-outline" size={22} color={Colors.text} />
+          </Pressable>
+
+          <Pressable
+            hitSlop={12}
+            onPress={() => setCreateFolderVisible(true)}
+            style={styles.newFolderButton}
+          >
+            <MaterialCommunityIcons name="folder-plus-outline" size={24} color={Colors.primary} />
+          </Pressable>
+        </View>
       </View>
 
       <SearchBar value={query} onChangeText={setQuery} />
@@ -321,6 +331,10 @@ const styles = StyleSheet.create({
     fontSize: 32,
     fontWeight: '800',
     color: Colors.text,
+  },
+  headerActions: {
+    flexDirection: 'row',
+    gap: 10,
   },
   newFolderButton: {
     width: 44,

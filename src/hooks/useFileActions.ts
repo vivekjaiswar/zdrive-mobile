@@ -12,6 +12,10 @@ export function useFileActions(onChanged?: () => void) {
   const [downloadingId, setDownloadingId] = useState<string | null>(null);
   const [sharingId, setSharingId] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [restoringId, setRestoringId] = useState<string | null>(null);
+  const [permanentlyDeletingId, setPermanentlyDeletingId] = useState<
+    string | null
+  >(null);
 
   async function download(file: Pick<ZDriveFile, 'id' | 'name'>) {
     try {
@@ -120,14 +124,62 @@ export function useFileActions(onChanged?: () => void) {
     );
   }
 
+  async function restore(file: Pick<ZDriveFile, 'id' | 'name'>) {
+    try {
+      setRestoringId(file.id);
+      await filesService.restore(file.id);
+      onChanged?.();
+    } catch (error: any) {
+      Alert.alert(
+        'Restore Failed',
+        error?.response?.data?.message ?? 'Unable to restore this file.',
+      );
+    } finally {
+      setRestoringId(null);
+    }
+  }
+
+  function confirmPermanentDelete(file: Pick<ZDriveFile, 'id' | 'name'>) {
+    Alert.alert(
+      'Delete Forever?',
+      `"${file.name}" will be permanently deleted. This can't be undone.`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete Forever',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              setPermanentlyDeletingId(file.id);
+              await filesService.permanentlyDelete(file.id);
+              onChanged?.();
+            } catch (error: any) {
+              Alert.alert(
+                'Delete Failed',
+                error?.response?.data?.message ??
+                  'Unable to permanently delete this file.',
+              );
+            } finally {
+              setPermanentlyDeletingId(null);
+            }
+          },
+        },
+      ],
+    );
+  }
+
   return {
     download,
     share,
     rename,
     move,
     confirmDelete,
+    restore,
+    confirmPermanentDelete,
     downloadingId,
     sharingId,
     deletingId,
+    restoringId,
+    permanentlyDeletingId,
   };
 }

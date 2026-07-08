@@ -68,6 +68,13 @@ class FilesService {
     return data;
   }
 
+  // DELETE /files/:id/permanent - actually removes the S3 object and
+  // DB row (unlike delete(), which just soft-deletes into trash).
+  // Irreversible.
+  async permanentlyDelete(id: string): Promise<void> {
+    await api.delete(`/files/${id}/permanent`);
+  }
+
   async search(query: string): Promise<ZDriveFile[]> {
     const { data } = await api.get(
       `/files/search/${encodeURIComponent(query)}`,

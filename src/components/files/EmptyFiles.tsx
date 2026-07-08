@@ -8,22 +8,31 @@ import {
 
 import Colors from '@/theme/colors';
 
-export default function EmptyFiles() {
+interface Props {
+  icon?: keyof typeof MaterialCommunityIcons.glyphMap;
+  title?: string;
+  subtitle?: string;
+}
+
+export default function EmptyFiles({
+  icon = 'folder-open-outline',
+  title = 'No Files Yet',
+  subtitle = 'Upload your first document to start using ZDrive.',
+}: Props) {
   return (
     <View style={styles.container}>
       <MaterialCommunityIcons
-        name="folder-open-outline"
+        name={icon}
         size={90}
         color="#CBD5E1"
       />
 
       <Text style={styles.title}>
-        No Files Yet
+        {title}
       </Text>
 
       <Text style={styles.subtitle}>
-        Upload your first document to start
-        using ZDrive.
+        {subtitle}
       </Text>
     </View>
   );

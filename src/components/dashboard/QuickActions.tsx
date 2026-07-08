@@ -1,4 +1,4 @@
-import { Alert, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 import { useRouter } from 'expo-router';
 
 import Colors from '@/theme/colors';
@@ -30,8 +30,7 @@ export default function QuickActions({ onUploaded }: Props) {
   }
 
   function handleTrash() {
-    // Same reasoning: there's no Trash screen/route yet (Priority 6).
-    Alert.alert('Coming Soon', 'Trash is not built yet.');
+    router.push('/trash');
   }
 
   return (
