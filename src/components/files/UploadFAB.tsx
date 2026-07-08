@@ -1,6 +1,7 @@
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import React from 'react';
 import {
+  ActivityIndicator,
   Pressable,
   StyleSheet,
   Text,
@@ -10,30 +11,38 @@ import Colors from '@/theme/colors';
 
 interface Props {
   onPress: () => void;
+  loading?: boolean;
 }
 
 export default function UploadFAB({
   onPress,
+  loading = false,
 }: Props) {
   return (
     <Pressable
+      disabled={loading}
       style={({ pressed }) => [
         styles.button,
         pressed && {
           opacity: 0.9,
           transform: [{ scale: 0.97 }],
         },
+        loading && styles.disabled,
       ]}
       onPress={onPress}
     >
-      <MaterialCommunityIcons
-        name="plus"
-        size={26}
-        color="#FFFFFF"
-      />
+      {loading ? (
+        <ActivityIndicator size="small" color="#FFFFFF" />
+      ) : (
+        <MaterialCommunityIcons
+          name="plus"
+          size={26}
+          color="#FFFFFF"
+        />
+      )}
 
       <Text style={styles.text}>
-        Upload
+        {loading ? 'Uploading...' : 'Upload'}
       </Text>
     </Pressable>
   );
@@ -69,6 +78,10 @@ const styles = StyleSheet.create({
     },
 
     elevation: 10,
+  },
+
+  disabled: {
+    opacity: 0.7,
   },
 
   text: {

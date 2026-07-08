@@ -56,7 +56,7 @@ export default function DashboardScreen() {
           />
         )}
 
-        <QuickActions />
+        <QuickActions onUploaded={loadDashboard} />
       </ScrollView>
     </Screen>
   );

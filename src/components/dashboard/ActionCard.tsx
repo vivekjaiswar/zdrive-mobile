@@ -1,5 +1,5 @@
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import Colors from '@/theme/colors';
 
@@ -8,6 +8,7 @@ interface Props {
   title: string;
   subtitle: string;
   onPress: () => void;
+  loading?: boolean;
 }
 
 export default function ActionCard({
@@ -15,21 +16,28 @@ export default function ActionCard({
   title,
   subtitle,
   onPress,
+  loading = false,
 }: Props) {
   return (
     <Pressable
       onPress={onPress}
+      disabled={loading}
       style={({ pressed }) => [
         styles.card,
         pressed && styles.pressed,
+        loading && styles.disabled,
       ]}
     >
       <View style={styles.iconCircle}>
-        <MaterialCommunityIcons
-          name={icon}
-          size={28}
-          color={Colors.primary}
-        />
+        {loading ? (
+          <ActivityIndicator size="small" color={Colors.primary} />
+        ) : (
+          <MaterialCommunityIcons
+            name={icon}
+            size={28}
+            color={Colors.primary}
+          />
+        )}
       </View>
 
       <Text style={styles.title}>{title}</Text>
@@ -61,6 +69,10 @@ const styles = StyleSheet.create({
   pressed: {
     opacity: 0.9,
     transform: [{ scale: 0.98 }],
+  },
+
+  disabled: {
+    opacity: 0.6,
   },
 
   iconCircle: {

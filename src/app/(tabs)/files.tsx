@@ -15,6 +15,7 @@ import SearchBar from '@/components/files/SearchBar';
 import EmptyFiles from '@/components/files/EmptyFiles';
 import UploadFAB from '@/components/files/UploadFAB';
 import filesService from '@/services/files.service';
+import { useFileUpload } from '@/hooks/useFileUpload';
 import { ZDriveFile } from '@/types/file';
 
 export default function FilesScreen() {
@@ -23,6 +24,8 @@ export default function FilesScreen() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [query, setQuery] = useState('');
+
+  const { uploading, pickAndUpload } = useFileUpload();
 
   useEffect(() => {
     loadFiles();
@@ -67,6 +70,14 @@ export default function FilesScreen() {
     loadFiles();
   }, []);
 
+  async function handleUpload() {
+    const uploaded = await pickAndUpload();
+
+    if (uploaded) {
+      await loadFiles();
+    }
+  }
+
   if (loading) {
     return (
       <SafeAreaView style={styles.center}>
@@ -107,7 +118,7 @@ export default function FilesScreen() {
         ListEmptyComponent={<EmptyFiles />}
       />
 
-      <UploadFAB onPress={() => console.log('Upload')} />
+      <UploadFAB onPress={handleUpload} loading={uploading} />
     </SafeAreaView>
   );
 }
