@@ -46,6 +46,13 @@ class UsersService {
       newPassword,
     });
   }
+
+  // Permanently deletes the account, its files, folders, and shares.
+  // Irreversible - the caller is responsible for confirming intent
+  // and clearing the local session afterward.
+  async deleteAccount(): Promise<void> {
+    await api.delete('/users/account');
+  }
 }
 
 export default new UsersService();

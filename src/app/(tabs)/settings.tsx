@@ -14,6 +14,7 @@ import Screen from '@/components/Layout/Screen';
 import ProfileHeader from '@/components/settings/ProfileHeader';
 import SettingsRow from '@/components/settings/SettingsRow';
 import ChangePasswordModal from '@/components/settings/ChangePasswordModal';
+import DeleteAccountModal from '@/components/settings/DeleteAccountModal';
 import PlansModal from '@/components/settings/PlansModal';
 import TextPromptModal from '@/components/common/TextPromptModal';
 import usersService from '@/services/users.service';
@@ -43,6 +44,8 @@ export default function SettingsScreen() {
   const [passwordModalVisible, setPasswordModalVisible] = useState(false);
   const [changingPassword, setChangingPassword] = useState(false);
   const [plansVisible, setPlansVisible] = useState(false);
+  const [deleteModalVisible, setDeleteModalVisible] = useState(false);
+  const [deletingAccount, setDeletingAccount] = useState(false);
 
   useFocusEffect(
     useCallback(() => {
@@ -129,6 +132,28 @@ export default function SettingsScreen() {
     }
   }
 
+  async function handleDeleteAccount() {
+    try {
+      setDeletingAccount(true);
+      await usersService.deleteAccount();
+
+      // Account is gone server-side - clear the local session
+      // immediately rather than waiting for a 401 on some future
+      // request, and don't leave the delete modal open underneath
+      // the login screen.
+      setDeleteModalVisible(false);
+      await logout();
+      router.replace('/(auth)/login');
+    } catch (error: any) {
+      Alert.alert(
+        'Delete Failed',
+        error?.response?.data?.message ?? 'Unable to delete your account.',
+      );
+    } finally {
+      setDeletingAccount(false);
+    }
+  }
+
   function handleLogout() {
     Alert.alert('Log Out?', 'You will need to sign in again.', [
       { text: 'Cancel', style: 'cancel' },
@@ -208,6 +233,13 @@ export default function SettingsScreen() {
             showChevron={false}
             onPress={handleLogout}
           />
+          <SettingsRow
+            icon="delete-outline"
+            label="Delete Account"
+            destructive
+            showChevron={false}
+            onPress={() => setDeleteModalVisible(true)}
+          />
         </View>
       </ScrollView>
 
@@ -233,6 +265,13 @@ export default function SettingsScreen() {
         visible={plansVisible}
         currentPlan={profile.plan}
         onClose={() => setPlansVisible(false)}
+      />
+
+      <DeleteAccountModal
+        visible={deleteModalVisible}
+        loading={deletingAccount}
+        onCancel={() => setDeleteModalVisible(false)}
+        onConfirm={handleDeleteAccount}
       />
     </Screen>
   );

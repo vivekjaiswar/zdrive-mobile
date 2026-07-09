@@ -9,6 +9,7 @@ interface Props {
   title: string;
   loading?: boolean;
   disabled?: boolean;
+  variant?: 'primary' | 'danger';
   onPress: () => void;
 }
 
@@ -16,6 +17,7 @@ export default function PrimaryButton({
   title,
   loading = false,
   disabled = false,
+  variant = 'primary',
   onPress,
 }: Props) {
   return (
@@ -24,6 +26,7 @@ export default function PrimaryButton({
       disabled={loading || disabled}
       style={({ pressed }) => [
         styles.button,
+        variant === 'danger' && styles.buttonDanger,
         pressed && styles.pressed,
         (loading || disabled) && styles.disabled,
       ]}
@@ -54,6 +57,11 @@ const styles = StyleSheet.create({
     },
 
     elevation: 5,
+  },
+
+  buttonDanger: {
+    backgroundColor: '#DC2626',
+    shadowColor: '#DC2626',
   },
 
   pressed: {
