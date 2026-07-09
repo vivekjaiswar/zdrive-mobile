@@ -6,7 +6,7 @@ import AuthScreenLayout from '@/components/auth/AuthScreenLayout';
 import PrimaryButton from '@/components/Button/PrimaryButton';
 import AppInput from '@/components/Input/AppInput';
 import authService from '@/services/auth.service';
-import { authStyles } from './_authStyles';
+import { authStyles } from '@/components/auth/authStyles';
 
 export default function RegisterScreen() {
   const router = useRouter();
