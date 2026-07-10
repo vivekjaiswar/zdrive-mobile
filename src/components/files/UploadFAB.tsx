@@ -12,12 +12,20 @@ import Colors from '@/theme/colors';
 interface Props {
   onPress: () => void;
   loading?: boolean;
+  progress?: { current: number; total: number } | null;
 }
 
 export default function UploadFAB({
   onPress,
   loading = false,
+  progress,
 }: Props) {
+  const label = loading
+    ? progress && progress.total > 1
+      ? `Uploading ${progress.current}/${progress.total}`
+      : 'Uploading...'
+    : 'Upload';
+
   return (
     <Pressable
       disabled={loading}
@@ -42,7 +50,7 @@ export default function UploadFAB({
       )}
 
       <Text style={styles.text}>
-        {loading ? 'Uploading...' : 'Upload'}
+        {label}
       </Text>
     </Pressable>
   );

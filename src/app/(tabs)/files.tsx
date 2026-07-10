@@ -47,7 +47,7 @@ export default function FilesScreen() {
   const [createFolderVisible, setCreateFolderVisible] = useState(false);
   const [creatingFolder, setCreatingFolder] = useState(false);
 
-  const { uploading, pickAndUpload } = useFileUpload();
+  const { uploading, progress, pickAndUpload } = useFileUpload();
   const tabBarHeight = useTabBarHeight();
 
   const {
@@ -138,9 +138,9 @@ export default function FilesScreen() {
   }, []);
 
   async function handleUpload() {
-    const uploaded = await pickAndUpload();
+    const result = await pickAndUpload();
 
-    if (uploaded) {
+    if (result && result.uploaded.length > 0) {
       await loadContents();
     }
   }
@@ -241,7 +241,7 @@ export default function FilesScreen() {
         bottomSpacing={tabBarHeight + 88}
       />
 
-      <UploadFAB onPress={handleUpload} loading={uploading} />
+      <UploadFAB onPress={handleUpload} loading={uploading} progress={progress} />
 
       <FileActionSheet
         file={actionFile}

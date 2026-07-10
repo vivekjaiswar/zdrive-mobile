@@ -46,7 +46,7 @@ export default function FolderExplorerScreen() {
   // child, so there's no need for a separate modal/state pair.
   const [showCurrentFolderMenu, setShowCurrentFolderMenu] = useState(false);
 
-  const { uploading, pickAndUpload } = useFileUpload();
+  const { uploading, progress, pickAndUpload } = useFileUpload();
 
   const {
     download,
@@ -99,9 +99,9 @@ export default function FolderExplorerScreen() {
   async function handleUpload() {
     if (!id) return;
 
-    const uploaded = await pickAndUpload(id);
+    const result = await pickAndUpload(id);
 
-    if (uploaded) {
+    if (result && result.uploaded.length > 0) {
       await loadExplorer();
     }
   }
@@ -234,7 +234,7 @@ export default function FolderExplorerScreen() {
         bottomSpacing={112}
       />
 
-      <UploadFAB onPress={handleUpload} loading={uploading} />
+      <UploadFAB onPress={handleUpload} loading={uploading} progress={progress} />
 
       <FileActionSheet
         file={actionFile}

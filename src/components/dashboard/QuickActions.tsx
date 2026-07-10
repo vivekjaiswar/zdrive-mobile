@@ -16,9 +16,9 @@ export default function QuickActions({ onUploaded }: Props) {
   const { uploading, pickAndUpload } = useFileUpload();
 
   async function handleUpload() {
-    const uploaded = await pickAndUpload();
+    const result = await pickAndUpload();
 
-    if (uploaded) {
+    if (result && result.uploaded.length > 0) {
       onUploaded?.();
     }
   }
