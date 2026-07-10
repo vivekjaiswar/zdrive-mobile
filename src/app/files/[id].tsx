@@ -11,9 +11,9 @@ import {
 } from 'react-native';
 import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { Image } from 'expo-image';
 
 import Screen from '@/components/Layout/Screen';
+import ZoomableImage from '@/components/files/ZoomableImage';
 import filesService from '@/services/files.service';
 import { useFileActions } from '@/hooks/useFileActions';
 import Colors from '@/theme/colors';
@@ -188,12 +188,7 @@ export default function FilePreviewScreen() {
 
       {isImage ? (
         <View style={styles.imageWrap}>
-          <Image
-            source={{ uri: file.previewUrl }}
-            style={styles.image}
-            contentFit="contain"
-            transition={150}
-          />
+          <ZoomableImage uri={file.previewUrl} />
         </View>
       ) : isText ? (
         <ScrollView style={styles.textScroll} contentContainerStyle={styles.textContent}>
@@ -270,10 +265,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#0B1120',
     marginHorizontal: -24,
     marginBottom: -24,
-  },
-
-  image: {
-    flex: 1,
   },
 
   textScroll: {

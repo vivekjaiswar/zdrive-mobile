@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { router, Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 import { setUnauthorizedHandler } from '@/services/api';
 import { useAuthStore } from '@/store/auth.store';
@@ -19,7 +20,7 @@ export default function RootLayout() {
   }, [logout]);
 
   return (
-    <>
+    <GestureHandlerRootView style={{ flex: 1 }}>
       <StatusBar style="dark" />
 
       <Stack
@@ -31,6 +32,6 @@ export default function RootLayout() {
           },
         }}
       />
-    </>
+    </GestureHandlerRootView>
   );
 }
