@@ -40,7 +40,13 @@
       ],
       "expo-secure-store",
       "expo-sharing",
-      "expo-document-picker"
+      "expo-document-picker",
+      [
+        "expo-local-authentication",
+        {
+          "faceIDPermission": "Allow ZDrive to use Face ID to unlock the app."
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true,

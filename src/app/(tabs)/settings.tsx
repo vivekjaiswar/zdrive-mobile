@@ -20,6 +20,7 @@ import PlansModal from '@/components/settings/PlansModal';
 import TextPromptModal from '@/components/common/TextPromptModal';
 import usersService from '@/services/users.service';
 import { useAuthStore } from '@/store/auth.store';
+import { useSecurityStore } from '@/store/security.store';
 import { useTabBarHeight } from '@/hooks/useTabBarHeight';
 import { ColorPalette } from '@/theme/palette';
 import { useColors } from '@/theme/useColors';
@@ -40,6 +41,10 @@ export default function SettingsScreen() {
   const tabBarHeight = useTabBarHeight();
   const logout = useAuthStore((state) => state.logout);
   const setToken = useAuthStore((state) => state.setToken);
+
+  const biometricAvailable = useSecurityStore((state) => state.biometricAvailable);
+  const biometricEnabled = useSecurityStore((state) => state.biometricEnabled);
+  const setBiometricEnabled = useSecurityStore((state) => state.setBiometricEnabled);
 
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
@@ -235,6 +240,20 @@ export default function SettingsScreen() {
             showChevron={false}
           />
         </View>
+
+        {biometricAvailable && (
+          <>
+            <Text style={styles.sectionLabel}>Security</Text>
+            <View style={styles.card}>
+              <SettingsRow
+                icon="fingerprint"
+                label="Unlock with Face ID / Fingerprint"
+                toggleValue={biometricEnabled}
+                onToggleChange={setBiometricEnabled}
+              />
+            </View>
+          </>
+        )}
 
         <Text style={styles.sectionLabel}>Account</Text>
         <View style={styles.card}>
