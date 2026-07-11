@@ -6,7 +6,8 @@ import {
   View,
 } from 'react-native';
 
-import Colors from '@/theme/colors';
+import { ColorPalette } from '@/theme/palette';
+import { useColors } from '@/theme/useColors';
 
 interface Props {
   value: string;
@@ -17,18 +18,21 @@ export default function SearchBar({
   value,
   onChangeText,
 }: Props) {
+  const colors = useColors();
+  const styles = getStyles(colors);
+
   return (
     <View style={styles.container}>
       <MaterialCommunityIcons
         name="magnify"
-        size={24}
-        color="#64748B"
+        size={21}
+        color={colors.textSecondary}
       />
 
       <TextInput
         style={styles.input}
         placeholder="Search files..."
-        placeholderTextColor="#94A3B8"
+        placeholderTextColor={colors.textSecondary}
         value={value}
         onChangeText={onChangeText}
       />
@@ -36,32 +40,26 @@ export default function SearchBar({
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    height: 56,
-    borderRadius: 18,
-    backgroundColor: '#FFFFFF',
+function getStyles(colors: ColorPalette) {
+  return StyleSheet.create({
+    container: {
+      height: 50,
+      borderRadius: 16,
+      backgroundColor: colors.surface,
+      borderWidth: 1,
+      borderColor: colors.border,
 
-    flexDirection: 'row',
-    alignItems: 'center',
+      flexDirection: 'row',
+      alignItems: 'center',
 
-    paddingHorizontal: 18,
-
-    shadowColor: '#000',
-    shadowOpacity: 0.05,
-    shadowRadius: 10,
-    shadowOffset: {
-      width: 0,
-      height: 4,
+      paddingHorizontal: 16,
     },
 
-    elevation: 3,
-  },
-
-  input: {
-    flex: 1,
-    marginLeft: 12,
-    color: Colors.text,
-    fontSize: 16,
-  },
-});
+    input: {
+      flex: 1,
+      marginLeft: 10,
+      color: colors.text,
+      fontSize: 15,
+    },
+  });
+}

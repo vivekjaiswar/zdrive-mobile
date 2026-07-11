@@ -11,7 +11,8 @@ import {
 
 import AppInput from '@/components/Input/AppInput';
 import PrimaryButton from '@/components/Button/PrimaryButton';
-import Colors from '@/theme/colors';
+import { ColorPalette } from '@/theme/palette';
+import { useColors } from '@/theme/useColors';
 
 interface Props {
   visible: boolean;
@@ -34,6 +35,8 @@ export default function TextPromptModal({
   onCancel,
   onConfirm,
 }: Props) {
+  const colors = useColors();
+  const styles = getStyles(colors);
   const [value, setValue] = useState(initialValue);
 
   // Reset the input each time the modal is (re)opened, otherwise a
@@ -92,68 +95,70 @@ export default function TextPromptModal({
   );
 }
 
-const styles = StyleSheet.create({
-  backdrop: {
-    flex: 1,
-    backgroundColor: 'rgba(15, 23, 42, 0.45)',
-    justifyContent: 'flex-end',
-  },
+function getStyles(colors: ColorPalette) {
+  return StyleSheet.create({
+    backdrop: {
+      flex: 1,
+      backgroundColor: 'rgba(8, 12, 22, 0.5)',
+      justifyContent: 'flex-end',
+    },
 
-  keyboardWrap: {
-    justifyContent: 'flex-end',
-  },
+    keyboardWrap: {
+      justifyContent: 'flex-end',
+    },
 
-  sheet: {
-    backgroundColor: '#FFFFFF',
-    borderTopLeftRadius: 28,
-    borderTopRightRadius: 28,
-    paddingHorizontal: 24,
-    paddingTop: 12,
-    paddingBottom: 32,
-  },
+    sheet: {
+      backgroundColor: colors.surface,
+      borderTopLeftRadius: 28,
+      borderTopRightRadius: 28,
+      paddingHorizontal: 24,
+      paddingTop: 12,
+      paddingBottom: 32,
+    },
 
-  handle: {
-    alignSelf: 'center',
-    width: 44,
-    height: 5,
-    borderRadius: 3,
-    backgroundColor: '#E2E8F0',
-    marginBottom: 20,
-  },
+    handle: {
+      alignSelf: 'center',
+      width: 40,
+      height: 4,
+      borderRadius: 3,
+      backgroundColor: colors.border,
+      marginBottom: 20,
+    },
 
-  title: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: Colors.text,
-    marginBottom: 16,
-  },
+    title: {
+      fontSize: 18,
+      fontWeight: '700',
+      color: colors.text,
+      marginBottom: 16,
+    },
 
-  input: {
-    marginBottom: 24,
-  },
+    input: {
+      marginBottom: 24,
+    },
 
-  actions: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-  },
+    actions: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 12,
+    },
 
-  cancelButton: {
-    flex: 1,
-    height: 58,
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderRadius: 16,
-    backgroundColor: '#F1F5F9',
-  },
+    cancelButton: {
+      flex: 1,
+      height: 54,
+      justifyContent: 'center',
+      alignItems: 'center',
+      borderRadius: 14,
+      backgroundColor: colors.surfaceAlt,
+    },
 
-  cancelText: {
-    fontWeight: '700',
-    color: Colors.textSecondary,
-    fontSize: 16,
-  },
+    cancelText: {
+      fontWeight: '700',
+      color: colors.textSecondary,
+      fontSize: 15,
+    },
 
-  confirmButton: {
-    flex: 1,
-  },
-});
+    confirmButton: {
+      flex: 1,
+    },
+  });
+}

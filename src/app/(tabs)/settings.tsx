@@ -9,6 +9,7 @@ import {
 } from 'react-native';
 import { useFocusEffect, useRouter } from 'expo-router';
 import * as DocumentPicker from 'expo-document-picker';
+import * as SecureStore from 'expo-secure-store';
 
 import Screen from '@/components/Layout/Screen';
 import ProfileHeader from '@/components/settings/ProfileHeader';
@@ -20,7 +21,8 @@ import TextPromptModal from '@/components/common/TextPromptModal';
 import usersService from '@/services/users.service';
 import { useAuthStore } from '@/store/auth.store';
 import { useTabBarHeight } from '@/hooks/useTabBarHeight';
-import Colors from '@/theme/colors';
+import { ColorPalette } from '@/theme/palette';
+import { useColors } from '@/theme/useColors';
 import { UserProfile } from '@/types/user';
 
 function formatBytes(value: string) {
@@ -33,8 +35,11 @@ function formatBytes(value: string) {
 
 export default function SettingsScreen() {
   const router = useRouter();
+  const colors = useColors();
+  const styles = getStyles(colors);
   const tabBarHeight = useTabBarHeight();
   const logout = useAuthStore((state) => state.logout);
+  const setToken = useAuthStore((state) => state.setToken);
 
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
@@ -119,7 +124,19 @@ export default function SettingsScreen() {
   async function handleChangePassword(currentPassword: string, newPassword: string) {
     try {
       setChangingPassword(true);
-      await usersService.changePassword(currentPassword, newPassword);
+      const { accessToken } = await usersService.changePassword(
+        currentPassword,
+        newPassword,
+      );
+
+      // Server bumped tokenVersion as part of this change, so the
+      // token we were using a second ago is now revoked. Persist and
+      // re-attach the fresh one immediately, or the very next API
+      // call (even just loading this screen) gets a 401 and silently
+      // logs the user out right after they saw a "Success" alert.
+      await SecureStore.setItemAsync('accessToken', accessToken);
+      setToken(accessToken);
+
       setPasswordModalVisible(false);
       Alert.alert('Success', 'Your password has been updated.');
     } catch (error: any) {
@@ -172,7 +189,7 @@ export default function SettingsScreen() {
     return (
       <Screen edges={['top', 'left', 'right']}>
         <View style={styles.center}>
-          <ActivityIndicator size="large" color={Colors.primary} />
+          <ActivityIndicator size="large" color={colors.primary} />
         </View>
       </Screen>
     );
@@ -277,33 +294,31 @@ export default function SettingsScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  center: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
+function getStyles(colors: ColorPalette) {
+  return StyleSheet.create({
+    center: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
 
-  sectionLabel: {
-    marginTop: 8,
-    marginBottom: 8,
-    fontSize: 13,
-    fontWeight: '700',
-    color: Colors.textSecondary,
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-  },
+    sectionLabel: {
+      marginTop: 8,
+      marginBottom: 8,
+      fontSize: 12.5,
+      fontWeight: '700',
+      color: colors.textSecondary,
+      textTransform: 'uppercase',
+      letterSpacing: 0.5,
+    },
 
-  card: {
-    backgroundColor: Colors.surface,
-    borderRadius: 18,
-    paddingHorizontal: 16,
-    marginBottom: 20,
-
-    shadowColor: '#000',
-    shadowOpacity: 0.04,
-    shadowRadius: 10,
-    shadowOffset: { width: 0, height: 4 },
-    elevation: 2,
-  },
-});
+    card: {
+      backgroundColor: colors.surface,
+      borderRadius: 18,
+      paddingHorizontal: 16,
+      marginBottom: 20,
+      borderWidth: 1,
+      borderColor: colors.border,
+    },
+  });
+}

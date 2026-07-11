@@ -2,7 +2,7 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Tabs } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import Colors from '@/theme/colors';
+import { useColors } from '@/theme/useColors';
 import {
   TAB_BAR_CONTENT_HEIGHT,
   TAB_BAR_VERTICAL_PADDING,
@@ -10,15 +10,16 @@ import {
 
 export default function TabsLayout() {
   const insets = useSafeAreaInsets();
+  const colors = useColors();
 
   return (
     <Tabs
       screenOptions={{
         headerShown: false,
 
-        tabBarActiveTintColor: Colors.primary,
+        tabBarActiveTintColor: colors.primary,
 
-        tabBarInactiveTintColor: '#94A3B8',
+        tabBarInactiveTintColor: colors.textSecondary,
 
         tabBarStyle: {
           // Height/padding derive from the device's actual bottom
@@ -32,11 +33,11 @@ export default function TabsLayout() {
           paddingBottom: insets.bottom + 8,
           paddingTop: 8,
           borderTopWidth: 0,
-          backgroundColor: '#FFFFFF',
+          backgroundColor: colors.surface,
 
           elevation: 12,
 
-          shadowColor: '#000',
+          shadowColor: colors.shadow,
 
           shadowOpacity: 0.08,
 

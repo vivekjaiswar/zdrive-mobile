@@ -44,6 +44,18 @@ export const useAuthStore = create<AuthStore>((set) => ({
   setUser: (user) => set({ user }),
 
   logout: async () => {
+    // Best-effort server-side revocation (bumps tokenVersion) - must
+    // happen BEFORE the Authorization header is cleared, since the
+    // request needs the current token to know which user to revoke.
+    // Wrapped so a network failure (offline, server down) never blocks
+    // the local logout - the user should always be able to log out of
+    // the app on their own device regardless of connectivity.
+    try {
+      await authService.logout();
+    } catch {
+      // Ignored - local session is cleared below regardless.
+    }
+
     await SecureStore.deleteItemAsync('accessToken');
     delete api.defaults.headers.common.Authorization;
     set({ token: null, user: null });

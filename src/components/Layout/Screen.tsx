@@ -1,6 +1,8 @@
 import { ReactNode } from 'react';
-import { StatusBar, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import { Edge, SafeAreaView } from 'react-native-safe-area-context';
+
+import { useColors } from '@/theme/useColors';
 
 interface Props {
   children: ReactNode;
@@ -12,18 +14,26 @@ interface Props {
   edges?: readonly Edge[];
 }
 
+// NOTE: this no longer renders its own <StatusBar> - it used to,
+// alongside the root layout's expo-status-bar <StatusBar>, which
+// meant two different StatusBar implementations (react-native's and
+// expo-status-bar's) were both fighting to control the same native
+// module. The root layout is now the single source of truth for
+// status bar style, driven by the same useColors() theme.
 export default function Screen({
   children,
   edges = ['top', 'left', 'right', 'bottom'],
 }: Props) {
-  return (
-    <SafeAreaView style={styles.safeArea} edges={edges}>
-      <StatusBar
-        barStyle="dark-content"
-        backgroundColor="#EEF6FF"
-      />
+  const colors = useColors();
 
-      <View style={styles.container}>{children}</View>
+  return (
+    <SafeAreaView
+      style={[styles.safeArea, { backgroundColor: colors.background }]}
+      edges={edges}
+    >
+      <View style={[styles.container, { backgroundColor: colors.background }]}>
+        {children}
+      </View>
     </SafeAreaView>
   );
 }
@@ -31,12 +41,10 @@ export default function Screen({
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#EEF6FF',
   },
 
   container: {
     flex: 1,
-    backgroundColor: '#EEF6FF',
     paddingHorizontal: 24,
   },
 });

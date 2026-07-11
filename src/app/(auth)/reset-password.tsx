@@ -7,6 +7,7 @@ import PrimaryButton from '@/components/Button/PrimaryButton';
 import AppInput from '@/components/Input/AppInput';
 import authService from '@/services/auth.service';
 import { authStyles } from '@/components/auth/authStyles';
+import { getPasswordError, PASSWORD_HINT } from '@/utils/validation';
 
 export default function ResetPasswordScreen() {
   const router = useRouter();
@@ -21,8 +22,9 @@ export default function ResetPasswordScreen() {
       Alert.alert('Validation', 'Paste the reset code from your email.');
       return;
     }
-    if (password.length < 8) {
-      Alert.alert('Validation', 'Password must be at least 8 characters.');
+    const passwordError = getPasswordError(password);
+    if (passwordError) {
+      Alert.alert('Validation', passwordError);
       return;
     }
     if (password !== confirmPassword) {
@@ -65,11 +67,12 @@ export default function ResetPasswordScreen() {
         onChangeText={setToken}
       />
       <AppInput
-        placeholder="New Password (min. 8 characters)"
+        placeholder="New Password"
         secureTextEntry
         value={password}
         onChangeText={setPassword}
       />
+      <Text style={authStyles.hint}>{PASSWORD_HINT}</Text>
       <AppInput
         placeholder="Confirm New Password"
         secureTextEntry

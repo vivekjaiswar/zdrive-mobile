@@ -25,4 +25,11 @@ export const authStyles = StyleSheet.create({
     fontWeight: '600',
     textAlign: 'center',
   },
+
+  hint: {
+    marginTop: -6,
+    marginBottom: 4,
+    fontSize: 12,
+    color: '#94A3B8',
+  },
 });

@@ -4,7 +4,8 @@ import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 import Screen from '@/components/Layout/Screen';
-import Colors from '@/theme/colors';
+import { ColorPalette } from '@/theme/palette';
+import { useColors } from '@/theme/useColors';
 import SearchBar from '@/components/files/SearchBar';
 import UploadFAB from '@/components/files/UploadFAB';
 import FileActionSheet from '@/components/files/FileActionSheet';
@@ -23,6 +24,8 @@ import { ZDriveFolder } from '@/types/folder';
 
 export default function FilesScreen() {
   const router = useRouter();
+  const colors = useColors();
+  const styles = getStyles(colors);
   const params = useLocalSearchParams<{ createFolder?: string }>();
 
   const [folders, setFolders] = useState<ZDriveFolder[]>([]);
@@ -195,7 +198,7 @@ export default function FilesScreen() {
   if (loading) {
     return (
       <Screen edges={['top', 'left', 'right']}>
-        <ActivityIndicator size="large" color={Colors.primary} style={styles.loadingSpinner} />
+        <ActivityIndicator size="large" color={colors.primary} style={styles.loadingSpinner} />
         <Text style={styles.loading}>Loading files...</Text>
       </Screen>
     );
@@ -214,7 +217,7 @@ export default function FilesScreen() {
             onPress={() => router.push('/trash')}
             style={styles.newFolderButton}
           >
-            <MaterialCommunityIcons name="trash-can-outline" size={22} color={Colors.text} />
+            <MaterialCommunityIcons name="trash-can-outline" size={20} color={colors.text} />
           </Pressable>
 
           <Pressable
@@ -222,7 +225,7 @@ export default function FilesScreen() {
             onPress={() => setCreateFolderVisible(true)}
             style={styles.newFolderButton}
           >
-            <MaterialCommunityIcons name="folder-plus-outline" size={24} color={Colors.primary} />
+            <MaterialCommunityIcons name="folder-plus-outline" size={22} color={colors.primary} />
           </Pressable>
         </View>
       </View>
@@ -319,37 +322,40 @@ export default function FilesScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginTop: 12,
-    marginBottom: 20,
-  },
-  title: {
-    fontSize: 32,
-    fontWeight: '800',
-    color: Colors.text,
-  },
-  headerActions: {
-    flexDirection: 'row',
-    gap: 10,
-  },
-  newFolderButton: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: '#EEF5FF',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  loadingSpinner: {
-    marginTop: 60,
-  },
-  loading: {
-    marginTop: 16,
-    textAlign: 'center',
-    color: Colors.textSecondary,
-  },
-});
+function getStyles(colors: ColorPalette) {
+  return StyleSheet.create({
+    header: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      marginTop: 8,
+      marginBottom: 20,
+    },
+    title: {
+      fontSize: 28,
+      fontWeight: '700',
+      letterSpacing: -0.5,
+      color: colors.text,
+    },
+    headerActions: {
+      flexDirection: 'row',
+      gap: 10,
+    },
+    newFolderButton: {
+      width: 40,
+      height: 40,
+      borderRadius: 20,
+      backgroundColor: colors.primarySoft,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    loadingSpinner: {
+      marginTop: 60,
+    },
+    loading: {
+      marginTop: 16,
+      textAlign: 'center',
+      color: colors.textSecondary,
+    },
+  });
+}

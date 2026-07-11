@@ -1,12 +1,8 @@
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import React from 'react';
-import {
-  StyleSheet,
-  Text,
-  View,
-} from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 
-import Colors from '@/theme/colors';
+import { ColorPalette } from '@/theme/palette';
+import { useColors } from '@/theme/useColors';
 
 interface Props {
   icon?: keyof typeof MaterialCommunityIcons.glyphMap;
@@ -16,47 +12,55 @@ interface Props {
 
 export default function EmptyFiles({
   icon = 'folder-open-outline',
-  title = 'No Files Yet',
+  title = 'No files yet',
   subtitle = 'Upload your first document to start using ZDrive.',
 }: Props) {
+  const colors = useColors();
+  const styles = getStyles(colors);
+
   return (
     <View style={styles.container}>
-      <MaterialCommunityIcons
-        name={icon}
-        size={90}
-        color="#CBD5E1"
-      />
+      <View style={styles.iconCircle}>
+        <MaterialCommunityIcons name={icon} size={44} color={colors.textSecondary} />
+      </View>
 
-      <Text style={styles.title}>
-        {title}
-      </Text>
+      <Text style={styles.title}>{title}</Text>
 
-      <Text style={styles.subtitle}>
-        {subtitle}
-      </Text>
+      <Text style={styles.subtitle}>{subtitle}</Text>
     </View>
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    marginTop: 90,
-    alignItems: 'center',
-  },
+function getStyles(colors: ColorPalette) {
+  return StyleSheet.create({
+    container: {
+      marginTop: 80,
+      alignItems: 'center',
+    },
 
-  title: {
-    marginTop: 20,
-    fontSize: 22,
-    fontWeight: '700',
-    color: Colors.text,
-  },
+    iconCircle: {
+      width: 88,
+      height: 88,
+      borderRadius: 44,
+      backgroundColor: colors.surfaceAlt,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
 
-  subtitle: {
-    marginTop: 10,
-    fontSize: 15,
-    color: Colors.textSecondary,
-    textAlign: 'center',
-    lineHeight: 22,
-    paddingHorizontal: 32,
-  },
-});
+    title: {
+      marginTop: 20,
+      fontSize: 18,
+      fontWeight: '700',
+      color: colors.text,
+    },
+
+    subtitle: {
+      marginTop: 8,
+      fontSize: 14.5,
+      color: colors.textSecondary,
+      textAlign: 'center',
+      lineHeight: 21,
+      paddingHorizontal: 32,
+    },
+  });
+}

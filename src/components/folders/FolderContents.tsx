@@ -3,7 +3,8 @@ import { FlatList, RefreshControl, StyleSheet, Text, View } from 'react-native';
 import FolderCard from './FolderCard';
 import FileCard from '@/components/files/FileCard';
 import EmptyFiles from '@/components/files/EmptyFiles';
-import Colors from '@/theme/colors';
+import { ColorPalette } from '@/theme/palette';
+import { useColors } from '@/theme/useColors';
 import { ZDriveFile } from '@/types/file';
 import { ZDriveFolder } from '@/types/folder';
 
@@ -33,6 +34,9 @@ export default function FolderContents({
   onFileLongPress,
   bottomSpacing,
 }: Props) {
+  const colors = useColors();
+  const styles = getStyles(colors);
+
   const isEmpty = folders.length === 0 && files.length === 0;
 
   return (
@@ -49,7 +53,7 @@ export default function FolderContents({
         <RefreshControl
           refreshing={refreshing}
           onRefresh={onRefresh}
-          tintColor={Colors.primary}
+          tintColor={colors.primary}
         />
       }
       ListHeaderComponent={
@@ -82,22 +86,24 @@ export default function FolderContents({
   );
 }
 
-const styles = StyleSheet.create({
-  list: {
-    marginTop: 12,
-  },
+function getStyles(colors: ColorPalette) {
+  return StyleSheet.create({
+    list: {
+      marginTop: 8,
+    },
 
-  foldersSection: {
-    marginBottom: 4,
-  },
+    foldersSection: {
+      marginBottom: 4,
+    },
 
-  sectionLabel: {
-    fontSize: 13,
-    fontWeight: '700',
-    color: Colors.textSecondary,
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-    marginBottom: 10,
-    marginTop: 4,
-  },
-});
+    sectionLabel: {
+      fontSize: 12.5,
+      fontWeight: '700',
+      color: colors.textSecondary,
+      textTransform: 'uppercase',
+      letterSpacing: 0.5,
+      marginBottom: 10,
+      marginTop: 6,
+    },
+  });
+}

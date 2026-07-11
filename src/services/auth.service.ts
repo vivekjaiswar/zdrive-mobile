@@ -37,6 +37,14 @@ class AuthService {
     return response.data;
   }
 
+  // Bumps the user's tokenVersion server-side so the token being
+  // logged out of is actually revoked, not just forgotten locally.
+  // Without this, a stolen/leaked token stays valid until its natural
+  // 7-day expiry even after the user "logs out."
+  async logout(): Promise<void> {
+    await api.post('/auth/logout');
+  }
+
   // POST /auth/register: { email, password }. Login is blocked
   // (401 "Please verify your email address") until the account is
   // verified - this does NOT log the user in.

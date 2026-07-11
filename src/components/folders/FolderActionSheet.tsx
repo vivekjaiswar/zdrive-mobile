@@ -1,7 +1,8 @@
 import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import FileActionRow from '@/components/files/FileActionRow';
-import Colors from '@/theme/colors';
+import { ColorPalette } from '@/theme/palette';
+import { useColors } from '@/theme/useColors';
 import { ZDriveFolder } from '@/types/folder';
 
 interface Props {
@@ -22,6 +23,9 @@ export default function FolderActionSheet({
   onRename,
   onDelete,
 }: Props) {
+  const colors = useColors();
+  const styles = getStyles(colors);
+
   return (
     <Modal
       visible={!!folder}
@@ -63,55 +67,55 @@ export default function FolderActionSheet({
   );
 }
 
-const styles = StyleSheet.create({
-  backdrop: {
-    flex: 1,
-    backgroundColor: 'rgba(15, 23, 42, 0.45)',
-    justifyContent: 'flex-end',
-  },
+function getStyles(colors: ColorPalette) {
+  return StyleSheet.create({
+    backdrop: {
+      flex: 1,
+      backgroundColor: 'rgba(8, 12, 22, 0.5)',
+      justifyContent: 'flex-end',
+    },
 
-  sheet: {
-    backgroundColor: '#FFFFFF',
-    borderTopLeftRadius: 28,
-    borderTopRightRadius: 28,
-    paddingHorizontal: 24,
-    paddingTop: 12,
-    paddingBottom: 32,
-  },
+    sheet: {
+      backgroundColor: colors.surface,
+      borderTopLeftRadius: 28,
+      borderTopRightRadius: 28,
+      paddingHorizontal: 24,
+      paddingTop: 12,
+      paddingBottom: 32,
+    },
 
-  handle: {
-    alignSelf: 'center',
-    width: 44,
-    height: 5,
-    borderRadius: 3,
-    backgroundColor: '#E2E8F0',
-    marginBottom: 16,
-  },
+    handle: {
+      alignSelf: 'center',
+      width: 40,
+      height: 4,
+      borderRadius: 3,
+      backgroundColor: colors.border,
+      marginBottom: 16,
+    },
 
-  title: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: Colors.textSecondary,
-    textAlign: 'center',
-    marginBottom: 8,
-  },
+    title: {
+      fontSize: 15,
+      fontWeight: '700',
+      color: colors.textSecondary,
+      textAlign: 'center',
+      marginBottom: 6,
+    },
 
-  rows: {
-    marginTop: 4,
-  },
+    rows: { marginTop: 4 },
 
-  cancelButton: {
-    marginTop: 16,
-    height: 52,
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderRadius: 16,
-    backgroundColor: '#F1F5F9',
-  },
+    cancelButton: {
+      marginTop: 16,
+      height: 50,
+      justifyContent: 'center',
+      alignItems: 'center',
+      borderRadius: 16,
+      backgroundColor: colors.surfaceAlt,
+    },
 
-  cancelText: {
-    fontWeight: '700',
-    color: Colors.textSecondary,
-    fontSize: 16,
-  },
-});
+    cancelText: {
+      fontWeight: '700',
+      color: colors.textSecondary,
+      fontSize: 15,
+    },
+  });
+}

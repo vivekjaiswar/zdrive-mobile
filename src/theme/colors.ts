@@ -1,27 +1,10 @@
-const Colors = {
-  primary: '#2563EB',
-  primaryDark: '#1D4ED8',
+import { lightColors } from './palette';
 
-  secondary: '#3B82F6',
-
-  success: '#16A34A',
-  warning: '#F59E0B',
-  danger: '#DC2626',
-
-  background: '#F4F8FF',
-
-  surface: '#FFFFFF',
-
-  text: '#0F172A',
-  textSecondary: '#64748B',
-
-  border: '#DCE8F8',
-
-  cardShadow: '#B8D2FF',
-
-  progressBackground: '#E7EEF8',
-
-  progressFill: '#2563EB',
-};
+// Kept for screens not yet migrated to useColors() (dark-mode-aware).
+// This now points at the refined light palette instead of the old
+// blue-tinted one, so every screen gets the visual refresh
+// immediately even before its own dedicated pass - it just won't
+// react to dark mode until it's migrated to useColors().
+const Colors = lightColors;
 
 export default Colors;

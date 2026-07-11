@@ -33,18 +33,26 @@ class UsersService {
   }
 
   // Note: the backend's ChangePasswordDto (class-validator) exists
-  // but auth.controller.ts's change-password route takes @Body()
-  // body: any, so there's no server-side validation on this beyond
-  // whatever authService.changePassword() checks manually. Validate
+  // but auth.controller.ts's change-password route was last seen
+  // typed as @Body() body: any, so server-side enforcement of the
+  // password policy on THIS route is unconfirmed. Validate
   // client-side defensively - see ChangePasswordModal.
+  //
+  // changePassword() on the backend bumps the user's tokenVersion
+  // (so old tokens everywhere else get revoked) and returns a fresh
+  // accessToken reflecting the new version. The caller MUST persist
+  // this immediately - if it doesn't, the app keeps using the now-
+  // stale token and gets silently logged out on the very next
+  // unrelated API call.
   async changePassword(
     currentPassword: string,
     newPassword: string,
-  ): Promise<void> {
-    await api.post('/auth/change-password', {
+  ): Promise<{ accessToken: string }> {
+    const { data } = await api.post('/auth/change-password', {
       currentPassword,
       newPassword,
     });
+    return data;
   }
 
   // Permanently deletes the account, its files, folders, and shares.

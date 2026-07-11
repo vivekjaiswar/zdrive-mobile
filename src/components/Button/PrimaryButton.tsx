@@ -5,6 +5,9 @@ import {
   Text,
 } from 'react-native';
 
+import { ColorPalette } from '@/theme/palette';
+import { useColors } from '@/theme/useColors';
+
 interface Props {
   title: string;
   loading?: boolean;
@@ -20,6 +23,9 @@ export default function PrimaryButton({
   variant = 'primary',
   onPress,
 }: Props) {
+  const colors = useColors();
+  const styles = getStyles(colors);
+
   return (
     <Pressable
       onPress={onPress}
@@ -40,41 +46,38 @@ export default function PrimaryButton({
   );
 }
 
-const styles = StyleSheet.create({
-  button: {
-    height: 58,
-    borderRadius: 16,
-    backgroundColor: '#2563EB',
-    justifyContent: 'center',
-    alignItems: 'center',
+function getStyles(colors: ColorPalette) {
+  return StyleSheet.create({
+    button: {
+      height: 54,
+      borderRadius: 14,
+      backgroundColor: colors.primary,
+      justifyContent: 'center',
+      alignItems: 'center',
 
-    shadowColor: '#2563EB',
-    shadowOpacity: 0.18,
-    shadowRadius: 12,
-    shadowOffset: {
-      width: 0,
-      height: 8,
+      shadowColor: colors.shadow,
+      shadowOpacity: 0.16,
+      shadowRadius: 10,
+      shadowOffset: { width: 0, height: 6 },
+      elevation: 4,
     },
 
-    elevation: 5,
-  },
+    buttonDanger: {
+      backgroundColor: colors.danger,
+    },
 
-  buttonDanger: {
-    backgroundColor: '#DC2626',
-    shadowColor: '#DC2626',
-  },
+    pressed: {
+      opacity: 0.9,
+    },
 
-  pressed: {
-    opacity: 0.9,
-  },
+    disabled: {
+      opacity: 0.7,
+    },
 
-  disabled: {
-    opacity: 0.7,
-  },
-
-  text: {
-    color: '#FFFFFF',
-    fontWeight: '700',
-    fontSize: 17,
-  },
-});
+    text: {
+      color: '#FFFFFF',
+      fontWeight: '700',
+      fontSize: 16,
+    },
+  });
+}

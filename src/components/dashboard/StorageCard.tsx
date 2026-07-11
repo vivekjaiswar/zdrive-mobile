@@ -1,6 +1,7 @@
 import { StyleSheet, Text, View } from 'react-native';
 
-import Colors from '@/theme/colors';
+import { ColorPalette } from '@/theme/palette';
+import { useColors } from '@/theme/useColors';
 
 interface Props {
   storageUsed: string;
@@ -29,13 +30,14 @@ export default function StorageCard({
   storageLimit,
   usagePercentage,
 }: Props) {
+  const colors = useColors();
+  const styles = getStyles(colors);
+
   return (
     <View style={styles.card}>
       <View style={styles.topRow}>
         <View>
-          <Text style={styles.smallTitle}>
-            Cloud Storage
-          </Text>
+          <Text style={styles.smallTitle}>Cloud storage</Text>
 
           <Text style={styles.bigStorage}>
             {formatBytes(Number(storageLimit))}
@@ -43,9 +45,7 @@ export default function StorageCard({
         </View>
 
         <View style={styles.circle}>
-          <Text style={styles.circleText}>
-            {usagePercentage}%
-          </Text>
+          <Text style={styles.circleText}>{usagePercentage}%</Text>
         </View>
       </View>
 
@@ -57,120 +57,112 @@ export default function StorageCard({
         <View
           style={[
             styles.progressFill,
-            {
-              width: `${Math.min(
-                usagePercentage,
-                100,
-              )}%`,
-            },
+            { width: `${Math.min(usagePercentage, 100)}%` },
           ]}
         />
       </View>
 
       <View style={styles.bottomRow}>
-        <Text style={styles.bottomLabel}>
-          Available
-        </Text>
+        <Text style={styles.bottomLabel}>Available</Text>
 
         <Text style={styles.bottomValue}>
-          {formatBytes(
-            Number(storageLimit) -
-              Number(storageUsed),
-          )}
+          {formatBytes(Number(storageLimit) - Number(storageUsed))}
         </Text>
       </View>
     </View>
   );
 }
 
-const styles = StyleSheet.create({
-  card: {
-    backgroundColor: Colors.primary,
-    borderRadius: 28,
-    padding: 24,
+function getStyles(colors: ColorPalette) {
+  return StyleSheet.create({
+    card: {
+      backgroundColor: colors.primary,
+      borderRadius: 24,
+      padding: 24,
 
-    shadowColor: '#2563EB',
-    shadowOpacity: 0.25,
-    shadowRadius: 20,
-    shadowOffset: {
-      width: 0,
-      height: 10,
+      // Neutral shadow instead of the old brand-colored one - reads
+      // less "default template," more like considered elevation.
+      shadowColor: colors.shadow,
+      shadowOpacity: 0.18,
+      shadowRadius: 16,
+      shadowOffset: { width: 0, height: 8 },
+      elevation: 6,
     },
 
-    elevation: 8,
-  },
+    topRow: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+    },
 
-  topRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
+    smallTitle: {
+      color: 'rgba(255,255,255,0.75)',
+      fontSize: 14,
+      fontWeight: '500',
+    },
 
-  smallTitle: {
-    color: '#D6E8FF',
-    fontSize: 15,
-  },
+    bigStorage: {
+      marginTop: 6,
+      fontSize: 30,
+      fontWeight: '700',
+      letterSpacing: -0.5,
+      color: '#FFFFFF',
+    },
 
-  bigStorage: {
-    marginTop: 8,
-    fontSize: 34,
-    fontWeight: '800',
-    color: '#FFFFFF',
-  },
+    circle: {
+      width: 68,
+      height: 68,
+      borderRadius: 34,
+      backgroundColor: 'rgba(255,255,255,0.14)',
 
-  circle: {
-    width: 78,
-    height: 78,
-    borderRadius: 39,
-    backgroundColor: 'rgba(255,255,255,0.15)',
+      justifyContent: 'center',
+      alignItems: 'center',
 
-    justifyContent: 'center',
-    alignItems: 'center',
+      borderWidth: 1.5,
+      borderColor: 'rgba(255,255,255,0.3)',
+    },
 
-    borderWidth: 2,
-    borderColor: 'rgba(255,255,255,0.35)',
-  },
+    circleText: {
+      color: '#FFFFFF',
+      fontWeight: '700',
+      fontSize: 16,
+    },
 
-  circleText: {
-    color: '#FFFFFF',
-    fontWeight: '700',
-    fontSize: 18,
-  },
+    usedText: {
+      marginTop: 24,
+      color: 'rgba(255,255,255,0.85)',
+      fontSize: 14,
+    },
 
-  usedText: {
-    marginTop: 28,
-    color: '#FFFFFF',
-    fontSize: 15,
-  },
+    progressBackground: {
+      marginTop: 10,
+      height: 8,
+      borderRadius: 20,
+      backgroundColor: 'rgba(255,255,255,0.2)',
+      overflow: 'hidden',
+    },
 
-  progressBackground: {
-    marginTop: 12,
-    height: 10,
-    borderRadius: 20,
-    backgroundColor: 'rgba(255,255,255,0.25)',
-    overflow: 'hidden',
-  },
+    progressFill: {
+      height: 8,
+      borderRadius: 20,
+      backgroundColor: '#FFFFFF',
+    },
 
-  progressFill: {
-    height: 10,
-    borderRadius: 20,
-    backgroundColor: '#FFFFFF',
-  },
+    bottomRow: {
+      marginTop: 18,
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+    },
 
-  bottomRow: {
-    marginTop: 18,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-  },
+    bottomLabel: {
+      color: 'rgba(255,255,255,0.75)',
+      fontSize: 13,
+    },
 
-  bottomLabel: {
-    color: '#D6E8FF',
-    fontSize: 14,
-  },
-
-  bottomValue: {
-    color: '#FFFFFF',
-    fontWeight: '700',
-    fontSize: 15,
-  },
-});
+    bottomValue: {
+      color: '#FFFFFF',
+      fontWeight: '700',
+      fontSize: 14,
+    },
+  });
+}

@@ -7,6 +7,7 @@ import PrimaryButton from '@/components/Button/PrimaryButton';
 import AppInput from '@/components/Input/AppInput';
 import authService from '@/services/auth.service';
 import { authStyles } from '@/components/auth/authStyles';
+import { getPasswordError, PASSWORD_HINT } from '@/utils/validation';
 
 export default function RegisterScreen() {
   const router = useRouter();
@@ -24,10 +25,11 @@ export default function RegisterScreen() {
       return;
     }
 
-    // Mirrors RegisterDto's @MinLength(8) - the backend will reject
-    // shorter passwords too, but failing fast here saves a round trip.
-    if (password.length < 8) {
-      Alert.alert('Validation', 'Password must be at least 8 characters.');
+    // Mirrors RegisterDto's IsStrongPassword rule - the backend
+    // enforces this too, but failing fast here saves a round trip.
+    const passwordError = getPasswordError(password);
+    if (passwordError) {
+      Alert.alert('Validation', passwordError);
       return;
     }
 
@@ -95,11 +97,13 @@ export default function RegisterScreen() {
       />
 
       <AppInput
-        placeholder="Password (min. 8 characters)"
+        placeholder="Password"
         secureTextEntry
         value={password}
         onChangeText={setPassword}
       />
+
+      <Text style={authStyles.hint}>{PASSWORD_HINT}</Text>
 
       <AppInput
         placeholder="Confirm Password"

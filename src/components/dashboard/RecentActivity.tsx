@@ -1,7 +1,8 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 
-import Colors from '@/theme/colors';
+import { ColorPalette } from '@/theme/palette';
+import { useColors } from '@/theme/useColors';
 import { RecentFile, RecentFolder } from '@/services/dashboard.service';
 
 interface Props {
@@ -25,6 +26,9 @@ function iconFor(mime?: string) {
 // load - recentFiles/recentFolders were fetched by the app since day
 // one but never rendered anywhere until now.
 export default function RecentActivity({ files, folders, onFilePress, onFolderPress }: Props) {
+  const colors = useColors();
+  const styles = getStyles(colors);
+
   if (files.length === 0 && folders.length === 0) return null;
 
   return (
@@ -39,7 +43,7 @@ export default function RecentActivity({ files, folders, onFilePress, onFolderPr
               style={styles.folderChip}
               onPress={() => onFolderPress(folder)}
             >
-              <MaterialCommunityIcons name="folder" size={18} color={Colors.primary} />
+              <MaterialCommunityIcons name="folder" size={17} color={colors.primary} />
               <Text numberOfLines={1} style={styles.folderChipText}>
                 {folder.name}
               </Text>
@@ -61,8 +65,8 @@ export default function RecentActivity({ files, folders, onFilePress, onFolderPr
             >
               <MaterialCommunityIcons
                 name={iconFor(file.mimeType)}
-                size={20}
-                color={Colors.primary}
+                size={19}
+                color={colors.primary}
               />
 
               <Text numberOfLines={1} style={styles.fileName}>
@@ -80,82 +84,76 @@ export default function RecentActivity({ files, folders, onFilePress, onFolderPr
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    marginTop: 30,
-  },
+function getStyles(colors: ColorPalette) {
+  return StyleSheet.create({
+    container: {
+      marginTop: 32,
+    },
 
-  heading: {
-    fontSize: 22,
-    fontWeight: '700',
-    color: Colors.text,
-    marginBottom: 14,
-  },
+    heading: {
+      fontSize: 18,
+      fontWeight: '700',
+      color: colors.text,
+      marginBottom: 14,
+    },
 
-  folderRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 10,
-    marginBottom: 14,
-  },
+    folderRow: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: 10,
+      marginBottom: 14,
+    },
 
-  folderChip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    backgroundColor: Colors.surface,
-    paddingVertical: 10,
-    paddingHorizontal: 14,
-    borderRadius: 14,
-    maxWidth: 160,
+    folderChip: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 8,
+      backgroundColor: colors.surface,
+      paddingVertical: 10,
+      paddingHorizontal: 14,
+      borderRadius: 14,
+      maxWidth: 160,
+      borderWidth: 1,
+      borderColor: colors.border,
+    },
 
-    shadowColor: '#000',
-    shadowOpacity: 0.04,
-    shadowRadius: 8,
-    shadowOffset: { width: 0, height: 3 },
-    elevation: 2,
-  },
+    folderChipText: {
+      fontSize: 13.5,
+      fontWeight: '600',
+      color: colors.text,
+    },
 
-  folderChipText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: Colors.text,
-  },
+    card: {
+      backgroundColor: colors.surface,
+      borderRadius: 18,
+      paddingHorizontal: 16,
+      borderWidth: 1,
+      borderColor: colors.border,
+    },
 
-  card: {
-    backgroundColor: Colors.surface,
-    borderRadius: 18,
-    paddingHorizontal: 16,
+    fileRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 12,
+      paddingVertical: 14,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.border,
+    },
 
-    shadowColor: '#000',
-    shadowOpacity: 0.04,
-    shadowRadius: 10,
-    shadowOffset: { width: 0, height: 4 },
-    elevation: 2,
-  },
+    fileRowLast: {
+      borderBottomWidth: 0,
+    },
 
-  fileRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    paddingVertical: 14,
-    borderBottomWidth: 1,
-    borderBottomColor: '#EEF2F8',
-  },
+    fileName: {
+      flex: 1,
+      fontSize: 14.5,
+      fontWeight: '600',
+      color: colors.text,
+    },
 
-  fileRowLast: {
-    borderBottomWidth: 0,
-  },
-
-  fileName: {
-    flex: 1,
-    fontSize: 15,
-    fontWeight: '600',
-    color: Colors.text,
-  },
-
-  fileDate: {
-    fontSize: 12,
-    color: Colors.textSecondary,
-  },
-});
+    fileDate: {
+      fontSize: 12,
+      color: colors.textSecondary,
+    },
+  });
+}

@@ -1,7 +1,8 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 
-import Colors from '@/theme/colors';
+import { ColorPalette } from '@/theme/palette';
+import { useColors } from '@/theme/useColors';
 import { ZDriveFolder } from '@/types/folder';
 
 interface Props {
@@ -11,6 +12,9 @@ interface Props {
 }
 
 export default function FolderCard({ folder, onPress, onLongPress }: Props) {
+  const colors = useColors();
+  const styles = getStyles(colors);
+
   return (
     <Pressable
       style={({ pressed }) => [styles.card, pressed && styles.pressed]}
@@ -19,43 +23,45 @@ export default function FolderCard({ folder, onPress, onLongPress }: Props) {
       delayLongPress={350}
     >
       <View style={styles.icon}>
-        <MaterialCommunityIcons name="folder" size={26} color={Colors.primary} />
+        <MaterialCommunityIcons name="folder" size={22} color={colors.primary} />
       </View>
 
       <Text numberOfLines={1} style={styles.name}>
         {folder.name}
       </Text>
 
-      <MaterialCommunityIcons name="chevron-right" size={20} color="#94A3B8" />
+      <MaterialCommunityIcons name="chevron-right" size={20} color={colors.textSecondary} />
     </Pressable>
   );
 }
 
-const styles = StyleSheet.create({
-  card: {
-    backgroundColor: '#fff',
-    borderRadius: 18,
-    padding: 14,
-    marginBottom: 12,
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  pressed: {
-    opacity: 0.85,
-  },
-  icon: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: '#EEF5FF',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  name: {
-    flex: 1,
-    marginLeft: 14,
-    fontSize: 16,
-    fontWeight: '600',
-    color: Colors.text,
-  },
-});
+function getStyles(colors: ColorPalette) {
+  return StyleSheet.create({
+    card: {
+      backgroundColor: colors.surface,
+      borderRadius: 18,
+      padding: 14,
+      marginBottom: 10,
+      flexDirection: 'row',
+      alignItems: 'center',
+      borderWidth: 1,
+      borderColor: colors.border,
+    },
+    pressed: { opacity: 0.85 },
+    icon: {
+      width: 40,
+      height: 40,
+      borderRadius: 20,
+      backgroundColor: colors.primarySoft,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    name: {
+      flex: 1,
+      marginLeft: 14,
+      fontSize: 15,
+      fontWeight: '600',
+      color: colors.text,
+    },
+  });
+}

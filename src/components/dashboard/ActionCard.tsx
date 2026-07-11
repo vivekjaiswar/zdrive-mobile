@@ -1,7 +1,8 @@
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
 
-import Colors from '@/theme/colors';
+import { ColorPalette } from '@/theme/palette';
+import { useColors } from '@/theme/useColors';
 
 interface Props {
   icon: keyof typeof MaterialCommunityIcons.glyphMap;
@@ -18,6 +19,9 @@ export default function ActionCard({
   onPress,
   loading = false,
 }: Props) {
+  const colors = useColors();
+  const styles = getStyles(colors);
+
   return (
     <Pressable
       onPress={onPress}
@@ -30,13 +34,9 @@ export default function ActionCard({
     >
       <View style={styles.iconCircle}>
         {loading ? (
-          <ActivityIndicator size="small" color={Colors.primary} />
+          <ActivityIndicator size="small" color={colors.primary} />
         ) : (
-          <MaterialCommunityIcons
-            name={icon}
-            size={28}
-            color={Colors.primary}
-          />
+          <MaterialCommunityIcons name={icon} size={24} color={colors.primary} />
         )}
       </View>
 
@@ -47,53 +47,53 @@ export default function ActionCard({
   );
 }
 
-const styles = StyleSheet.create({
-  card: {
-    flex: 1,
-    backgroundColor: Colors.surface,
-    borderRadius: 22,
-    paddingVertical: 22,
-    alignItems: 'center',
+function getStyles(colors: ColorPalette) {
+  return StyleSheet.create({
+    card: {
+      flex: 1,
+      backgroundColor: colors.surface,
+      borderRadius: 20,
+      paddingVertical: 20,
+      alignItems: 'center',
+      borderWidth: 1,
+      borderColor: colors.border,
 
-    shadowColor: '#000',
-    shadowOpacity: 0.06,
-    shadowRadius: 12,
-    shadowOffset: {
-      width: 0,
-      height: 6,
+      shadowColor: colors.shadow,
+      shadowOpacity: 0.04,
+      shadowRadius: 10,
+      shadowOffset: { width: 0, height: 4 },
+      elevation: 2,
     },
 
-    elevation: 4,
-  },
+    pressed: {
+      opacity: 0.85,
+      transform: [{ scale: 0.98 }],
+    },
 
-  pressed: {
-    opacity: 0.9,
-    transform: [{ scale: 0.98 }],
-  },
+    disabled: {
+      opacity: 0.6,
+    },
 
-  disabled: {
-    opacity: 0.6,
-  },
+    iconCircle: {
+      width: 52,
+      height: 52,
+      borderRadius: 26,
+      backgroundColor: colors.primarySoft,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
 
-  iconCircle: {
-    width: 58,
-    height: 58,
-    borderRadius: 29,
-    backgroundColor: '#EEF5FF',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
+    title: {
+      marginTop: 12,
+      fontSize: 15,
+      fontWeight: '600',
+      color: colors.text,
+    },
 
-  title: {
-    marginTop: 14,
-    fontSize: 16,
-    fontWeight: '700',
-    color: Colors.text,
-  },
-
-  subtitle: {
-    marginTop: 5,
-    color: Colors.textSecondary,
-    fontSize: 13,
-  },
-});
+    subtitle: {
+      marginTop: 3,
+      color: colors.textSecondary,
+      fontSize: 12.5,
+    },
+  });
+}

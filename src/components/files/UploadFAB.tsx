@@ -1,13 +1,8 @@
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import React from 'react';
-import {
-  ActivityIndicator,
-  Pressable,
-  StyleSheet,
-  Text,
-} from 'react-native';
+import { ActivityIndicator, Pressable, StyleSheet, Text } from 'react-native';
 
-import Colors from '@/theme/colors';
+import { ColorPalette } from '@/theme/palette';
+import { useColors } from '@/theme/useColors';
 
 interface Props {
   onPress: () => void;
@@ -15,11 +10,10 @@ interface Props {
   progress?: { current: number; total: number } | null;
 }
 
-export default function UploadFAB({
-  onPress,
-  loading = false,
-  progress,
-}: Props) {
+export default function UploadFAB({ onPress, loading = false, progress }: Props) {
+  const colors = useColors();
+  const styles = getStyles(colors);
+
   const label = loading
     ? progress && progress.total > 1
       ? `Uploading ${progress.current}/${progress.total}`
@@ -31,10 +25,7 @@ export default function UploadFAB({
       disabled={loading}
       style={({ pressed }) => [
         styles.button,
-        pressed && {
-          opacity: 0.9,
-          transform: [{ scale: 0.97 }],
-        },
+        pressed && { opacity: 0.9, transform: [{ scale: 0.97 }] },
         loading && styles.disabled,
       ]}
       onPress={onPress}
@@ -42,60 +33,41 @@ export default function UploadFAB({
       {loading ? (
         <ActivityIndicator size="small" color="#FFFFFF" />
       ) : (
-        <MaterialCommunityIcons
-          name="plus"
-          size={26}
-          color="#FFFFFF"
-        />
+        <MaterialCommunityIcons name="plus" size={22} color="#FFFFFF" />
       )}
 
-      <Text style={styles.text}>
-        {label}
-      </Text>
+      <Text style={styles.text}>{label}</Text>
     </Pressable>
   );
 }
 
-const styles = StyleSheet.create({
-  button: {
-    position: 'absolute',
+function getStyles(colors: ColorPalette) {
+  return StyleSheet.create({
+    button: {
+      position: 'absolute',
+      right: 20,
+      bottom: 24,
+      height: 54,
+      borderRadius: 27,
+      paddingHorizontal: 22,
+      backgroundColor: colors.primary,
+      flexDirection: 'row',
+      alignItems: 'center',
 
-    right: 22,
-    bottom: 28,
-
-    height: 60,
-
-    borderRadius: 30,
-
-    paddingHorizontal: 24,
-
-    backgroundColor: Colors.primary,
-
-    flexDirection: 'row',
-    alignItems: 'center',
-
-    shadowColor: Colors.primary,
-
-    shadowOpacity: 0.35,
-
-    shadowRadius: 18,
-
-    shadowOffset: {
-      width: 0,
-      height: 8,
+      shadowColor: colors.shadow,
+      shadowOpacity: 0.25,
+      shadowRadius: 14,
+      shadowOffset: { width: 0, height: 6 },
+      elevation: 8,
     },
 
-    elevation: 10,
-  },
+    disabled: { opacity: 0.7 },
 
-  disabled: {
-    opacity: 0.7,
-  },
-
-  text: {
-    marginLeft: 10,
-    color: '#FFFFFF',
-    fontWeight: '700',
-    fontSize: 17,
-  },
-});
+    text: {
+      marginLeft: 9,
+      color: '#FFFFFF',
+      fontWeight: '700',
+      fontSize: 15.5,
+    },
+  });
+}

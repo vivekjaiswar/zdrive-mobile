@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Alert } from 'react-native';
+import { useRouter } from 'expo-router';
 import * as DocumentPicker from 'expo-document-picker';
 
 import filesService from '@/services/files.service';
@@ -10,12 +11,23 @@ export interface UploadBatchResult {
   failed: string[];
 }
 
+// storage.service.ts's uploadFile() throws this exact BadRequestException
+// message when subscriptionStatus isn't ACTIVE or subscriptionExpiresAt
+// has passed. Matched on substring since the backend could still be
+// tweaking exact wording - this only affects which alert gets shown,
+// never whether the upload was actually blocked.
+function isSubscriptionExpiredError(error: any): boolean {
+  const message: string = error?.response?.data?.message ?? '';
+  return message.toLowerCase().includes('subscription has expired');
+}
+
 export interface UploadProgress {
   current: number;
   total: number;
 }
 
 export function useFileUpload() {
+  const router = useRouter();
   const [uploading, setUploading] = useState(false);
   const [progress, setProgress] = useState<UploadProgress | null>(null);
 
@@ -59,7 +71,30 @@ export function useFileUpload() {
             folderId,
           );
           uploaded.push(response);
-        } catch {
+        } catch (error: any) {
+          // Every remaining file would fail for the exact same reason,
+          // so stop the batch immediately instead of burning through
+          // the rest of the queue one confusing failure at a time.
+          if (isSubscriptionExpiredError(error)) {
+            for (let j = i; j < assets.length; j++) {
+              failed.push(assets[j].name);
+            }
+
+            Alert.alert(
+              'Subscription Expired',
+              'Your plan has expired, so new uploads are paused. Renew or check your current plan in Settings to continue uploading.',
+              [
+                { text: 'Later', style: 'cancel' },
+                {
+                  text: 'View Plan',
+                  onPress: () => router.push('/(tabs)/settings'),
+                },
+              ],
+            );
+
+            return { uploaded, failed };
+          }
+
           failed.push(asset.name);
         }
       }
