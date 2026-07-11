@@ -9,6 +9,15 @@ interface Props {
   file: ZDriveFile;
   onPress: () => void;
   onLongPress?: () => void;
+  // Long-press elsewhere in the list already entered selection mode -
+  // shows a checkbox instead of the file-type icon and swaps the tap
+  // behavior to "toggle selection" (handled by the parent's onPress).
+  selectionMode?: boolean;
+  selected?: boolean;
+  // Selection mode hides this row's own kebab menu (no per-item
+  // actions while bulk-selecting), so this is only ever called when
+  // selectionMode is false.
+  onMenuPress?: () => void;
 }
 
 function formatSize(size: string) {
@@ -29,25 +38,54 @@ function icon(mime?: string) {
   return 'file-outline';
 }
 
-export default function FileCard({ file, onPress, onLongPress }: Props) {
+export default function FileCard({
+  file,
+  onPress,
+  onLongPress,
+  selectionMode = false,
+  selected = false,
+  onMenuPress,
+}: Props) {
   const colors = useColors();
   const styles = getStyles(colors);
 
   return (
     <Pressable
-      style={({ pressed }) => [styles.card, pressed && styles.pressed]}
+      style={({ pressed }) => [
+        styles.card,
+        pressed && styles.pressed,
+        selected && styles.cardSelected,
+      ]}
       onPress={onPress}
       onLongPress={onLongPress}
       delayLongPress={350}
     >
       <View style={styles.icon}>
-        <MaterialCommunityIcons name={icon(file.mimeType) as any} size={24} color={colors.primary} />
+        {selectionMode ? (
+          <View style={[styles.checkbox, selected && styles.checkboxChecked]}>
+            {selected && (
+              <MaterialCommunityIcons name="check" size={14} color="#FFFFFF" />
+            )}
+          </View>
+        ) : (
+          <MaterialCommunityIcons name={icon(file.mimeType) as any} size={24} color={colors.primary} />
+        )}
       </View>
       <View style={styles.content}>
         <Text numberOfLines={1} style={styles.name}>{file.name}</Text>
         <Text style={styles.meta}>{formatSize(file.size)}</Text>
       </View>
-      <MaterialCommunityIcons name="chevron-right" size={20} color={colors.textSecondary} />
+      {selectionMode ? null : (
+        <Pressable
+          hitSlop={12}
+          onPress={(e) => {
+            e.stopPropagation();
+            onMenuPress?.();
+          }}
+        >
+          <MaterialCommunityIcons name="dots-vertical" size={20} color={colors.textSecondary} />
+        </Pressable>
+      )}
     </Pressable>
   );
 }
@@ -65,6 +103,10 @@ function getStyles(colors: ColorPalette) {
       borderColor: colors.border,
     },
     pressed: { opacity: 0.85 },
+    cardSelected: {
+      borderColor: colors.primary,
+      backgroundColor: colors.primarySoft,
+    },
     icon: {
       width: 46,
       height: 46,
@@ -72,6 +114,18 @@ function getStyles(colors: ColorPalette) {
       backgroundColor: colors.primarySoft,
       justifyContent: 'center',
       alignItems: 'center',
+    },
+    checkbox: {
+      width: 24,
+      height: 24,
+      borderRadius: 12,
+      borderWidth: 2,
+      borderColor: colors.primary,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    checkboxChecked: {
+      backgroundColor: colors.primary,
     },
     content: { flex: 1, marginLeft: 14 },
     name: { fontSize: 15, fontWeight: '600', color: colors.text },

@@ -16,6 +16,7 @@ export function useFileActions(onChanged?: () => void) {
   const [permanentlyDeletingId, setPermanentlyDeletingId] = useState<
     string | null
   >(null);
+  const [bulkBusy, setBulkBusy] = useState(false);
 
   async function download(file: Pick<ZDriveFile, 'id' | 'name'>) {
     try {
@@ -168,6 +169,108 @@ export function useFileActions(onChanged?: () => void) {
     );
   }
 
+  // Bulk delete/move/share for multi-select. There's no batch endpoint
+  // on the backend - each is a Promise.allSettled fan-out over the
+  // existing single-item calls, so a handful of individual failures
+  // (e.g. one file mid-move by another request) don't abort the rest.
+  function confirmBulkDelete(
+    files: Pick<ZDriveFile, 'id' | 'name'>[],
+    onDone: () => void,
+  ) {
+    if (files.length === 0) return;
+
+    Alert.alert(
+      'Move to Trash?',
+      `${files.length} file${files.length === 1 ? '' : 's'} will be moved to trash.`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: async () => {
+            setBulkBusy(true);
+            const results = await Promise.allSettled(
+              files.map((file) => filesService.delete(file.id)),
+            );
+            setBulkBusy(false);
+
+            const failed = results.filter((r) => r.status === 'rejected').length;
+            onChanged?.();
+            onDone();
+
+            if (failed > 0) {
+              Alert.alert(
+                'Some Deletes Failed',
+                `${failed} of ${files.length} files could not be deleted.`,
+              );
+            }
+          },
+        },
+      ],
+    );
+  }
+
+  async function bulkMove(
+    files: Pick<ZDriveFile, 'id'>[],
+    folderId: string | undefined,
+  ): Promise<void> {
+    setBulkBusy(true);
+    const results = await Promise.allSettled(
+      files.map((file) => filesService.move(file.id, folderId)),
+    );
+    setBulkBusy(false);
+
+    const failed = results.filter((r) => r.status === 'rejected').length;
+    onChanged?.();
+
+    if (failed > 0) {
+      Alert.alert(
+        'Some Moves Failed',
+        `${failed} of ${files.length} files could not be moved.`,
+      );
+    }
+  }
+
+  // NOTE: this shares LINKS for each selected file in one message -
+  // there's no backend endpoint to zip multiple files into a single
+  // download, so a true "bulk download to device" would mean firing
+  // the native share/save sheet once per file back-to-back, which is
+  // a broken experience on both iOS and Android. Sharing all the
+  // links together in one Share.share() call is the honest version
+  // of this feature until a zip-export endpoint exists.
+  async function bulkShare(files: Pick<ZDriveFile, 'id'>[]): Promise<void> {
+    setBulkBusy(true);
+
+    const results = await Promise.allSettled(
+      files.map((file) => filesService.share(file.id)),
+    );
+
+    setBulkBusy(false);
+
+    const links = results
+      .filter(
+        (r): r is PromiseFulfilledResult<Awaited<ReturnType<typeof filesService.share>>> =>
+          r.status === 'fulfilled',
+      )
+      .map((r) => r.value.absoluteUrl);
+
+    const failed = results.length - links.length;
+
+    if (links.length === 0) {
+      Alert.alert('Share Failed', 'Unable to create share links for the selected files.');
+      return;
+    }
+
+    await Share.share({ message: links.join('\n') });
+
+    if (failed > 0) {
+      Alert.alert(
+        'Some Shares Failed',
+        `${failed} of ${files.length} files could not be shared.`,
+      );
+    }
+  }
+
   return {
     download,
     share,
@@ -176,6 +279,10 @@ export function useFileActions(onChanged?: () => void) {
     confirmDelete,
     restore,
     confirmPermanentDelete,
+    confirmBulkDelete,
+    bulkMove,
+    bulkShare,
+    bulkBusy,
     downloadingId,
     sharingId,
     deletingId,

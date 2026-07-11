@@ -13,11 +13,13 @@ import TextPromptModal from '@/components/common/TextPromptModal';
 import FolderPickerModal from '@/components/files/FolderPickerModal';
 import FolderContents from '@/components/folders/FolderContents';
 import FolderActionSheet from '@/components/folders/FolderActionSheet';
+import SelectionBar from '@/components/files/SelectionBar';
 import filesService from '@/services/files.service';
 import foldersService from '@/services/folders.service';
 import { useFileUpload } from '@/hooks/useFileUpload';
 import { useFileActions } from '@/hooks/useFileActions';
 import { useFolderActions } from '@/hooks/useFolderActions';
+import { useMultiSelect } from '@/hooks/useMultiSelect';
 import { useTabBarHeight } from '@/hooks/useTabBarHeight';
 import { ZDriveFile } from '@/types/file';
 import { ZDriveFolder } from '@/types/folder';
@@ -42,6 +44,7 @@ export default function FilesScreen() {
   const [renaming, setRenaming] = useState(false);
   const [moveFile, setMoveFile] = useState<ZDriveFile | null>(null);
   const [moving, setMoving] = useState(false);
+  const [bulkMoveVisible, setBulkMoveVisible] = useState(false);
 
   // Same, but for folders.
   const [actionFolder, setActionFolder] = useState<ZDriveFolder | null>(null);
@@ -59,6 +62,10 @@ export default function FilesScreen() {
     rename,
     move,
     confirmDelete,
+    confirmBulkDelete,
+    bulkMove,
+    bulkShare,
+    bulkBusy,
     downloadingId,
     sharingId,
     deletingId,
@@ -69,6 +76,14 @@ export default function FilesScreen() {
     confirmDelete: confirmDeleteFolder,
     deletingId: deletingFolderId,
   } = useFolderActions(loadContents);
+
+  const {
+    selectionMode,
+    selectedIds,
+    enter: enterSelection,
+    toggle: toggleSelection,
+    clear: clearSelection,
+  } = useMultiSelect();
 
   // Refresh every time this tab regains focus - not just on first
   // mount - so a rename/move/delete/create or an upload from the
@@ -168,6 +183,29 @@ export default function FilesScreen() {
     if (ok) setMoveFile(null);
   }
 
+  // Selected ids are matched against whichever list is actually on
+  // screen right now (search results while searching, root files
+  // otherwise) - the ids alone don't carry enough info for the bulk
+  // delete/move/share confirmations, which need name/mimeType.
+  function getSelectedFiles(): ZDriveFile[] {
+    const source = isSearching ? searchResults ?? [] : files;
+    return source.filter((file) => selectedIds.has(file.id));
+  }
+
+  function handleBulkDelete() {
+    confirmBulkDelete(getSelectedFiles(), clearSelection);
+  }
+
+  async function handleBulkMove(folderId: string | undefined) {
+    await bulkMove(getSelectedFiles(), folderId);
+    setBulkMoveVisible(false);
+    clearSelection();
+  }
+
+  async function handleBulkShare() {
+    await bulkShare(getSelectedFiles());
+  }
+
   async function handleConfirmRenameFolder(name: string) {
     if (!renameFolder) return;
 
@@ -208,27 +246,38 @@ export default function FilesScreen() {
 
   return (
     <Screen edges={['top', 'left', 'right']}>
-      <View style={styles.header}>
-        <Text style={styles.title}>Files</Text>
+      {selectionMode ? (
+        <SelectionBar
+          count={selectedIds.size}
+          busy={bulkBusy}
+          onCancel={clearSelection}
+          onMove={() => setBulkMoveVisible(true)}
+          onShare={handleBulkShare}
+          onDelete={handleBulkDelete}
+        />
+      ) : (
+        <View style={styles.header}>
+          <Text style={styles.title}>Files</Text>
 
-        <View style={styles.headerActions}>
-          <Pressable
-            hitSlop={12}
-            onPress={() => router.push('/trash')}
-            style={styles.newFolderButton}
-          >
-            <MaterialCommunityIcons name="trash-can-outline" size={20} color={colors.text} />
-          </Pressable>
+          <View style={styles.headerActions}>
+            <Pressable
+              hitSlop={12}
+              onPress={() => router.push('/trash')}
+              style={styles.newFolderButton}
+            >
+              <MaterialCommunityIcons name="trash-can-outline" size={20} color={colors.text} />
+            </Pressable>
 
-          <Pressable
-            hitSlop={12}
-            onPress={() => setCreateFolderVisible(true)}
-            style={styles.newFolderButton}
-          >
-            <MaterialCommunityIcons name="folder-plus-outline" size={22} color={colors.primary} />
-          </Pressable>
+            <Pressable
+              hitSlop={12}
+              onPress={() => setCreateFolderVisible(true)}
+              style={styles.newFolderButton}
+            >
+              <MaterialCommunityIcons name="folder-plus-outline" size={22} color={colors.primary} />
+            </Pressable>
+          </View>
         </View>
-      </View>
+      )}
 
       <SearchBar value={query} onChangeText={setQuery} />
 
@@ -240,7 +289,11 @@ export default function FilesScreen() {
         onFolderPress={(folder) => router.push(`/folders/${folder.id}`)}
         onFolderLongPress={(folder) => setActionFolder(folder)}
         onFilePress={(file) => router.push(`/files/${file.id}`)}
-        onFileLongPress={(file) => setActionFile(file)}
+        onFileLongPress={(file) => enterSelection(file.id)}
+        onFileToggleSelect={(file) => toggleSelection(file.id)}
+        onFileMenuPress={(file) => setActionFile(file)}
+        selectionMode={selectionMode}
+        selectedIds={selectedIds}
         bottomSpacing={tabBarHeight + 88}
       />
 
@@ -317,6 +370,13 @@ export default function FilesScreen() {
         submitting={moving}
         onCancel={() => setMoveFile(null)}
         onSelect={handleConfirmMove}
+      />
+
+      <FolderPickerModal
+        visible={bulkMoveVisible}
+        submitting={bulkBusy}
+        onCancel={() => setBulkMoveVisible(false)}
+        onSelect={handleBulkMove}
       />
     </Screen>
   );

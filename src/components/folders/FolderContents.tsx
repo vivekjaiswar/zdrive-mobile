@@ -17,6 +17,15 @@ interface Props {
   onFolderLongPress: (folder: ZDriveFolder) => void;
   onFilePress: (file: ZDriveFile) => void;
   onFileLongPress: (file: ZDriveFile) => void;
+  // Long-press enters selection mode (onFileLongPress above); once
+  // active, tapping a row toggles it instead of navigating, and the
+  // per-row kebab menu opens the single-file action sheet in its
+  // place. Folders are excluded from multi-select entirely - their
+  // taps are disabled (not just re-purposed) while selecting.
+  onFileToggleSelect?: (file: ZDriveFile) => void;
+  onFileMenuPress?: (file: ZDriveFile) => void;
+  selectionMode?: boolean;
+  selectedIds?: Set<string>;
   bottomSpacing: number;
 }
 
@@ -32,6 +41,10 @@ export default function FolderContents({
   onFolderLongPress,
   onFilePress,
   onFileLongPress,
+  onFileToggleSelect,
+  onFileMenuPress,
+  selectionMode = false,
+  selectedIds,
   bottomSpacing,
 }: Props) {
   const colors = useColors();
@@ -63,8 +76,12 @@ export default function FolderContents({
               <FolderCard
                 key={folder.id}
                 folder={folder}
-                onPress={() => onFolderPress(folder)}
-                onLongPress={() => onFolderLongPress(folder)}
+                onPress={() => {
+                  if (!selectionMode) onFolderPress(folder);
+                }}
+                onLongPress={() => {
+                  if (!selectionMode) onFolderLongPress(folder);
+                }}
               />
             ))}
 
@@ -77,8 +94,19 @@ export default function FolderContents({
       renderItem={({ item }) => (
         <FileCard
           file={item}
-          onPress={() => onFilePress(item)}
-          onLongPress={() => onFileLongPress(item)}
+          selectionMode={selectionMode}
+          selected={selectedIds?.has(item.id) ?? false}
+          onPress={() => {
+            if (selectionMode) {
+              onFileToggleSelect?.(item);
+            } else {
+              onFilePress(item);
+            }
+          }}
+          onLongPress={() => {
+            if (!selectionMode) onFileLongPress(item);
+          }}
+          onMenuPress={() => onFileMenuPress?.(item)}
         />
       )}
       ListEmptyComponent={<EmptyFiles />}

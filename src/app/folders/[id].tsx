@@ -10,10 +10,12 @@ import TextPromptModal from '@/components/common/TextPromptModal';
 import FolderPickerModal from '@/components/files/FolderPickerModal';
 import FolderContents from '@/components/folders/FolderContents';
 import FolderActionSheet from '@/components/folders/FolderActionSheet';
+import SelectionBar from '@/components/files/SelectionBar';
 import foldersService from '@/services/folders.service';
 import { useFileUpload } from '@/hooks/useFileUpload';
 import { useFileActions } from '@/hooks/useFileActions';
 import { useFolderActions } from '@/hooks/useFolderActions';
+import { useMultiSelect } from '@/hooks/useMultiSelect';
 import Colors from '@/theme/colors';
 import { ZDriveFile } from '@/types/file';
 import { ZDriveFolder } from '@/types/folder';
@@ -33,6 +35,7 @@ export default function FolderExplorerScreen() {
   const [renaming, setRenaming] = useState(false);
   const [moveFile, setMoveFile] = useState<ZDriveFile | null>(null);
   const [moving, setMoving] = useState(false);
+  const [bulkMoveVisible, setBulkMoveVisible] = useState(false);
 
   const [actionChildFolder, setActionChildFolder] = useState<ZDriveFolder | null>(null);
   const [renameChildFolder, setRenameChildFolder] = useState<ZDriveFolder | null>(null);
@@ -54,6 +57,10 @@ export default function FolderExplorerScreen() {
     rename,
     move,
     confirmDelete,
+    confirmBulkDelete,
+    bulkMove,
+    bulkShare,
+    bulkBusy,
     downloadingId,
     sharingId,
     deletingId,
@@ -64,6 +71,14 @@ export default function FolderExplorerScreen() {
     confirmDelete: confirmDeleteFolder,
     deletingId: deletingFolderId,
   } = useFolderActions(loadExplorer);
+
+  const {
+    selectionMode,
+    selectedIds,
+    enter: enterSelection,
+    toggle: toggleSelection,
+    clear: clearSelection,
+  } = useMultiSelect();
 
   useFocusEffect(
     useCallback(() => {
@@ -124,6 +139,24 @@ export default function FolderExplorerScreen() {
     setMoving(false);
 
     if (ok) setMoveFile(null);
+  }
+
+  function getSelectedFiles(): ZDriveFile[] {
+    return files.filter((file) => selectedIds.has(file.id));
+  }
+
+  function handleBulkDelete() {
+    confirmBulkDelete(getSelectedFiles(), clearSelection);
+  }
+
+  async function handleBulkMove(folderId: string | undefined) {
+    await bulkMove(getSelectedFiles(), folderId);
+    setBulkMoveVisible(false);
+    clearSelection();
+  }
+
+  async function handleBulkShare() {
+    await bulkShare(getSelectedFiles());
   }
 
   async function handleConfirmRenameChildFolder(name: string) {
@@ -202,25 +235,36 @@ export default function FolderExplorerScreen() {
 
   return (
     <Screen>
-      <View style={styles.topBar}>
-        <Pressable onPress={() => router.back()} hitSlop={12}>
-          <MaterialCommunityIcons name="arrow-left" size={26} color={Colors.text} />
-        </Pressable>
-
-        <Text style={styles.topBarTitle} numberOfLines={1}>
-          {folder.name}
-        </Text>
-
-        <View style={styles.headerActions}>
-          <Pressable hitSlop={10} onPress={() => setCreateFolderVisible(true)}>
-            <MaterialCommunityIcons name="folder-plus-outline" size={24} color={Colors.primary} />
+      {selectionMode ? (
+        <SelectionBar
+          count={selectedIds.size}
+          busy={bulkBusy}
+          onCancel={clearSelection}
+          onMove={() => setBulkMoveVisible(true)}
+          onShare={handleBulkShare}
+          onDelete={handleBulkDelete}
+        />
+      ) : (
+        <View style={styles.topBar}>
+          <Pressable onPress={() => router.back()} hitSlop={12}>
+            <MaterialCommunityIcons name="arrow-left" size={26} color={Colors.text} />
           </Pressable>
 
-          <Pressable hitSlop={10} onPress={() => setShowCurrentFolderMenu(true)}>
-            <MaterialCommunityIcons name="dots-vertical" size={22} color={Colors.text} />
-          </Pressable>
+          <Text style={styles.topBarTitle} numberOfLines={1}>
+            {folder.name}
+          </Text>
+
+          <View style={styles.headerActions}>
+            <Pressable hitSlop={10} onPress={() => setCreateFolderVisible(true)}>
+              <MaterialCommunityIcons name="folder-plus-outline" size={24} color={Colors.primary} />
+            </Pressable>
+
+            <Pressable hitSlop={10} onPress={() => setShowCurrentFolderMenu(true)}>
+              <MaterialCommunityIcons name="dots-vertical" size={22} color={Colors.text} />
+            </Pressable>
+          </View>
         </View>
-      </View>
+      )}
 
       <FolderContents
         folders={childFolders}
@@ -230,7 +274,11 @@ export default function FolderExplorerScreen() {
         onFolderPress={(child) => router.push(`/folders/${child.id}`)}
         onFolderLongPress={(child) => setActionChildFolder(child)}
         onFilePress={(file) => router.push(`/files/${file.id}`)}
-        onFileLongPress={(file) => setActionFile(file)}
+        onFileLongPress={(file) => enterSelection(file.id)}
+        onFileToggleSelect={(file) => toggleSelection(file.id)}
+        onFileMenuPress={(file) => setActionFile(file)}
+        selectionMode={selectionMode}
+        selectedIds={selectedIds}
         bottomSpacing={112}
       />
 
@@ -319,6 +367,13 @@ export default function FolderExplorerScreen() {
         submitting={moving}
         onCancel={() => setMoveFile(null)}
         onSelect={handleConfirmMove}
+      />
+
+      <FolderPickerModal
+        visible={bulkMoveVisible}
+        submitting={bulkBusy}
+        onCancel={() => setBulkMoveVisible(false)}
+        onSelect={handleBulkMove}
       />
     </Screen>
   );
