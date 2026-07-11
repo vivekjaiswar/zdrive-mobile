@@ -8,12 +8,15 @@ import EmptyFiles from '@/components/files/EmptyFiles';
 import filesService from '@/services/files.service';
 import { WEB_BASE_URL } from '@/services/api';
 import { useTabBarHeight } from '@/hooks/useTabBarHeight';
-import Colors from '@/theme/colors';
+import { ColorPalette } from '@/theme/palette';
+import { useColors } from '@/theme/useColors';
 import { SharedFileEntry } from '@/types/file';
 
 export default function SharedScreen() {
   const router = useRouter();
   const tabBarHeight = useTabBarHeight();
+  const colors = useColors();
+  const styles = getStyles(colors);
 
   const [entries, setEntries] = useState<SharedFileEntry[]>([]);
   const [loading, setLoading] = useState(true);
@@ -87,7 +90,7 @@ export default function SharedScreen() {
   if (loading) {
     return (
       <Screen edges={['top', 'left', 'right']}>
-        <ActivityIndicator size="large" color={Colors.primary} style={styles.loadingSpinner} />
+        <ActivityIndicator size="large" color={colors.primary} style={styles.loadingSpinner} />
         <Text style={styles.loading}>Loading shared files...</Text>
       </Screen>
     );
@@ -106,7 +109,7 @@ export default function SharedScreen() {
             : { paddingBottom: tabBarHeight + 24 }
         }
         refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={Colors.primary} />
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />
         }
         renderItem={({ item }) => (
           <SharedFileRow
@@ -130,20 +133,22 @@ export default function SharedScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  title: {
-    fontSize: 32,
-    fontWeight: '800',
-    color: Colors.text,
-    marginTop: 12,
-    marginBottom: 20,
-  },
-  loadingSpinner: {
-    marginTop: 60,
-  },
-  loading: {
-    marginTop: 16,
-    textAlign: 'center',
-    color: Colors.textSecondary,
-  },
-});
+function getStyles(colors: ColorPalette) {
+  return StyleSheet.create({
+    title: {
+      fontSize: 32,
+      fontWeight: '800',
+      color: colors.text,
+      marginTop: 12,
+      marginBottom: 20,
+    },
+    loadingSpinner: {
+      marginTop: 60,
+    },
+    loading: {
+      marginTop: 16,
+      textAlign: 'center',
+      color: colors.textSecondary,
+    },
+  });
+}

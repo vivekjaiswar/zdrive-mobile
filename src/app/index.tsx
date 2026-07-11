@@ -2,10 +2,11 @@ import { useEffect } from 'react';
 import { ActivityIndicator, View } from 'react-native';
 import { Redirect } from 'expo-router';
 
-import Colors from '@/theme/colors';
+import { useColors } from '@/theme/useColors';
 import { useAuthStore } from '@/store/auth.store';
 
 export default function Index() {
+  const colors = useColors();
   const isHydrated = useAuthStore((state) => state.isHydrated);
   const token = useAuthStore((state) => state.token);
   const hydrate = useAuthStore((state) => state.hydrate);
@@ -16,8 +17,15 @@ export default function Index() {
 
   if (!isHydrated) {
     return (
-      <View style={styles.center}>
-        <ActivityIndicator size="large" color={Colors.primary} />
+      <View
+        style={{
+          flex: 1,
+          justifyContent: 'center',
+          alignItems: 'center',
+          backgroundColor: colors.background,
+        }}
+      >
+        <ActivityIndicator size="large" color={colors.primary} />
       </View>
     );
   }
@@ -28,12 +36,3 @@ export default function Index() {
     />
   );
 }
-
-const styles = {
-  center: {
-    flex: 1,
-    justifyContent: 'center' as const,
-    alignItems: 'center' as const,
-    backgroundColor: '#EEF6FF',
-  },
-};

@@ -16,7 +16,8 @@ import Screen from '@/components/Layout/Screen';
 import ZoomableImage from '@/components/files/ZoomableImage';
 import filesService from '@/services/files.service';
 import { useFileActions } from '@/hooks/useFileActions';
-import Colors from '@/theme/colors';
+import { ColorPalette } from '@/theme/palette';
+import { useColors } from '@/theme/useColors';
 import { FileDetails } from '@/types/file';
 
 function formatSize(size: string) {
@@ -55,6 +56,8 @@ function isTextLike(mime?: string) {
 export default function FilePreviewScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
+  const colors = useColors();
+  const styles = getStyles(colors);
 
   const [file, setFile] = useState<FileDetails | null>(null);
   const [loading, setLoading] = useState(true);
@@ -131,7 +134,7 @@ export default function FilePreviewScreen() {
     return (
       <Screen>
         <View style={styles.center}>
-          <ActivityIndicator size="large" color={Colors.primary} />
+          <ActivityIndicator size="large" color={colors.primary} />
         </View>
       </Screen>
     );
@@ -144,7 +147,7 @@ export default function FilePreviewScreen() {
     <Screen>
       <View style={styles.topBar}>
         <Pressable onPress={() => router.back()} hitSlop={12}>
-          <MaterialCommunityIcons name="arrow-left" size={26} color={Colors.text} />
+          <MaterialCommunityIcons name="arrow-left" size={26} color={colors.text} />
         </Pressable>
 
         <Text style={styles.topBarTitle} numberOfLines={1}>
@@ -158,12 +161,12 @@ export default function FilePreviewScreen() {
             disabled={downloadingId === file.id}
           >
             {downloadingId === file.id ? (
-              <ActivityIndicator size="small" color={Colors.primary} />
+              <ActivityIndicator size="small" color={colors.primary} />
             ) : (
               <MaterialCommunityIcons
                 name="download-outline"
                 size={24}
-                color={Colors.primary}
+                color={colors.primary}
               />
             )}
           </Pressable>
@@ -174,12 +177,12 @@ export default function FilePreviewScreen() {
             disabled={sharingId === file.id}
           >
             {sharingId === file.id ? (
-              <ActivityIndicator size="small" color={Colors.primary} />
+              <ActivityIndicator size="small" color={colors.primary} />
             ) : (
               <MaterialCommunityIcons
                 name="share-variant-outline"
                 size={22}
-                color={Colors.primary}
+                color={colors.primary}
               />
             )}
           </Pressable>
@@ -193,7 +196,7 @@ export default function FilePreviewScreen() {
       ) : isText ? (
         <ScrollView style={styles.textScroll} contentContainerStyle={styles.textContent}>
           {textLoading ? (
-            <ActivityIndicator size="large" color={Colors.primary} style={{ marginTop: 40 }} />
+            <ActivityIndicator size="large" color={colors.primary} style={{ marginTop: 40 }} />
           ) : textError ? (
             <Text style={styles.fallbackMessage}>
               Couldn't load a preview for this file.
@@ -207,7 +210,7 @@ export default function FilePreviewScreen() {
           <MaterialCommunityIcons
             name={iconFor(file.mimeType)}
             size={72}
-            color={Colors.primary}
+            color={colors.primary}
           />
 
           <Text style={styles.fileName} numberOfLines={2}>
@@ -232,93 +235,105 @@ export default function FilePreviewScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  center: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: 24,
-  },
+function getStyles(colors: ColorPalette) {
+  return StyleSheet.create({
+    center: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+      paddingHorizontal: 24,
+    },
 
-  topBar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 12,
-    gap: 12,
-  },
+    topBar: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingVertical: 12,
+      gap: 12,
+    },
 
-  topBarTitle: {
-    flex: 1,
-    fontSize: 16,
-    fontWeight: '700',
-    color: Colors.text,
-  },
+    topBarTitle: {
+      flex: 1,
+      fontSize: 16,
+      fontWeight: '700',
+      letterSpacing: -0.3,
+      color: colors.text,
+    },
 
-  quickActions: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 18,
-  },
+    quickActions: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 18,
+    },
 
-  imageWrap: {
-    flex: 1,
-    backgroundColor: '#0B1120',
-    marginHorizontal: -24,
-    marginBottom: -24,
-  },
+    // Intentionally always this near-black navy regardless of
+    // light/dark mode - a neutral photo-viewer backdrop, same choice
+    // ZoomableImage's surrounding chrome has used from the start.
+    imageWrap: {
+      flex: 1,
+      backgroundColor: '#0B1120',
+      marginHorizontal: -24,
+      marginBottom: -24,
+    },
 
-  textScroll: {
-    flex: 1,
-    marginHorizontal: -24,
-  },
+    textScroll: {
+      flex: 1,
+      marginHorizontal: -24,
+    },
 
-  textContent: {
-    paddingHorizontal: 24,
-    paddingBottom: 40,
-  },
+    textContent: {
+      paddingHorizontal: 24,
+      paddingBottom: 40,
+    },
 
-  textBody: {
-    fontFamily: 'monospace',
-    fontSize: 13,
-    lineHeight: 20,
-    color: Colors.text,
-  },
+    textBody: {
+      fontFamily: 'monospace',
+      fontSize: 13,
+      lineHeight: 20,
+      color: colors.text,
+    },
 
-  fileName: {
-    marginTop: 20,
-    fontSize: 18,
-    fontWeight: '700',
-    color: Colors.text,
-    textAlign: 'center',
-  },
+    fileName: {
+      marginTop: 20,
+      fontSize: 18,
+      fontWeight: '700',
+      color: colors.text,
+      textAlign: 'center',
+    },
 
-  meta: {
-    marginTop: 6,
-    fontSize: 14,
-    color: Colors.textSecondary,
-  },
+    meta: {
+      marginTop: 6,
+      fontSize: 14,
+      color: colors.textSecondary,
+    },
 
-  fallbackMessage: {
-    marginTop: 20,
-    fontSize: 15,
-    color: Colors.textSecondary,
-    textAlign: 'center',
-  },
+    fallbackMessage: {
+      marginTop: 20,
+      fontSize: 15,
+      color: colors.textSecondary,
+      textAlign: 'center',
+    },
 
-  openButton: {
-    marginTop: 24,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    backgroundColor: Colors.primary,
-    paddingHorizontal: 24,
-    paddingVertical: 14,
-    borderRadius: 16,
-  },
+    openButton: {
+      marginTop: 24,
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 8,
+      backgroundColor: colors.primary,
+      paddingHorizontal: 24,
+      paddingVertical: 14,
+      borderRadius: 16,
 
-  openButtonText: {
-    color: '#FFFFFF',
-    fontWeight: '700',
-    fontSize: 15,
-  },
-});
+      shadowColor: colors.shadow,
+      shadowOpacity: 0.16,
+      shadowRadius: 10,
+      shadowOffset: { width: 0, height: 6 },
+      elevation: 4,
+    },
+
+    openButtonText: {
+      color: '#FFFFFF',
+      fontWeight: '700',
+      fontSize: 15,
+    },
+  });
+}

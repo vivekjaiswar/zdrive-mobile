@@ -8,11 +8,14 @@ import TrashFileRow from '@/components/files/TrashFileRow';
 import EmptyFiles from '@/components/files/EmptyFiles';
 import filesService from '@/services/files.service';
 import { useFileActions } from '@/hooks/useFileActions';
-import Colors from '@/theme/colors';
+import { ColorPalette } from '@/theme/palette';
+import { useColors } from '@/theme/useColors';
 import { ZDriveFile } from '@/types/file';
 
 export default function TrashScreen() {
   const router = useRouter();
+  const colors = useColors();
+  const styles = getStyles(colors);
 
   const [files, setFiles] = useState<ZDriveFile[]>([]);
   const [loading, setLoading] = useState(true);
@@ -52,7 +55,7 @@ export default function TrashScreen() {
     return (
       <Screen>
         <View style={styles.center}>
-          <ActivityIndicator size="large" color={Colors.primary} />
+          <ActivityIndicator size="large" color={colors.primary} />
         </View>
       </Screen>
     );
@@ -62,7 +65,7 @@ export default function TrashScreen() {
     <Screen>
       <View style={styles.topBar}>
         <Pressable onPress={() => router.back()} hitSlop={12}>
-          <MaterialCommunityIcons name="arrow-left" size={26} color={Colors.text} />
+          <MaterialCommunityIcons name="arrow-left" size={26} color={colors.text} />
         </Pressable>
 
         <Text style={styles.topBarTitle}>Trash</Text>
@@ -87,7 +90,7 @@ export default function TrashScreen() {
             : { paddingBottom: 40 }
         }
         refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={Colors.primary} />
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />
         }
         renderItem={({ item }) => (
           <TrashFileRow
@@ -110,35 +113,37 @@ export default function TrashScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  center: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
+function getStyles(colors: ColorPalette) {
+  return StyleSheet.create({
+    center: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
 
-  topBar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingVertical: 12,
-  },
+    topBar: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      paddingVertical: 12,
+    },
 
-  topBarTitle: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: Colors.text,
-  },
+    topBarTitle: {
+      fontSize: 18,
+      fontWeight: '700',
+      color: colors.text,
+    },
 
-  notice: {
-    marginTop: 8,
-    marginBottom: 12,
-    fontSize: 13,
-    color: Colors.textSecondary,
-    lineHeight: 18,
-  },
+    notice: {
+      marginTop: 8,
+      marginBottom: 12,
+      fontSize: 13,
+      color: colors.textSecondary,
+      lineHeight: 18,
+    },
 
-  list: {
-    marginTop: 4,
-  },
-});
+    list: {
+      marginTop: 4,
+    },
+  });
+}

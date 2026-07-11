@@ -6,11 +6,14 @@ import AuthScreenLayout from '@/components/auth/AuthScreenLayout';
 import PrimaryButton from '@/components/Button/PrimaryButton';
 import AppInput from '@/components/Input/AppInput';
 import authService from '@/services/auth.service';
-import { authStyles } from '@/components/auth/authStyles';
+import { getAuthStyles } from '@/components/auth/authStyles';
+import { useColors } from '@/theme/useColors';
 import { getPasswordError, PASSWORD_HINT } from '@/utils/validation';
 
 export default function ResetPasswordScreen() {
   const router = useRouter();
+  const colors = useColors();
+  const authStyles = getAuthStyles(colors);
 
   const [token, setToken] = useState('');
   const [password, setPassword] = useState('');

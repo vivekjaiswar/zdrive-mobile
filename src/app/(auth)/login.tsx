@@ -19,9 +19,13 @@ import AppInput from '@/components/Input/AppInput';
 import Screen from '@/components/Layout/Screen';
 import authService from '@/services/auth.service';
 import { useAuthStore } from '@/store/auth.store';
+import { ColorPalette } from '@/theme/palette';
+import { useColors } from '@/theme/useColors';
 
 export default function LoginScreen() {
   const router = useRouter();
+  const colors = useColors();
+  const styles = getStyles(colors);
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -146,81 +150,75 @@ export default function LoginScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  scroll: {
-    flexGrow: 1,
-    justifyContent: 'center',
-    paddingVertical: 40,
-  },
-
-  logo: {
-    width: 210,
-    height: 70,
-    alignSelf: 'center',
-    marginBottom: 24,
-  },
-
-  card: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 24,
-
-    paddingHorizontal: 24,
-    paddingVertical: 28,
-
-    shadowColor: '#2563EB',
-    shadowOpacity: 0.05,
-    shadowRadius: 10,
-    shadowOffset: {
-      width: 0,
-      height: 5,
+function getStyles(colors: ColorPalette) {
+  return StyleSheet.create({
+    scroll: {
+      flexGrow: 1,
+      justifyContent: 'center',
+      paddingVertical: 40,
     },
 
-    elevation: 3,
-  },
+    logo: {
+      width: 210,
+      height: 70,
+      alignSelf: 'center',
+      marginBottom: 24,
+    },
 
-  title: {
-    fontSize: 28,
-    fontWeight: '700',
-    color: '#0F172A',
-    textAlign: 'center',
-  },
+    card: {
+      backgroundColor: colors.surface,
+      borderRadius: 24,
+      borderWidth: 1,
+      borderColor: colors.border,
 
-  subtitle: {
-    marginTop: 10,
-    fontSize: 15,
-    color: '#64748B',
-    textAlign: 'center',
-    lineHeight: 22,
-  },
+      paddingHorizontal: 24,
+      paddingVertical: 28,
+    },
 
-  form: {
-    marginTop: 28,
-    gap: 16,
-  },
+    title: {
+      fontSize: 26,
+      fontWeight: '700',
+      color: colors.text,
+      textAlign: 'center',
+    },
 
-  forgot: {
-    textAlign: 'right',
-    color: '#2563EB',
-    fontWeight: '600',
-    marginTop: 2,
-    marginBottom: 6,
-  },
+    subtitle: {
+      marginTop: 10,
+      fontSize: 14.5,
+      color: colors.textSecondary,
+      textAlign: 'center',
+      lineHeight: 21,
+    },
 
-  bottom: {
-    marginTop: 28,
-    flexDirection: 'row',
-    justifyContent: 'center',
-  },
+    form: {
+      marginTop: 28,
+      gap: 16,
+    },
 
-  bottomText: {
-    color: '#64748B',
-    fontSize: 15,
-  },
+    forgot: {
+      textAlign: 'right',
+      color: colors.primary,
+      fontWeight: '600',
+      marginTop: 2,
+      marginBottom: 6,
+    },
 
-  register: {
-    marginLeft: 5,
-    color: '#2563EB',
-    fontWeight: '700',
-    fontSize: 15,
-  },
-});
+    bottom: {
+      marginTop: 28,
+      flexDirection: 'row',
+      justifyContent: 'center',
+    },
+
+    bottomText: {
+      color: colors.textSecondary,
+      fontSize: 15,
+    },
+
+    register: {
+      marginLeft: 5,
+      color: colors.primary,
+      fontWeight: '700',
+      fontSize: 15,
+    },
+  });
+}

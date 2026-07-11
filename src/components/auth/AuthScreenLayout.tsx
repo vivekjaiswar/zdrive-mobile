@@ -10,6 +10,8 @@ import {
 } from 'react-native';
 
 import Screen from '@/components/Layout/Screen';
+import { ColorPalette } from '@/theme/palette';
+import { useColors } from '@/theme/useColors';
 
 interface Props {
   title: string;
@@ -22,6 +24,9 @@ interface Props {
 // password, verify email) so they look consistent instead of each
 // re-declaring the same card/logo/scroll boilerplate.
 export default function AuthScreenLayout({ title, subtitle, children, footer }: Props) {
+  const colors = useColors();
+  const styles = getStyles(colors);
+
   return (
     <Screen>
       <KeyboardAvoidingView
@@ -53,62 +58,56 @@ export default function AuthScreenLayout({ title, subtitle, children, footer }: 
   );
 }
 
-const styles = StyleSheet.create({
-  scroll: {
-    flexGrow: 1,
-    justifyContent: 'center',
-    paddingVertical: 40,
-  },
-
-  logo: {
-    width: 210,
-    height: 70,
-    alignSelf: 'center',
-    marginBottom: 24,
-  },
-
-  card: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 24,
-
-    paddingHorizontal: 24,
-    paddingVertical: 28,
-
-    shadowColor: '#2563EB',
-    shadowOpacity: 0.05,
-    shadowRadius: 10,
-    shadowOffset: {
-      width: 0,
-      height: 5,
+function getStyles(colors: ColorPalette) {
+  return StyleSheet.create({
+    scroll: {
+      flexGrow: 1,
+      justifyContent: 'center',
+      paddingVertical: 40,
     },
 
-    elevation: 3,
-  },
+    logo: {
+      width: 210,
+      height: 70,
+      alignSelf: 'center',
+      marginBottom: 24,
+    },
 
-  title: {
-    fontSize: 28,
-    fontWeight: '700',
-    color: '#0F172A',
-    textAlign: 'center',
-  },
+    card: {
+      backgroundColor: colors.surface,
+      borderRadius: 24,
+      borderWidth: 1,
+      borderColor: colors.border,
 
-  subtitle: {
-    marginTop: 10,
-    fontSize: 15,
-    color: '#64748B',
-    textAlign: 'center',
-    lineHeight: 22,
-  },
+      paddingHorizontal: 24,
+      paddingVertical: 28,
+    },
 
-  form: {
-    marginTop: 28,
-    gap: 16,
-  },
+    title: {
+      fontSize: 26,
+      fontWeight: '700',
+      color: colors.text,
+      textAlign: 'center',
+    },
 
-  bottom: {
-    marginTop: 28,
-    flexDirection: 'row',
-    justifyContent: 'center',
-    flexWrap: 'wrap',
-  },
-});
+    subtitle: {
+      marginTop: 10,
+      fontSize: 14.5,
+      color: colors.textSecondary,
+      textAlign: 'center',
+      lineHeight: 21,
+    },
+
+    form: {
+      marginTop: 28,
+      gap: 16,
+    },
+
+    bottom: {
+      marginTop: 28,
+      flexDirection: 'row',
+      justifyContent: 'center',
+      flexWrap: 'wrap',
+    },
+  });
+}

@@ -1,7 +1,8 @@
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 
-import Colors from '@/theme/colors';
+import { ColorPalette } from '@/theme/palette';
+import { useColors } from '@/theme/useColors';
 import { ZDriveFile } from '@/types/file';
 
 interface Props {
@@ -31,10 +32,13 @@ export default function TrashFileRow({
   onRestore,
   onDeleteForever,
 }: Props) {
+  const colors = useColors();
+  const styles = getStyles(colors);
+
   return (
     <View style={styles.card}>
       <View style={styles.icon}>
-        <MaterialCommunityIcons name="file-outline" size={24} color="#94A3B8" />
+        <MaterialCommunityIcons name="file-outline" size={24} color={colors.textSecondary} />
       </View>
 
       <View style={styles.content}>
@@ -49,9 +53,9 @@ export default function TrashFileRow({
         style={styles.actionButton}
       >
         {restoring ? (
-          <ActivityIndicator size="small" color={Colors.primary} />
+          <ActivityIndicator size="small" color={colors.primary} />
         ) : (
-          <MaterialCommunityIcons name="restore" size={22} color={Colors.primary} />
+          <MaterialCommunityIcons name="restore" size={22} color={colors.primary} />
         )}
       </Pressable>
 
@@ -62,47 +66,51 @@ export default function TrashFileRow({
         style={styles.actionButton}
       >
         {deleting ? (
-          <ActivityIndicator size="small" color={Colors.danger} />
+          <ActivityIndicator size="small" color={colors.danger} />
         ) : (
-          <MaterialCommunityIcons name="trash-can-outline" size={22} color={Colors.danger} />
+          <MaterialCommunityIcons name="trash-can-outline" size={22} color={colors.danger} />
         )}
       </Pressable>
     </View>
   );
 }
 
-const styles = StyleSheet.create({
-  card: {
-    backgroundColor: '#fff',
-    borderRadius: 18,
-    padding: 14,
-    marginBottom: 12,
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  icon: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: '#F1F5F9',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  content: {
-    flex: 1,
-    marginLeft: 14,
-  },
-  name: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: Colors.text,
-  },
-  meta: {
-    marginTop: 4,
-    fontSize: 13,
-    color: Colors.textSecondary,
-  },
-  actionButton: {
-    paddingHorizontal: 8,
-  },
-});
+function getStyles(colors: ColorPalette) {
+  return StyleSheet.create({
+    card: {
+      backgroundColor: colors.surface,
+      borderRadius: 18,
+      padding: 14,
+      marginBottom: 10,
+      flexDirection: 'row',
+      alignItems: 'center',
+      borderWidth: 1,
+      borderColor: colors.border,
+    },
+    icon: {
+      width: 46,
+      height: 46,
+      borderRadius: 23,
+      backgroundColor: colors.surfaceAlt,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    content: {
+      flex: 1,
+      marginLeft: 14,
+    },
+    name: {
+      fontSize: 15,
+      fontWeight: '600',
+      color: colors.text,
+    },
+    meta: {
+      marginTop: 3,
+      fontSize: 12.5,
+      color: colors.textSecondary,
+    },
+    actionButton: {
+      paddingHorizontal: 8,
+    },
+  });
+}

@@ -1,7 +1,8 @@
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 
-import Colors from '@/theme/colors';
+import { ColorPalette } from '@/theme/palette';
+import { useColors } from '@/theme/useColors';
 import { SharedFileEntry } from '@/types/file';
 
 interface Props {
@@ -29,13 +30,16 @@ export default function SharedFileRow({
   onShareAgain,
   onRevoke,
 }: Props) {
+  const colors = useColors();
+  const styles = getStyles(colors);
+
   return (
     <Pressable
       style={({ pressed }) => [styles.card, pressed && styles.pressed]}
       onPress={onPress}
     >
       <View style={styles.icon}>
-        <MaterialCommunityIcons name="link-variant" size={22} color={Colors.primary} />
+        <MaterialCommunityIcons name="link-variant" size={22} color={colors.primary} />
       </View>
 
       <View style={styles.content}>
@@ -52,9 +56,9 @@ export default function SharedFileRow({
         style={styles.actionButton}
       >
         {sharing ? (
-          <ActivityIndicator size="small" color={Colors.primary} />
+          <ActivityIndicator size="small" color={colors.primary} />
         ) : (
-          <MaterialCommunityIcons name="share-variant-outline" size={20} color={Colors.primary} />
+          <MaterialCommunityIcons name="share-variant-outline" size={20} color={colors.primary} />
         )}
       </Pressable>
 
@@ -65,50 +69,54 @@ export default function SharedFileRow({
         style={styles.actionButton}
       >
         {revoking ? (
-          <ActivityIndicator size="small" color={Colors.danger} />
+          <ActivityIndicator size="small" color={colors.danger} />
         ) : (
-          <MaterialCommunityIcons name="link-off" size={20} color={Colors.danger} />
+          <MaterialCommunityIcons name="link-off" size={20} color={colors.danger} />
         )}
       </Pressable>
     </Pressable>
   );
 }
 
-const styles = StyleSheet.create({
-  card: {
-    backgroundColor: '#fff',
-    borderRadius: 18,
-    padding: 14,
-    marginBottom: 12,
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  pressed: {
-    opacity: 0.85,
-  },
-  icon: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: '#EEF5FF',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  content: {
-    flex: 1,
-    marginLeft: 14,
-  },
-  name: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: Colors.text,
-  },
-  meta: {
-    marginTop: 4,
-    fontSize: 12,
-    color: Colors.textSecondary,
-  },
-  actionButton: {
-    paddingHorizontal: 6,
-  },
-});
+function getStyles(colors: ColorPalette) {
+  return StyleSheet.create({
+    card: {
+      backgroundColor: colors.surface,
+      borderRadius: 18,
+      padding: 14,
+      marginBottom: 10,
+      flexDirection: 'row',
+      alignItems: 'center',
+      borderWidth: 1,
+      borderColor: colors.border,
+    },
+    pressed: {
+      opacity: 0.85,
+    },
+    icon: {
+      width: 46,
+      height: 46,
+      borderRadius: 23,
+      backgroundColor: colors.primarySoft,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    content: {
+      flex: 1,
+      marginLeft: 14,
+    },
+    name: {
+      fontSize: 15,
+      fontWeight: '600',
+      color: colors.text,
+    },
+    meta: {
+      marginTop: 3,
+      fontSize: 12,
+      color: colors.textSecondary,
+    },
+    actionButton: {
+      paddingHorizontal: 6,
+    },
+  });
+}

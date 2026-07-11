@@ -16,13 +16,16 @@ import { useFileUpload } from '@/hooks/useFileUpload';
 import { useFileActions } from '@/hooks/useFileActions';
 import { useFolderActions } from '@/hooks/useFolderActions';
 import { useMultiSelect } from '@/hooks/useMultiSelect';
-import Colors from '@/theme/colors';
+import { ColorPalette } from '@/theme/palette';
+import { useColors } from '@/theme/useColors';
 import { ZDriveFile } from '@/types/file';
 import { ZDriveFolder } from '@/types/folder';
 
 export default function FolderExplorerScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
+  const colors = useColors();
+  const styles = getStyles(colors);
 
   const [folder, setFolder] = useState<ZDriveFolder | null>(null);
   const [childFolders, setChildFolders] = useState<ZDriveFolder[]>([]);
@@ -227,7 +230,7 @@ export default function FolderExplorerScreen() {
     return (
       <Screen>
         <View style={styles.center}>
-          <ActivityIndicator size="large" color={Colors.primary} />
+          <ActivityIndicator size="large" color={colors.primary} />
         </View>
       </Screen>
     );
@@ -247,7 +250,7 @@ export default function FolderExplorerScreen() {
       ) : (
         <View style={styles.topBar}>
           <Pressable onPress={() => router.back()} hitSlop={12}>
-            <MaterialCommunityIcons name="arrow-left" size={26} color={Colors.text} />
+            <MaterialCommunityIcons name="arrow-left" size={26} color={colors.text} />
           </Pressable>
 
           <Text style={styles.topBarTitle} numberOfLines={1}>
@@ -256,11 +259,11 @@ export default function FolderExplorerScreen() {
 
           <View style={styles.headerActions}>
             <Pressable hitSlop={10} onPress={() => setCreateFolderVisible(true)}>
-              <MaterialCommunityIcons name="folder-plus-outline" size={24} color={Colors.primary} />
+              <MaterialCommunityIcons name="folder-plus-outline" size={24} color={colors.primary} />
             </Pressable>
 
             <Pressable hitSlop={10} onPress={() => setShowCurrentFolderMenu(true)}>
-              <MaterialCommunityIcons name="dots-vertical" size={22} color={Colors.text} />
+              <MaterialCommunityIcons name="dots-vertical" size={22} color={colors.text} />
             </Pressable>
           </View>
         </View>
@@ -379,30 +382,33 @@ export default function FolderExplorerScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  center: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
+function getStyles(colors: ColorPalette) {
+  return StyleSheet.create({
+    center: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
 
-  topBar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 12,
-    gap: 12,
-  },
+    topBar: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingVertical: 12,
+      gap: 12,
+    },
 
-  topBarTitle: {
-    flex: 1,
-    fontSize: 18,
-    fontWeight: '700',
-    color: Colors.text,
-  },
+    topBarTitle: {
+      flex: 1,
+      fontSize: 18,
+      fontWeight: '700',
+      letterSpacing: -0.3,
+      color: colors.text,
+    },
 
-  headerActions: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 16,
-  },
-});
+    headerActions: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 16,
+    },
+  });
+}
