@@ -1,5 +1,9 @@
-import { StyleSheet } from 'react-native';
+import { useEvent } from 'expo';
+import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 import { useVideoPlayer, VideoView } from 'expo-video';
+
+import { ColorPalette } from '@/theme/palette';
+import { useColors } from '@/theme/useColors';
 
 interface Props {
   uri: string;
@@ -15,17 +19,72 @@ interface Props {
 // audio modes, which is more permission surface than a simple "view
 // this video file" screen warrants.
 export default function VideoPreview({ uri }: Props) {
+  const colors = useColors();
+  const styles = getStyles(colors);
+
   const player = useVideoPlayer(uri, (instance) => {
     instance.loop = false;
   });
 
+  // The player fails completely silently by default (no visible
+  // feedback at all on a network/format error) unless we listen for
+  // statusChange ourselves - surfacing loading/error state here so a
+  // broken video doesn't just look like a blank screen.
+  const { status, error } = useEvent(player, 'statusChange', {
+    status: player.status,
+  });
+
+  if (status === 'error') {
+    console.error('VideoPreview playback error:', error?.message);
+  }
+
   return (
-    <VideoView player={player} style={styles.video} nativeControls contentFit="contain" />
+    <View style={styles.wrap}>
+      <VideoView player={player} style={styles.video} nativeControls contentFit="contain" />
+
+      {status === 'loading' && (
+        <View style={styles.overlay} pointerEvents="none">
+          <ActivityIndicator size="large" color="#FFFFFF" />
+        </View>
+      )}
+
+      {status === 'error' && (
+        <View style={styles.overlay}>
+          <Text style={styles.errorText}>
+            Couldn't play this video{error?.message ? `: ${error.message}` : '.'}
+          </Text>
+        </View>
+      )}
+    </View>
   );
 }
 
-const styles = StyleSheet.create({
-  video: {
-    flex: 1,
-  },
-});
+function getStyles(colors: ColorPalette) {
+  return StyleSheet.create({
+    wrap: {
+      flex: 1,
+    },
+
+    video: {
+      flex: 1,
+    },
+
+    overlay: {
+      position: 'absolute',
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      justifyContent: 'center',
+      alignItems: 'center',
+      backgroundColor: 'rgba(0, 0, 0, 0.5)',
+      paddingHorizontal: 24,
+    },
+
+    errorText: {
+      color: '#FFFFFF',
+      fontSize: 14,
+      textAlign: 'center',
+    },
+  });
+}

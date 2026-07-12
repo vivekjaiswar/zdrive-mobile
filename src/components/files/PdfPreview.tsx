@@ -36,7 +36,13 @@ export default function PdfPreview({ uri }: Props) {
         source={{ uri, cache: true }}
         style={styles.pdf}
         onLoadComplete={() => setLoading(false)}
-        onError={() => {
+        onError={(error) => {
+          // react-native-pdf's own download path swallows the real
+          // fetch failure and can throw a second, misleading
+          // "ENOENT .pdf.tmp" error from its internal cache-copy step
+          // - logging the raw error here is the only way to see what
+          // actually went wrong (network, auth, timeout, etc.).
+          console.error('PdfPreview load error:', error);
           setLoading(false);
           setFailed(true);
         }}
