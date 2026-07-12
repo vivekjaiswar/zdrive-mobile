@@ -1,5 +1,6 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
+import { File, Paths } from 'expo-file-system';
 import Pdf from 'react-native-pdf';
 
 import { ColorPalette } from '@/theme/palette';
@@ -9,18 +10,41 @@ interface Props {
   uri: string;
 }
 
-// react-native-pdf (not an Expo-Go-compatible module - see the
-// project-level note about needing a custom dev client / full EAS
-// build once this landed) renders real paged, pinch-zoomable PDF
-// pages natively. `cache: true` lets it keep a local copy keyed off
-// the URL rather than re-downloading on every re-render, which
-// matters here since `uri` is a short-lived ticket URL that changes
-// each time the file details are re-fetched.
+// react-native-pdf's own network-download path goes through
+// react-native-blob-util, which does a strict check comparing bytes
+// received against the response's Content-Length header and reports
+// "Download interrupted" whenever they don't match exactly - which
+// happens reliably against this backend, since files are decrypted
+// on the fly while streaming and the header doesn't necessarily match
+// the decrypted body size. expo-file-system's downloader (already
+// used elsewhere in this app for the working "Download" button)
+// handles this fine, so fetch the PDF ourselves and hand
+// react-native-pdf a plain local file:// path instead of a network
+// URL - that skips its buggy download path entirely.
 export default function PdfPreview({ uri }: Props) {
   const colors = useColors();
   const styles = getStyles(colors);
-  const [loading, setLoading] = useState(true);
+  const [localUri, setLocalUri] = useState<string | null>(null);
   const [failed, setFailed] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    setLocalUri(null);
+    setFailed(false);
+
+    File.downloadFileAsync(uri, Paths.cache, { idempotent: true })
+      .then((file) => {
+        if (!cancelled) setLocalUri(file.uri);
+      })
+      .catch((error) => {
+        console.error('PdfPreview download error:', error);
+        if (!cancelled) setFailed(true);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [uri]);
 
   if (failed) {
     return (
@@ -30,38 +54,24 @@ export default function PdfPreview({ uri }: Props) {
     );
   }
 
+  if (!localUri) {
+    return (
+      <View style={styles.center}>
+        <ActivityIndicator size="large" color={colors.primary} />
+      </View>
+    );
+  }
+
   return (
     <View style={styles.wrap}>
       <Pdf
-        source={{ uri, cache: true }}
-        // Explicit false, not omitted: react-native-pdf forwards this
-        // straight to react-native-blob-util as `trusty`, and leaving
-        // it undefined can still evaluate truthy on the native side,
-        // routing the request through blob-util's broken "trust all
-        // certs" path (which requires a sharedTrustManager this app
-        // never sets up) instead of normal TLS verification - causing
-        // "IllegalStateException: Use of own trust manager but none
-        // defined". A real boolean false avoids that path entirely.
-        trustAllCerts={false}
+        source={{ uri: localUri }}
         style={styles.pdf}
-        onLoadComplete={() => setLoading(false)}
         onError={(error) => {
-          // react-native-pdf's own download path swallows the real
-          // fetch failure and can throw a second, misleading
-          // "ENOENT .pdf.tmp" error from its internal cache-copy step
-          // - logging the raw error here is the only way to see what
-          // actually went wrong (network, auth, timeout, etc.).
-          console.error('PdfPreview load error:', error);
-          setLoading(false);
+          console.error('PdfPreview render error:', error);
           setFailed(true);
         }}
       />
-
-      {loading && (
-        <View style={styles.loadingOverlay}>
-          <ActivityIndicator size="large" color={colors.primary} />
-        </View>
-      )}
     </View>
   );
 }
@@ -75,17 +85,6 @@ function getStyles(colors: ColorPalette) {
     pdf: {
       flex: 1,
       backgroundColor: colors.surfaceAlt,
-    },
-
-    loadingOverlay: {
-      position: 'absolute',
-      top: 0,
-      left: 0,
-      right: 0,
-      bottom: 0,
-      justifyContent: 'center',
-      alignItems: 'center',
-      backgroundColor: colors.background,
     },
 
     center: {
