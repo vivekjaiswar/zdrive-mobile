@@ -34,6 +34,15 @@ export default function PdfPreview({ uri }: Props) {
     <View style={styles.wrap}>
       <Pdf
         source={{ uri, cache: true }}
+        // Explicit false, not omitted: react-native-pdf forwards this
+        // straight to react-native-blob-util as `trusty`, and leaving
+        // it undefined can still evaluate truthy on the native side,
+        // routing the request through blob-util's broken "trust all
+        // certs" path (which requires a sharedTrustManager this app
+        // never sets up) instead of normal TLS verification - causing
+        // "IllegalStateException: Use of own trust manager but none
+        // defined". A real boolean false avoids that path entirely.
+        trustAllCerts={false}
         style={styles.pdf}
         onLoadComplete={() => setLoading(false)}
         onError={(error) => {
