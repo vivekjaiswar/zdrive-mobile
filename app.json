@@ -46,7 +46,8 @@
         {
           "faceIDPermission": "Allow ZDrive to use Face ID to unlock the app."
         }
-      ]
+      ],
+      "@sentry/react-native/expo"
     ],
     "experiments": {
       "typedRoutes": true,

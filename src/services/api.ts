@@ -7,6 +7,11 @@ export const API_BASE_URL = 'https://zhdrive.in/api';
 // Share.share() / Linking.openURL()).
 export const WEB_BASE_URL = 'https://zhdrive.in';
 
+// Static pages served directly by the web server (not the API) -
+// update these paths if the hosted location changes.
+export const PRIVACY_POLICY_URL = `${WEB_BASE_URL}/privacy`;
+export const TERMS_OF_SERVICE_URL = `${WEB_BASE_URL}/terms`;
+
 export const api = axios.create({
   baseURL: API_BASE_URL,
   timeout: 30000,

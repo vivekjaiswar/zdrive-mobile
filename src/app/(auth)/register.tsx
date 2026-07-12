@@ -1,11 +1,12 @@
 import { useState } from 'react';
-import { Alert, Pressable, Text } from 'react-native';
+import { Alert, Linking, Pressable, Text } from 'react-native';
 import { useRouter } from 'expo-router';
 
 import AuthScreenLayout from '@/components/auth/AuthScreenLayout';
 import PrimaryButton from '@/components/Button/PrimaryButton';
 import AppInput from '@/components/Input/AppInput';
 import authService from '@/services/auth.service';
+import { PRIVACY_POLICY_URL, TERMS_OF_SERVICE_URL } from '@/services/api';
 import { getAuthStyles } from '@/components/auth/authStyles';
 import { useColors } from '@/theme/useColors';
 import { getPasswordError, PASSWORD_HINT } from '@/utils/validation';
@@ -116,6 +117,24 @@ export default function RegisterScreen() {
       />
 
       <PrimaryButton title="Create Account" loading={loading} onPress={handleRegister} />
+
+      <Text style={authStyles.legalText}>
+        By creating an account, you agree to our{' '}
+        <Text
+          style={authStyles.legalLink}
+          onPress={() => Linking.openURL(TERMS_OF_SERVICE_URL)}
+        >
+          Terms of Service
+        </Text>{' '}
+        and{' '}
+        <Text
+          style={authStyles.legalLink}
+          onPress={() => Linking.openURL(PRIVACY_POLICY_URL)}
+        >
+          Privacy Policy
+        </Text>
+        .
+      </Text>
     </AuthScreenLayout>
   );
 }

@@ -3,14 +3,29 @@ import { AppState, AppStateStatus } from 'react-native';
 import { router, Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import * as Sentry from '@sentry/react-native';
 
 import LockScreen from '@/components/security/LockScreen';
 import { setUnauthorizedHandler } from '@/services/api';
+import { SENTRY_DSN } from '@/constants/sentry';
 import { useAuthStore } from '@/store/auth.store';
 import { useSecurityStore } from '@/store/security.store';
 import { useColors } from '@/theme/useColors';
 
-export default function RootLayout() {
+// Must run once at module scope (not inside the component) so it's
+// wired up before anything else in the app can throw. An empty DSN
+// (see src/constants/sentry.ts) makes this a safe no-op.
+if (SENTRY_DSN) {
+  Sentry.init({
+    dsn: SENTRY_DSN,
+    tracesSampleRate: 1.0,
+    // Sends a session on every app start/foreground so crash-free-rate
+    // (a useful beta health metric) is tracked, not just hard errors.
+    enableAutoSessionTracking: true,
+  });
+}
+
+function RootLayout() {
   const logout = useAuthStore((state) => state.logout);
   const token = useAuthStore((state) => state.token);
   const authHydrated = useAuthStore((state) => state.isHydrated);
@@ -112,3 +127,8 @@ export default function RootLayout() {
     </GestureHandlerRootView>
   );
 }
+
+// Sentry.wrap adds an error boundary (so a crash reports before the
+// app goes down instead of silently) plus automatic navigation
+// breadcrumbs. A no-op passthrough when SENTRY_DSN is empty.
+export default Sentry.wrap(RootLayout);

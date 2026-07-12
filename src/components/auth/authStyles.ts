@@ -35,5 +35,18 @@ export function getAuthStyles(colors: ColorPalette) {
       fontSize: 12,
       color: colors.textSecondary,
     },
+
+    legalText: {
+      marginTop: 4,
+      fontSize: 12.5,
+      color: colors.textSecondary,
+      textAlign: 'center',
+      lineHeight: 18,
+    },
+
+    legalLink: {
+      color: colors.primary,
+      fontWeight: '600',
+    },
   });
 }
