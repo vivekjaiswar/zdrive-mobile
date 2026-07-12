@@ -71,14 +71,14 @@ export default function ResetPasswordScreen() {
       />
       <AppInput
         placeholder="New Password"
-        secureTextEntry
+        isPassword
         value={password}
         onChangeText={setPassword}
       />
       <Text style={authStyles.hint}>{PASSWORD_HINT}</Text>
       <AppInput
         placeholder="Confirm New Password"
-        secureTextEntry
+        isPassword
         value={confirmPassword}
         onChangeText={setConfirmPassword}
       />

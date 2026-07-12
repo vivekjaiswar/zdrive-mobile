@@ -114,7 +114,7 @@ export default function LoginScreen() {
 
               <AppInput
                 placeholder="Password"
-                secureTextEntry
+                isPassword
                 value={password}
                 onChangeText={setPassword}
               />

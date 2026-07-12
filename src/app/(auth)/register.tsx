@@ -101,7 +101,7 @@ export default function RegisterScreen() {
 
       <AppInput
         placeholder="Password"
-        secureTextEntry
+        isPassword
         value={password}
         onChangeText={setPassword}
       />
@@ -110,7 +110,7 @@ export default function RegisterScreen() {
 
       <AppInput
         placeholder="Confirm Password"
-        secureTextEntry
+        isPassword
         value={confirmPassword}
         onChangeText={setConfirmPassword}
       />

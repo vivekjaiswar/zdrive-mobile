@@ -98,14 +98,14 @@ export default function ChangePasswordModal({
             <View style={styles.form}>
               <AppInput
                 placeholder="Current Password"
-                secureTextEntry
+                isPassword
                 value={current}
                 onChangeText={setCurrent}
               />
 
               <AppInput
                 placeholder="New Password"
-                secureTextEntry
+                isPassword
                 value={next}
                 onChangeText={setNext}
               />
@@ -114,7 +114,7 @@ export default function ChangePasswordModal({
 
               <AppInput
                 placeholder="Confirm New Password"
-                secureTextEntry
+                isPassword
                 value={confirm}
                 onChangeText={setConfirm}
               />
