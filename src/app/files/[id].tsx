@@ -14,6 +14,9 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 import Screen from '@/components/Layout/Screen';
 import ZoomableImage from '@/components/files/ZoomableImage';
+import VideoPreview from '@/components/files/VideoPreview';
+import AudioPlayer from '@/components/files/AudioPlayer';
+import PdfPreview from '@/components/files/PdfPreview';
 import filesService from '@/services/files.service';
 import { useFileActions } from '@/hooks/useFileActions';
 import { ColorPalette } from '@/theme/palette';
@@ -38,10 +41,8 @@ function iconFor(mime?: string) {
 }
 
 // Text-ish mime types we can safely fetch and render as plain text.
-// Anything else (pdf/video/audio/binary) falls back to "open
-// externally" - there's no embedded PDF/video/audio player installed
-// in this project yet, and adding one mid-session risks needing a
-// native rebuild.
+// Anything else that isn't image/video/audio/pdf falls back to "open
+// externally".
 function isTextLike(mime?: string) {
   if (!mime) return false;
   if (mime.startsWith('text/')) return true;
@@ -141,6 +142,9 @@ export default function FilePreviewScreen() {
   }
 
   const isImage = file.mimeType?.startsWith('image/');
+  const isVideo = file.mimeType?.startsWith('video/');
+  const isAudio = file.mimeType?.startsWith('audio/');
+  const isPdf = file.mimeType === 'application/pdf';
   const isText = isTextLike(file.mimeType);
 
   return (
@@ -192,6 +196,18 @@ export default function FilePreviewScreen() {
       {isImage ? (
         <View style={styles.imageWrap}>
           <ZoomableImage uri={file.previewUrl} />
+        </View>
+      ) : isVideo ? (
+        <View style={styles.imageWrap}>
+          <VideoPreview uri={file.previewUrl} />
+        </View>
+      ) : isAudio ? (
+        <View style={styles.audioWrap}>
+          <AudioPlayer uri={file.previewUrl} name={file.name} />
+        </View>
+      ) : isPdf ? (
+        <View style={styles.pdfWrap}>
+          <PdfPreview uri={file.previewUrl} />
         </View>
       ) : isText ? (
         <ScrollView style={styles.textScroll} contentContainerStyle={styles.textContent}>
@@ -271,6 +287,18 @@ function getStyles(colors: ColorPalette) {
     imageWrap: {
       flex: 1,
       backgroundColor: '#0B1120',
+      marginHorizontal: -24,
+      marginBottom: -24,
+    },
+
+    audioWrap: {
+      flex: 1,
+      marginHorizontal: -24,
+      marginBottom: -24,
+    },
+
+    pdfWrap: {
+      flex: 1,
       marginHorizontal: -24,
       marginBottom: -24,
     },
