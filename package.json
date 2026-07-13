@@ -5,9 +5,10 @@
   "dependencies": {
     "@expo/ui": "~56.0.21",
     "@expo/vector-icons": "^15.0.2",
-    "@sentry/react-native": "^8.17.2",
+    "@sentry/react-native": "~7.11.0",
     "axios": "^1.18.1",
     "expo": "~56.0.15",
+    "expo-asset": "~56.0.12",
     "expo-audio": "~56.0.12",
     "expo-constants": "~56.0.18",
     "expo-dev-client": "~56.0.22",
