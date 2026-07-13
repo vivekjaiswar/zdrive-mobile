@@ -28,3 +28,5 @@ yarn-error.log*
 
 expo-env.d.ts
 # @end expo-cli
+# Debug artifacts from EAS build log troubleshooting
+gradle_log*.txt*
