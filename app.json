@@ -49,7 +49,8 @@
       ],
       "@sentry/react-native/expo",
       "./plugins/withGradleWrapperFix.js",
-      "./plugins/withGradleJavaHomeFix.js"
+      "./plugins/withGradleJavaHomeFix.js",
+      "./plugins/withGradleMemoryFix.js"
     ],
     "experiments": {
       "typedRoutes": true,
