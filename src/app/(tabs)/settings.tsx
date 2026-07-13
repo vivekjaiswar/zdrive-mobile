@@ -2,7 +2,6 @@ import { useCallback, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
-  Linking,
   ScrollView,
   StyleSheet,
   Text,
@@ -20,7 +19,6 @@ import DeleteAccountModal from '@/components/settings/DeleteAccountModal';
 import PlansModal from '@/components/settings/PlansModal';
 import TextPromptModal from '@/components/common/TextPromptModal';
 import usersService from '@/services/users.service';
-import { PRIVACY_POLICY_URL, TERMS_OF_SERVICE_URL } from '@/services/api';
 import { useAuthStore } from '@/store/auth.store';
 import { useSecurityStore } from '@/store/security.store';
 import { useTabBarHeight } from '@/hooks/useTabBarHeight';
@@ -285,12 +283,12 @@ export default function SettingsScreen() {
           <SettingsRow
             icon="shield-check-outline"
             label="Privacy Policy"
-            onPress={() => Linking.openURL(PRIVACY_POLICY_URL)}
+            onPress={() => router.push('/legal/privacy')}
           />
           <SettingsRow
             icon="file-document-outline"
             label="Terms of Service"
-            onPress={() => Linking.openURL(TERMS_OF_SERVICE_URL)}
+            onPress={() => router.push('/legal/terms')}
           />
         </View>
       </ScrollView>
