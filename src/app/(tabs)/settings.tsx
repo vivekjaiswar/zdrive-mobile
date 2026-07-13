@@ -10,6 +10,7 @@ import {
 import { useFocusEffect, useRouter } from 'expo-router';
 import * as DocumentPicker from 'expo-document-picker';
 import * as SecureStore from 'expo-secure-store';
+import * as Sentry from '@sentry/react-native';
 
 import Screen from '@/components/Layout/Screen';
 import ProfileHeader from '@/components/settings/ProfileHeader';
@@ -291,6 +292,32 @@ export default function SettingsScreen() {
             onPress={() => router.push('/legal/terms')}
           />
         </View>
+
+        {/* __DEV__ only - lets us confirm Sentry is actually wired up
+            end-to-end without shipping a test-crash button to real
+            users. This whole card is stripped out of production/EAS
+            builds since __DEV__ is false there. */}
+        {__DEV__ && (
+          <>
+            <Text style={styles.sectionLabel}>Debug</Text>
+            <View style={styles.card}>
+              <SettingsRow
+                icon="bug-outline"
+                label="Send Test Error to Sentry"
+                showChevron={false}
+                onPress={() => {
+                  Sentry.captureException(
+                    new Error('ZDrive test error - Sentry wired up correctly'),
+                  );
+                  Alert.alert(
+                    'Sent',
+                    'Check your Sentry dashboard - it may take a few seconds to appear.',
+                  );
+                }}
+              />
+            </View>
+          </>
+        )}
       </ScrollView>
 
       <TextPromptModal
