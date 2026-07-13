@@ -36,15 +36,15 @@ export default function Index() {
     );
   }
 
-  // An existing session (token restored from SecureStore) always
-  // wins - a user who's already logged in on this device shouldn't
-  // be stopped by the consent gate on every cold start. The gate only
-  // applies to the pre-login/register path: first-ever launch, or any
-  // launch after a logout where consent was never recorded on this
-  // device.
-  if (token) {
-    return <Redirect href="/(tabs)/dashboard" />;
+  // Consent is required from EVERY user on this device, logged in or
+  // not - the Privacy Policy itself names user consent as the legal
+  // basis for processing data, so a session that predates this gate
+  // (e.g. an existing tester who logged in before this feature
+  // shipped) still needs to explicitly agree once. consent.tsx reads
+  // the token itself to decide where "Continue" sends them next.
+  if (!hasAcceptedTerms) {
+    return <Redirect href="/consent" />;
   }
 
-  return <Redirect href={hasAcceptedTerms ? '/(auth)/login' : '/consent'} />;
+  return <Redirect href={token ? '/(tabs)/dashboard' : '/(auth)/login'} />;
 }

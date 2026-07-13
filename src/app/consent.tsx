@@ -6,21 +6,24 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import AuthScreenLayout from '@/components/auth/AuthScreenLayout';
 import PrimaryButton from '@/components/Button/PrimaryButton';
 import { getAuthStyles } from '@/components/auth/authStyles';
+import { useAuthStore } from '@/store/auth.store';
 import { useConsentStore } from '@/store/consent.store';
 import { ColorPalette } from '@/theme/palette';
 import { useColors } from '@/theme/useColors';
 
-// Shown exactly once per install, before the user ever sees login or
-// register - gated by useConsentStore (persisted in SecureStore, see
-// src/app/index.tsx for the redirect logic). An already-logged-in
-// user (existing session restored from a prior install) never sees
-// this screen at all.
+// Shown exactly once per device, to every user regardless of login
+// state - gated by useConsentStore (persisted in SecureStore, see
+// src/app/index.tsx for the redirect logic). Someone who's already
+// logged in (a session that predates this gate) still lands here
+// first; Continue sends them on to wherever they were actually
+// headed instead of always assuming a fresh, logged-out user.
 export default function ConsentScreen() {
   const router = useRouter();
   const colors = useColors();
   const authStyles = getAuthStyles(colors);
   const styles = getStyles(colors);
 
+  const token = useAuthStore((state) => state.token);
   const accept = useConsentStore((state) => state.accept);
   const [agreed, setAgreed] = useState(false);
   const [continuing, setContinuing] = useState(false);
@@ -30,7 +33,7 @@ export default function ConsentScreen() {
 
     setContinuing(true);
     await accept();
-    router.replace('/(auth)/login');
+    router.replace(token ? '/(tabs)/dashboard' : '/(auth)/login');
   }
 
   return (

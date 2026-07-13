@@ -130,5 +130,7 @@ function RootLayout() {
 
 // Sentry.wrap adds an error boundary (so a crash reports before the
 // app goes down instead of silently) plus automatic navigation
-// breadcrumbs. A no-op passthrough when SENTRY_DSN is empty.
-export default Sentry.wrap(RootLayout);
+// breadcrumbs. Only wrap when Sentry.init() actually ran above - doing
+// it unconditionally caused "Sentry.wrap was called before
+// Sentry.init" warnings on every launch while SENTRY_DSN is empty.
+export default SENTRY_DSN ? Sentry.wrap(RootLayout) : RootLayout;
