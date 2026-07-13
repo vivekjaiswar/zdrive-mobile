@@ -3,6 +3,7 @@
   "main": "expo-router/entry",
   "version": "1.0.0",
   "dependencies": {
+    "@expo/config-plugins": "~56.0.12",
     "@expo/ui": "~56.0.21",
     "@expo/vector-icons": "^15.0.2",
     "@sentry/react-native": "~7.11.0",
