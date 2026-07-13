@@ -5,8 +5,10 @@ export interface LoginRequest {
   password: string;
 }
 
+// v1.2.1: the backend sets the session as an httpOnly cookie (see
+// api.ts's withCredentials) and no longer returns the JWT in the body -
+// there is no accessToken field to read here anymore.
 export interface LoginResponse {
-  accessToken: string;
   user: {
     id: string;
     email: string;
@@ -15,11 +17,12 @@ export interface LoginResponse {
   };
 }
 
+// v1.2.1: register() no longer echoes back userId/email (part of the
+// anti-enumeration hardening - existing-email and new-email registration
+// attempts now return an identical generic response).
 export interface RegisterResponse {
   success: boolean;
   message: string;
-  userId: string;
-  email: string;
 }
 
 class AuthService {

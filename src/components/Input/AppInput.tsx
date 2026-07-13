@@ -44,6 +44,19 @@ export default function AppInput({
       <TextInput
         {...props}
         secureTextEntry={isPassword ? !visible : secureTextEntry}
+        // secureTextEntry masks the display, it does NOT reliably
+        // disable autoCapitalize/autoCorrect on its own - RN's default
+        // for any TextInput is autoCapitalize="sentences" and
+        // autoCorrect={true}, and neither call site here (login,
+        // register, change-password, reset-password) was overriding
+        // that. Since isPassword already fully owns secureTextEntry,
+        // it should own these too - a password field silently
+        // capitalizing or "correcting" characters means what actually
+        // gets submitted can differ from what the user typed, with no
+        // visible sign of it (the field is masked). Force these off
+        // whenever isPassword is set, regardless of what's passed in.
+        autoCapitalize={isPassword ? 'none' : props.autoCapitalize}
+        autoCorrect={isPassword ? false : props.autoCorrect}
         style={[styles.input, style]}
         placeholderTextColor={colors.textSecondary}
         selectionColor={colors.primary}

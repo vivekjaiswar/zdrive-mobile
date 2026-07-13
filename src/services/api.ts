@@ -18,6 +18,15 @@ export const api = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
+  // Backend v1.2.1 moved the session token out of the JSON response body
+  // and into an httpOnly cookie (zd_session) - JwtStrategy only reads
+  // that cookie now, there is no Authorization-header fallback. This
+  // flag tells React Native's native networking layer (NSHTTPCookieStorage
+  // on iOS, OkHttp's cookie jar on Android) to store Set-Cookie responses
+  // and re-attach them on subsequent requests, the same way a browser
+  // would. Nothing else in this app can read or set that cookie directly -
+  // it's httpOnly by design, specifically so client-side JS can't touch it.
+  withCredentials: true,
 });
 
 // Registered-handler pattern: api.ts can't import auth.store.ts directly

@@ -11,7 +11,6 @@ import {
   View,
 } from 'react-native';
 
-import * as SecureStore from 'expo-secure-store';
 import { useRouter } from 'expo-router';
 
 import PrimaryButton from '@/components/Button/PrimaryButton';
@@ -31,7 +30,6 @@ export default function LoginScreen() {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const setToken = useAuthStore((state) => state.setToken);
   const setUser = useAuthStore((state) => state.setUser);
 
   async function handleLogin() {
@@ -53,22 +51,24 @@ export default function LoginScreen() {
         password,
       });
 
-      await SecureStore.setItemAsync(
-        'accessToken',
-        response.accessToken,
-      );
-
-      // setToken attaches the Authorization header to the shared
-      // axios instance too - no need to do it manually here.
-      setToken(response.accessToken);
+      // v1.2.1: the session itself arrives as a Set-Cookie header on
+      // this same response (httpOnly, handled automatically by the
+      // native cookie jar - see api.ts's withCredentials). There's no
+      // token in the body anymore to store or attach manually.
       setUser(response.user);
 
       router.replace('/(tabs)/dashboard');
 
     } catch (error: any) {
+      // Falls back to error.message (e.g. "Network Error") before the
+      // generic string, rather than hiding it - that distinction is
+      // exactly what confirmed the v1.2.1 cookie-auth switch itself was
+      // working (a real 401 with a server message, not a silent
+      // client-side failure).
       Alert.alert(
         'Login Failed',
         error?.response?.data?.message ??
+          error?.message ??
           'Unable to login.',
       );
     } finally {

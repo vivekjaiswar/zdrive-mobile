@@ -1,7 +1,6 @@
 import { create } from 'zustand';
 import * as SecureStore from 'expo-secure-store';
 
-import api from '@/services/api';
 import authService from '@/services/auth.service';
 
 interface User {
@@ -11,81 +10,72 @@ interface User {
   role: string;
 }
 
+// v1.2.1: the backend switched from a Bearer token in the JSON response
+// body to an httpOnly session cookie (zd_session) that JwtStrategy reads
+// exclusively - there's no Authorization-header fallback anymore, and no
+// token value this app can ever read (that's the point of httpOnly).
+// The native networking layer (see api.ts's withCredentials) stores and
+// resends that cookie automatically, the same way a browser would - this
+// store no longer holds or manages a token at all. "Authenticated" is now
+// just "do we have a user object," and the real source of truth for
+// whether the session is actually valid is always a live GET /auth/me
+// call, not anything cached locally.
 interface AuthStore {
-  token: string | null;
   user: User | null;
-  // Whether we've finished checking SecureStore for a saved session.
-  // The router should show a loading state, not redirect, until this
-  // is true - otherwise every cold start flashes the login screen
-  // before a valid saved token has had a chance to load.
+  // Whether we've finished the initial GET /auth/me check on boot. The
+  // router should show a loading state, not redirect, until this is
+  // true - otherwise every cold start flashes the login screen before
+  // we've had a chance to find out the cookie is actually still valid.
   isHydrated: boolean;
 
-  setToken: (token: string | null) => void;
   setUser: (user: User | null) => void;
   logout: () => Promise<void>;
   hydrate: () => Promise<void>;
 }
 
+// Legacy key from the pre-v1.2.1 Bearer-token build. Nothing reads this
+// anymore, but older installs may still have a stale value sitting in
+// SecureStore - clean it up opportunistically so it doesn't linger.
+const LEGACY_TOKEN_KEY = 'accessToken';
+
 export const useAuthStore = create<AuthStore>((set) => ({
-  token: null,
   user: null,
   isHydrated: false,
-
-  setToken: (token) => {
-    if (token) {
-      api.defaults.headers.common.Authorization = `Bearer ${token}`;
-    } else {
-      delete api.defaults.headers.common.Authorization;
-    }
-
-    set({ token });
-  },
 
   setUser: (user) => set({ user }),
 
   logout: async () => {
-    // Best-effort server-side revocation (bumps tokenVersion) - must
-    // happen BEFORE the Authorization header is cleared, since the
-    // request needs the current token to know which user to revoke.
-    // Wrapped so a network failure (offline, server down) never blocks
-    // the local logout - the user should always be able to log out of
-    // the app on their own device regardless of connectivity.
+    // Best-effort server-side revocation (bumps tokenVersion and clears
+    // the zd_session cookie). Wrapped so a network failure (offline,
+    // server down) never blocks the local logout - the user should
+    // always be able to log out of the app on their own device
+    // regardless of connectivity.
     try {
       await authService.logout();
     } catch {
       // Ignored - local session is cleared below regardless.
     }
 
-    await SecureStore.deleteItemAsync('accessToken');
-    delete api.defaults.headers.common.Authorization;
-    set({ token: null, user: null });
+    await SecureStore.deleteItemAsync(LEGACY_TOKEN_KEY).catch(() => {});
+    set({ user: null });
   },
 
-  // Called once on app boot (see src/app/index.tsx). Reads the token
-  // that login.tsx persisted with SecureStore, re-attaches it to the
-  // axios client, and confirms it's still valid via GET /auth/me
-  // before trusting it - a token can be present but expired/revoked.
+  // Called once on app boot (see src/app/index.tsx). There's no local
+  // token to read anymore - the httpOnly cookie (if any) is already
+  // attached automatically by the native networking layer, so the only
+  // way to know whether a session is actually still valid is to just
+  // ask the server.
   hydrate: async () => {
-    const token = await SecureStore.getItemAsync('accessToken');
-
-    if (!token) {
-      set({ isHydrated: true });
-      return;
-    }
-
-    api.defaults.headers.common.Authorization = `Bearer ${token}`;
+    await SecureStore.deleteItemAsync(LEGACY_TOKEN_KEY).catch(() => {});
 
     try {
       const user = await authService.me();
 
-      set({ token, user, isHydrated: true });
+      set({ user, isHydrated: true });
     } catch (e) {
-      // Expired/invalid token - don't strand the user on a dead
-      // session, fall back to a clean logged-out state.
-      await SecureStore.deleteItemAsync('accessToken');
-      delete api.defaults.headers.common.Authorization;
-
-      set({ token: null, user: null, isHydrated: true });
+      // No cookie, or an expired/revoked one - fall back to a clean
+      // logged-out state rather than stranding the user.
+      set({ user: null, isHydrated: true });
     }
   },
 }));

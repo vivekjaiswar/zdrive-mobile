@@ -9,7 +9,7 @@ import { useConsentStore } from '@/store/consent.store';
 export default function Index() {
   const colors = useColors();
   const isHydrated = useAuthStore((state) => state.isHydrated);
-  const token = useAuthStore((state) => state.token);
+  const user = useAuthStore((state) => state.user);
   const hydrate = useAuthStore((state) => state.hydrate);
 
   const consentHydrated = useConsentStore((state) => state.isHydrated);
@@ -41,10 +41,13 @@ export default function Index() {
   // basis for processing data, so a session that predates this gate
   // (e.g. an existing tester who logged in before this feature
   // shipped) still needs to explicitly agree once. consent.tsx reads
-  // the token itself to decide where "Continue" sends them next.
+  // the hydrated user itself to decide where "Continue" sends them next.
   if (!hasAcceptedTerms) {
     return <Redirect href="/consent" />;
   }
 
-  return <Redirect href={token ? '/(tabs)/dashboard' : '/(auth)/login'} />;
+  // v1.2.1: there's no local token to check anymore - hydrate() above
+  // already asked the server (GET /auth/me) whether the httpOnly session
+  // cookie is actually valid, and `user` is only set if it was.
+  return <Redirect href={user ? '/(tabs)/dashboard' : '/(auth)/login'} />;
 }

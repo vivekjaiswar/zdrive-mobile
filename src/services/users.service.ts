@@ -32,22 +32,20 @@ class UsersService {
     });
   }
 
-  // Note: the backend's ChangePasswordDto (class-validator) exists
-  // but auth.controller.ts's change-password route was last seen
-  // typed as @Body() body: any, so server-side enforcement of the
-  // password policy on THIS route is unconfirmed. Validate
-  // client-side defensively - see ChangePasswordModal.
+  // Backend enforces IsStrongPassword() on ChangePasswordDto (typed,
+  // not `any` - verified against the actual route). Client-side check
+  // in ChangePasswordModal mirrors the same rule to fail fast.
   //
-  // changePassword() on the backend bumps the user's tokenVersion
-  // (so old tokens everywhere else get revoked) and returns a fresh
-  // accessToken reflecting the new version. The caller MUST persist
-  // this immediately - if it doesn't, the app keeps using the now-
-  // stale token and gets silently logged out on the very next
-  // unrelated API call.
+  // v1.2.1: changePassword() still bumps the user's tokenVersion server-
+  // side and issues a fresh session, but that session now arrives as a
+  // Set-Cookie header on this same response (handled automatically by
+  // the native cookie jar - see api.ts's withCredentials) rather than as
+  // an accessToken field to persist manually. There is nothing left for
+  // the caller to store.
   async changePassword(
     currentPassword: string,
     newPassword: string,
-  ): Promise<{ accessToken: string }> {
+  ): Promise<{ success: boolean; message: string }> {
     const { data } = await api.post('/auth/change-password', {
       currentPassword,
       newPassword,

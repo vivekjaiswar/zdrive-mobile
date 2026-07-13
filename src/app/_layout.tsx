@@ -27,7 +27,7 @@ if (SENTRY_DSN) {
 
 function RootLayout() {
   const logout = useAuthStore((state) => state.logout);
-  const token = useAuthStore((state) => state.token);
+  const user = useAuthStore((state) => state.user);
   const authHydrated = useAuthStore((state) => state.isHydrated);
   const colors = useColors();
 
@@ -38,9 +38,11 @@ function RootLayout() {
 
   // Locking only ever makes sense once we know there's an actual
   // session to protect (no point locking the login screen itself)
-  // and once both stores have finished reading from SecureStore.
+  // and once both stores have finished hydrating. v1.2.1: there's no
+  // local token to check anymore - `user` is only populated once
+  // hydrate() confirms the httpOnly session cookie is actually valid.
   const shouldLock =
-    authHydrated && securityHydrated && !!token && biometricEnabled && biometricAvailable;
+    authHydrated && securityHydrated && !!user && biometricEnabled && biometricAvailable;
 
   // Starts `true` so a cold start never flashes real content before
   // the one-time determination effect below has a chance to run.

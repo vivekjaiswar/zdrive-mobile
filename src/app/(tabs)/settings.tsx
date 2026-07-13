@@ -9,7 +9,6 @@ import {
 } from 'react-native';
 import { useFocusEffect, useRouter } from 'expo-router';
 import * as DocumentPicker from 'expo-document-picker';
-import * as SecureStore from 'expo-secure-store';
 import * as Sentry from '@sentry/react-native';
 
 import Screen from '@/components/Layout/Screen';
@@ -41,7 +40,6 @@ export default function SettingsScreen() {
   const styles = getStyles(colors);
   const tabBarHeight = useTabBarHeight();
   const logout = useAuthStore((state) => state.logout);
-  const setToken = useAuthStore((state) => state.setToken);
 
   const biometricAvailable = useSecurityStore((state) => state.biometricAvailable);
   const biometricEnabled = useSecurityStore((state) => state.biometricEnabled);
@@ -130,19 +128,13 @@ export default function SettingsScreen() {
   async function handleChangePassword(currentPassword: string, newPassword: string) {
     try {
       setChangingPassword(true);
-      const { accessToken } = await usersService.changePassword(
-        currentPassword,
-        newPassword,
-      );
+      await usersService.changePassword(currentPassword, newPassword);
 
-      // Server bumped tokenVersion as part of this change, so the
-      // token we were using a second ago is now revoked. Persist and
-      // re-attach the fresh one immediately, or the very next API
-      // call (even just loading this screen) gets a 401 and silently
-      // logs the user out right after they saw a "Success" alert.
-      await SecureStore.setItemAsync('accessToken', accessToken);
-      setToken(accessToken);
-
+      // v1.2.1: the server still bumps tokenVersion and issues a fresh
+      // session as part of this change, but it now arrives as a
+      // Set-Cookie header on this same response - the native cookie jar
+      // (see api.ts's withCredentials) swaps it in automatically. There's
+      // no token in the response body left to persist or re-attach.
       setPasswordModalVisible(false);
       Alert.alert('Success', 'Your password has been updated.');
     } catch (error: any) {

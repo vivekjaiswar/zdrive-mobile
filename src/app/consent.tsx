@@ -23,7 +23,7 @@ export default function ConsentScreen() {
   const authStyles = getAuthStyles(colors);
   const styles = getStyles(colors);
 
-  const token = useAuthStore((state) => state.token);
+  const user = useAuthStore((state) => state.user);
   const accept = useConsentStore((state) => state.accept);
   const [agreed, setAgreed] = useState(false);
   const [continuing, setContinuing] = useState(false);
@@ -33,7 +33,7 @@ export default function ConsentScreen() {
 
     setContinuing(true);
     await accept();
-    router.replace(token ? '/(tabs)/dashboard' : '/(auth)/login');
+    router.replace(user ? '/(tabs)/dashboard' : '/(auth)/login');
   }
 
   return (
