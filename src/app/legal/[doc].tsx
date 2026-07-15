@@ -63,6 +63,19 @@ export default function LegalDocScreen() {
             <WebView
               source={{ uri: url }}
               style={styles.webview}
+              // Defense-in-depth: this page is fully self-controlled
+              // (our own server, no user-generated content) so this
+              // wasn't exploitable today, but without an explicit
+              // whitelist react-native-webview will follow a tap on ANY
+              // link the loaded page contains, anywhere. Restricting
+              // navigation to our own domains means a future edit to
+              // privacy.html/terms.html can't turn this into an open
+              // in-app browser just by adding a link.
+              originWhitelist={['https://zhdrive.in/*', 'https://www.zhdrive.in/*']}
+              onShouldStartLoadWithRequest={(request) =>
+                request.url.startsWith('https://zhdrive.in/') ||
+                request.url.startsWith('https://www.zhdrive.in/')
+              }
               onLoadStart={() => setLoading(true)}
               onLoadEnd={() => setLoading(false)}
               onError={() => {

@@ -1,6 +1,9 @@
+import { useEffect, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { Image } from 'expo-image';
 
+import filesService from '@/services/files.service';
 import { ColorPalette } from '@/theme/palette';
 import { useColors } from '@/theme/useColors';
 import { ZDriveFile } from '@/types/file';
@@ -49,6 +52,38 @@ export default function FileCard({
   const colors = useColors();
   const styles = getStyles(colors);
 
+  const isImage = file.mimeType?.startsWith('image/') ?? false;
+  const [thumbUrl, setThumbUrl] = useState<string | null>(null);
+
+  // The list endpoint (GET /files, /folders/:id/explorer) doesn't return
+  // a preview URL - only the single-file details() call does (it mints a
+  // short-lived signed content ticket - see files.service.ts). So each
+  // image row fetches its own thumbnail URL individually on mount.
+  // Known limitation: a folder with many images means one extra request
+  // per image row, all firing roughly at once when the list first
+  // renders - fine at the scale this app runs at today, but a real
+  // per-row network cost worth revisiting (e.g. a batched thumbnail
+  // endpoint) if folders start regularly holding dozens of photos.
+  useEffect(() => {
+    if (!isImage) return;
+
+    let cancelled = false;
+
+    filesService
+      .details(file.id)
+      .then((details) => {
+        if (!cancelled) setThumbUrl(details.previewUrl);
+      })
+      .catch(() => {
+        // Silent - falls back to the generic file-type icon below,
+        // no need to surface a thumbnail-load failure to the user.
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [isImage, file.id]);
+
   return (
     <Pressable
       style={({ pressed }) => [
@@ -67,6 +102,13 @@ export default function FileCard({
               <MaterialCommunityIcons name="check" size={14} color="#FFFFFF" />
             )}
           </View>
+        ) : isImage && thumbUrl ? (
+          <Image
+            source={{ uri: thumbUrl }}
+            style={styles.thumbnail}
+            contentFit="cover"
+            transition={150}
+          />
         ) : (
           <MaterialCommunityIcons name={icon(file.mimeType) as any} size={24} color={colors.primary} />
         )}
@@ -114,6 +156,11 @@ function getStyles(colors: ColorPalette) {
       backgroundColor: colors.primarySoft,
       justifyContent: 'center',
       alignItems: 'center',
+      overflow: 'hidden',
+    },
+    thumbnail: {
+      width: '100%',
+      height: '100%',
     },
     checkbox: {
       width: 24,
