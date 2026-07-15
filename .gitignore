@@ -30,3 +30,8 @@ expo-env.d.ts
 # @end expo-cli
 # Debug artifacts from EAS build log troubleshooting
 gradle_log*.txt*
+
+# Local eas build --local output (APKs/AABs) - real build artifacts,
+# not source, and too large for git
+*.apk
+*.aab
