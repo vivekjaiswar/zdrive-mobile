@@ -22,6 +22,34 @@ if (SENTRY_DSN) {
     // Sends a session on every app start/foreground so crash-free-rate
     // (a useful beta health metric) is tracked, not just hard errors.
     enableAutoSessionTracking: true,
+    // Security review finding: console.error(e) call sites across the
+    // app log raw error/response objects (see api.ts call sites in
+    // trash.tsx, files.tsx, etc.). Sentry's default console
+    // integration turns every console.error into a breadcrumb
+    // attached to the next captured exception - without this, that
+    // raw data (which could include response bodies or a signed
+    // download-ticket URL) would ship to a third party unscrubbed.
+    // Stripping the breadcrumb's `data` keeps the "an error was
+    // logged here" signal without the payload.
+    beforeBreadcrumb: (breadcrumb) => {
+      if (breadcrumb.category === 'console') {
+        return { ...breadcrumb, data: undefined };
+      }
+      return breadcrumb;
+    },
+    // Defense in depth: signed content tickets (60s-lived, see
+    // files.service.ts) are low-risk if leaked, but there's no reason
+    // to retain them in Sentry at all - redact if one ever ends up in
+    // a captured request URL.
+    beforeSend: (event) => {
+      if (event.request?.url) {
+        event.request.url = event.request.url.replace(
+          /([?&]ticket=)[^&]+/,
+          '$1[Redacted]',
+        );
+      }
+      return event;
+    },
   });
 }
 
