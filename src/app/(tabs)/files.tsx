@@ -21,6 +21,7 @@ import { useFileActions } from '@/hooks/useFileActions';
 import { useFolderActions } from '@/hooks/useFolderActions';
 import { useMultiSelect } from '@/hooks/useMultiSelect';
 import { useTabBarHeight } from '@/hooks/useTabBarHeight';
+import { useFilePreviewStore } from '@/store/filePreview.store';
 import { ZDriveFile } from '@/types/file';
 import { ZDriveFolder } from '@/types/folder';
 
@@ -55,6 +56,7 @@ export default function FilesScreen() {
 
   const { uploading, progress, pickAndUpload } = useFileUpload();
   const tabBarHeight = useTabBarHeight();
+  const setPreviewFileIds = useFilePreviewStore((state) => state.setFileIds);
 
   const {
     download,
@@ -288,7 +290,14 @@ export default function FilesScreen() {
         onRefresh={onRefresh}
         onFolderPress={(folder) => router.push(`/folders/${folder.id}`)}
         onFolderLongPress={(folder) => setActionFolder(folder)}
-        onFilePress={(file) => router.push(`/files/${file.id}`)}
+        onFilePress={(file) => {
+          // Whichever list is actually visible right now (search
+          // results or the normal root list) becomes the swipe order
+          // on the preview screen - see filePreview.store.ts.
+          const list = isSearching ? searchResults! : files;
+          setPreviewFileIds(list.map((f) => f.id));
+          router.push(`/files/${file.id}`);
+        }}
         onFileLongPress={(file) => enterSelection(file.id)}
         onFileToggleSelect={(file) => toggleSelection(file.id)}
         onFileMenuPress={(file) => setActionFile(file)}

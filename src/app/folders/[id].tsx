@@ -16,6 +16,7 @@ import { useFileUpload } from '@/hooks/useFileUpload';
 import { useFileActions } from '@/hooks/useFileActions';
 import { useFolderActions } from '@/hooks/useFolderActions';
 import { useMultiSelect } from '@/hooks/useMultiSelect';
+import { useFilePreviewStore } from '@/store/filePreview.store';
 import { ColorPalette } from '@/theme/palette';
 import { useColors } from '@/theme/useColors';
 import { ZDriveFile } from '@/types/file';
@@ -53,6 +54,7 @@ export default function FolderExplorerScreen() {
   const [showCurrentFolderMenu, setShowCurrentFolderMenu] = useState(false);
 
   const { uploading, progress, pickAndUpload } = useFileUpload();
+  const setPreviewFileIds = useFilePreviewStore((state) => state.setFileIds);
 
   const {
     download,
@@ -276,7 +278,10 @@ export default function FolderExplorerScreen() {
         onRefresh={onRefresh}
         onFolderPress={(child) => router.push(`/folders/${child.id}`)}
         onFolderLongPress={(child) => setActionChildFolder(child)}
-        onFilePress={(file) => router.push(`/files/${file.id}`)}
+        onFilePress={(file) => {
+          setPreviewFileIds(files.map((f) => f.id));
+          router.push(`/files/${file.id}`);
+        }}
         onFileLongPress={(file) => enterSelection(file.id)}
         onFileToggleSelect={(file) => toggleSelection(file.id)}
         onFileMenuPress={(file) => setActionFile(file)}

@@ -11,6 +11,8 @@ import {
 } from 'react-native';
 import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { Gesture, GestureDetector } from 'react-native-gesture-handler';
+import { runOnJS } from 'react-native-reanimated';
 
 import Screen from '@/components/Layout/Screen';
 import ZoomableImage from '@/components/files/ZoomableImage';
@@ -19,9 +21,19 @@ import AudioPlayer from '@/components/files/AudioPlayer';
 import PdfPreview from '@/components/files/PdfPreview';
 import filesService from '@/services/files.service';
 import { useFileActions } from '@/hooks/useFileActions';
+import { useFilePreviewStore } from '@/store/filePreview.store';
 import { ColorPalette } from '@/theme/palette';
 import { useColors } from '@/theme/useColors';
 import { FileDetails } from '@/types/file';
+
+// Horizontal swipe must clearly beat vertical intent before it
+// activates, so it doesn't hijack scrolling in the text preview or
+// PDF viewer. Values chosen empirically (standard-ish for this
+// library) - revisit if swipe feels too eager/sluggish on device.
+const SWIPE_ACTIVE_OFFSET_X: [number, number] = [-20, 20];
+const SWIPE_FAIL_OFFSET_Y: [number, number] = [-15, 15];
+const SWIPE_DISTANCE_THRESHOLD = 60;
+const SWIPE_VELOCITY_THRESHOLD = 400;
 
 function formatSize(size: string) {
   const bytes = Number(size) || 0;
@@ -55,31 +67,53 @@ function isTextLike(mime?: string) {
 }
 
 export default function FilePreviewScreen() {
-  const { id } = useLocalSearchParams<{ id: string }>();
+  const { id: routeId } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const colors = useColors();
   const styles = getStyles(colors);
+
+  // The id actually being displayed - decoupled from the route param
+  // so swiping to the next/previous file doesn't require a
+  // navigation (router.push/replace) for every step. Re-synced from
+  // routeId whenever a *fresh* navigation happens (e.g. tapping a
+  // different file from the list, or coming back from a deep link).
+  const [currentId, setCurrentId] = useState(routeId);
+  useEffect(() => {
+    setCurrentId(routeId);
+  }, [routeId]);
+
+  const fileIds = useFilePreviewStore((state) => state.fileIds);
+  const currentIndex = fileIds.indexOf(currentId);
+  const hasPrev = currentIndex > 0;
+  const hasNext = currentIndex >= 0 && currentIndex < fileIds.length - 1;
 
   const [file, setFile] = useState<FileDetails | null>(null);
   const [loading, setLoading] = useState(true);
   const [textContent, setTextContent] = useState<string | null>(null);
   const [textLoading, setTextLoading] = useState(false);
   const [textError, setTextError] = useState(false);
+  // Only relevant while an image is showing - lets us disable the
+  // swipe-navigation gesture while the user is zoomed into
+  // ZoomableImage, so a pan-to-inspect doesn't get misread as a
+  // swipe-to-next-file.
+  const [isZoomed, setIsZoomed] = useState(false);
 
   const { download, share, downloadingId, sharingId } = useFileActions();
 
   useFocusEffect(
     useCallback(() => {
       loadFile();
-    }, [id]),
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [currentId]),
   );
 
   async function loadFile() {
-    if (!id) return;
+    if (!currentId) return;
 
     try {
       setLoading(true);
-      const data = await filesService.details(id);
+      setIsZoomed(false);
+      const data = await filesService.details(currentId);
       setFile(data);
     } catch (error: any) {
       Alert.alert(
@@ -91,6 +125,38 @@ export default function FilePreviewScreen() {
       setLoading(false);
     }
   }
+
+  function goNext() {
+    if (!hasNext) return;
+    setCurrentId(fileIds[currentIndex + 1]);
+  }
+
+  function goPrev() {
+    if (!hasPrev) return;
+    setCurrentId(fileIds[currentIndex - 1]);
+  }
+
+  // Right swipe = next file, left swipe = previous file (explicit
+  // user-requested mapping - not the "left = next" convention some
+  // gallery apps use). Disabled while zoomed into an image so it
+  // doesn't fight ZoomableImage's own pan-while-zoomed gesture.
+  const swipeGesture = Gesture.Pan()
+    .activeOffsetX(SWIPE_ACTIVE_OFFSET_X)
+    .failOffsetY(SWIPE_FAIL_OFFSET_Y)
+    .enabled(!isZoomed)
+    .onEnd((e) => {
+      const distanceOk = Math.abs(e.translationX) > SWIPE_DISTANCE_THRESHOLD;
+      const velocityOk = Math.abs(e.velocityX) > SWIPE_VELOCITY_THRESHOLD;
+      if (!distanceOk && !velocityOk) return;
+
+      if (e.translationX < 0) {
+        // swiped right-to-left -> "left swipe" -> previous
+        runOnJS(goPrev)();
+      } else {
+        // swiped left-to-right -> "right swipe" -> next
+        runOnJS(goNext)();
+      }
+    });
 
   useEffect(() => {
     if (!file || !isTextLike(file.mimeType) || !file.previewUrl) return;
@@ -193,60 +259,62 @@ export default function FilePreviewScreen() {
         </View>
       </View>
 
-      {isImage ? (
-        <View style={styles.imageWrap}>
-          <ZoomableImage uri={file.previewUrl} />
-        </View>
-      ) : isVideo ? (
-        <View style={styles.imageWrap}>
-          <VideoPreview uri={file.previewUrl} />
-        </View>
-      ) : isAudio ? (
-        <View style={styles.audioWrap}>
-          <AudioPlayer uri={file.previewUrl} name={file.name} />
-        </View>
-      ) : isPdf ? (
-        <View style={styles.pdfWrap}>
-          <PdfPreview uri={file.previewUrl} />
-        </View>
-      ) : isText ? (
-        <ScrollView style={styles.textScroll} contentContainerStyle={styles.textContent}>
-          {textLoading ? (
-            <ActivityIndicator size="large" color={colors.primary} style={{ marginTop: 40 }} />
-          ) : textError ? (
-            <Text style={styles.fallbackMessage}>
-              Couldn't load a preview for this file.
+      <GestureDetector gesture={swipeGesture}>
+        {isImage ? (
+          <View style={styles.imageWrap}>
+            <ZoomableImage uri={file.previewUrl} onZoomChange={setIsZoomed} />
+          </View>
+        ) : isVideo ? (
+          <View style={styles.imageWrap}>
+            <VideoPreview uri={file.previewUrl} />
+          </View>
+        ) : isAudio ? (
+          <View style={styles.audioWrap}>
+            <AudioPlayer uri={file.previewUrl} name={file.name} />
+          </View>
+        ) : isPdf ? (
+          <View style={styles.pdfWrap}>
+            <PdfPreview uri={file.previewUrl} />
+          </View>
+        ) : isText ? (
+          <ScrollView style={styles.textScroll} contentContainerStyle={styles.textContent}>
+            {textLoading ? (
+              <ActivityIndicator size="large" color={colors.primary} style={{ marginTop: 40 }} />
+            ) : textError ? (
+              <Text style={styles.fallbackMessage}>
+                Couldn't load a preview for this file.
+              </Text>
+            ) : (
+              <Text style={styles.textBody}>{textContent}</Text>
+            )}
+          </ScrollView>
+        ) : (
+          <View style={styles.center}>
+            <MaterialCommunityIcons
+              name={iconFor(file.mimeType)}
+              size={72}
+              color={colors.primary}
+            />
+
+            <Text style={styles.fileName} numberOfLines={2}>
+              {file.name}
             </Text>
-          ) : (
-            <Text style={styles.textBody}>{textContent}</Text>
-          )}
-        </ScrollView>
-      ) : (
-        <View style={styles.center}>
-          <MaterialCommunityIcons
-            name={iconFor(file.mimeType)}
-            size={72}
-            color={colors.primary}
-          />
 
-          <Text style={styles.fileName} numberOfLines={2}>
-            {file.name}
-          </Text>
+            <Text style={styles.meta}>
+              {formatSize(file.size)} · {new Date(file.createdAt).toLocaleDateString()}
+            </Text>
 
-          <Text style={styles.meta}>
-            {formatSize(file.size)} · {new Date(file.createdAt).toLocaleDateString()}
-          </Text>
+            <Text style={styles.fallbackMessage}>
+              In-app preview isn't available for this file type yet.
+            </Text>
 
-          <Text style={styles.fallbackMessage}>
-            In-app preview isn't available for this file type yet.
-          </Text>
-
-          <Pressable style={styles.openButton} onPress={openExternally}>
-            <MaterialCommunityIcons name="open-in-new" size={18} color="#FFFFFF" />
-            <Text style={styles.openButtonText}>Open Externally</Text>
-          </Pressable>
-        </View>
-      )}
+            <Pressable style={styles.openButton} onPress={openExternally}>
+              <MaterialCommunityIcons name="open-in-new" size={18} color="#FFFFFF" />
+              <Text style={styles.openButtonText}>Open Externally</Text>
+            </Pressable>
+          </View>
+        )}
+      </GestureDetector>
     </Screen>
   );
 }

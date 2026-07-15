@@ -1,7 +1,9 @@
+import { useState } from 'react';
 import { StyleSheet } from 'react-native';
 import { Image } from 'expo-image';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, {
+  runOnJS,
   useAnimatedStyle,
   useSharedValue,
   withTiming,
@@ -9,6 +11,12 @@ import Animated, {
 
 interface Props {
   uri: string;
+  // Fires whenever zoomed-in state changes (scale > 1 vs. scale ===
+  // 1). Lets a parent screen (e.g. the swipeable file preview)
+  // disable its own outer pan gesture while the user is actively
+  // zoomed in, so panning around a zoomed photo doesn't get
+  // misread as a swipe-to-next-file.
+  onZoomChange?: (zoomed: boolean) => void;
 }
 
 const MIN_SCALE = 1;
@@ -24,13 +32,31 @@ const DOUBLE_TAP_SCALE = 2.5;
 // clamping, so it's possible to pan the image fully out of view.
 // Good enough for a v1 photo viewer; revisit if it's actually
 // annoying in practice.
-export default function ZoomableImage({ uri }: Props) {
+export default function ZoomableImage({ uri, onZoomChange }: Props) {
   const scale = useSharedValue(1);
   const savedScale = useSharedValue(1);
   const translateX = useSharedValue(0);
   const translateY = useSharedValue(0);
   const savedTranslateX = useSharedValue(0);
   const savedTranslateY = useSharedValue(0);
+
+  // Real (JS-thread) mirror of "are we zoomed in right now" - this is
+  // the actual fix for swipe-to-next/prev not working. A
+  // Gesture.Pan() claims the touch stream based on its own
+  // activation criteria the moment a drag starts, regardless of what
+  // its .onUpdate() callback does - an early-return inside onUpdate
+  // does NOT stop the gesture from recognizing/claiming the touch.
+  // So without `.enabled()`, this inner pan was silently swallowing
+  // every horizontal drag even at scale 1, starving the outer
+  // swipe-navigation gesture in files/[id].tsx of any touches at all.
+  // Only true `.enabled(zoomed)` releases the touch stream to
+  // whatever gesture is above this one when not zoomed.
+  const [zoomed, setZoomed] = useState(false);
+
+  function notifyZoomChange(next: boolean) {
+    setZoomed(next);
+    onZoomChange?.(next);
+  }
 
   function reset() {
     'worklet';
@@ -40,6 +66,7 @@ export default function ZoomableImage({ uri }: Props) {
     translateY.value = withTiming(0);
     savedTranslateX.value = 0;
     savedTranslateY.value = 0;
+    runOnJS(notifyZoomChange)(false);
   }
 
   const pinchGesture = Gesture.Pinch()
@@ -51,14 +78,14 @@ export default function ZoomableImage({ uri }: Props) {
       savedScale.value = scale.value;
       if (scale.value <= MIN_SCALE) {
         reset();
+      } else {
+        runOnJS(notifyZoomChange)(true);
       }
     });
 
   const panGesture = Gesture.Pan()
+    .enabled(zoomed)
     .onUpdate((e) => {
-      // Only pan once zoomed in - at scale 1 a drag shouldn't hijack
-      // whatever gesture the screen normally uses (e.g. swipe-back).
-      if (savedScale.value <= MIN_SCALE) return;
       translateX.value = savedTranslateX.value + e.translationX;
       translateY.value = savedTranslateY.value + e.translationY;
     })
@@ -75,6 +102,7 @@ export default function ZoomableImage({ uri }: Props) {
       } else {
         scale.value = withTiming(DOUBLE_TAP_SCALE);
         savedScale.value = DOUBLE_TAP_SCALE;
+        runOnJS(notifyZoomChange)(true);
       }
     });
 
