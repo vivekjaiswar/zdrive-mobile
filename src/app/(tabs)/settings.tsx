@@ -19,6 +19,7 @@ import DeleteAccountModal from '@/components/settings/DeleteAccountModal';
 import PlansModal from '@/components/settings/PlansModal';
 import TextPromptModal from '@/components/common/TextPromptModal';
 import usersService from '@/services/users.service';
+import biometricService from '@/services/biometric.service';
 import { useAuthStore } from '@/store/auth.store';
 import { useSecurityStore } from '@/store/security.store';
 import { useTabBarHeight } from '@/hooks/useTabBarHeight';
@@ -66,8 +67,8 @@ export default function SettingsScreen() {
     try {
       const data = await usersService.getProfile();
       setProfile(data);
-    } catch (e) {
-      console.error(e);
+    } catch (e: any) {
+      console.error('Failed to load profile:', e?.message ?? 'Unknown error');
     } finally {
       setLoading(false);
     }
@@ -148,6 +149,21 @@ export default function SettingsScreen() {
   }
 
   async function handleDeleteAccount() {
+    // Security review finding: this is an irreversible, account-wide
+    // delete previously gated only by typing "DELETE" in the modal -
+    // anyone with momentary access to an already-unlocked device
+    // could wipe the account without proving identity again. Force a
+    // fresh biometric check immediately before the actual API call,
+    // on top of (not instead of) the existing confirmation modal.
+    // Note: this only proves "this device's owner is present," not
+    // "knows the account password" - real defense-in-depth would also
+    // have the backend require re-entering the password on this
+    // endpoint, which is a joint client+backend change beyond this fix.
+    if (biometricAvailable) {
+      const reauthed = await biometricService.authenticate();
+      if (!reauthed) return;
+    }
+
     try {
       setDeletingAccount(true);
       await usersService.deleteAccount();

@@ -35,8 +35,8 @@ export default function PlansModal({ visible, currentPlan, onClose }: Props) {
       setLoading(true);
       const data = await billingService.getPlans();
       setPlans(data);
-    } catch (e) {
-      console.error(e);
+    } catch (e: any) {
+      console.error('Failed to load plans:', e?.message ?? 'Unknown error');
     } finally {
       setLoading(false);
     }

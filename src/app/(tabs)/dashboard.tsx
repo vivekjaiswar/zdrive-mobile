@@ -40,8 +40,8 @@ export default function DashboardScreen() {
         await dashboardService.getStats();
 
       setStats(response);
-    } catch (e) {
-      console.log(e);
+    } catch (e: any) {
+      console.error('Failed to load dashboard stats:', e?.message ?? 'Unknown error');
     }
   }
 

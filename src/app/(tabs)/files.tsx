@@ -136,8 +136,8 @@ export default function FilesScreen() {
       // no backend endpoint for "root files only," so filter for
       // folderId === null client-side to build the root view.
       setFiles(fileList.filter((file) => !file.folderId));
-    } catch (e) {
-      console.error(e);
+    } catch (e: any) {
+      console.error('Failed to load files/folders:', e?.message ?? 'Unknown error');
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -148,8 +148,8 @@ export default function FilesScreen() {
     try {
       const data = await filesService.search(text);
       setSearchResults(data);
-    } catch (e) {
-      console.error(e);
+    } catch (e: any) {
+      console.error('Search failed:', e?.message ?? 'Unknown error');
     }
   }
 

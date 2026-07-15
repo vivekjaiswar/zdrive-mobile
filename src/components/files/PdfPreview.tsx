@@ -74,8 +74,8 @@ export default function PdfPreview({ uri }: Props) {
         const encoded = arrayBufferToBase64(buffer);
 
         if (!cancelled) setBase64(encoded);
-      } catch (error) {
-        console.error('PdfPreview fetch error:', error);
+      } catch (error: any) {
+        console.error('PdfPreview fetch error:', error?.message ?? 'Unknown error');
         if (!cancelled) setFailed(true);
       }
     })();
@@ -106,8 +106,8 @@ export default function PdfPreview({ uri }: Props) {
       <Pdf
         source={{ uri: `data:application/pdf;base64,${base64}` }}
         style={styles.pdf}
-        onError={(error) => {
-          console.error('PdfPreview render error:', error);
+        onError={(error: any) => {
+          console.error('PdfPreview render error:', error?.message ?? 'Unknown error');
           setFailed(true);
         }}
       />

@@ -38,8 +38,8 @@ export default function TrashScreen() {
     try {
       const data = await filesService.trash();
       setFiles(data);
-    } catch (e) {
-      console.error(e);
+    } catch (e: any) {
+      console.error('Failed to load trash:', e?.message ?? 'Unknown error');
     } finally {
       setLoading(false);
       setRefreshing(false);

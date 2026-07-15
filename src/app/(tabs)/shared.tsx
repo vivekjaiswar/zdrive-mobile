@@ -34,8 +34,8 @@ export default function SharedScreen() {
     try {
       const data = await filesService.shared();
       setEntries(data);
-    } catch (e) {
-      console.error(e);
+    } catch (e: any) {
+      console.error('Failed to load shared files:', e?.message ?? 'Unknown error');
     } finally {
       setLoading(false);
       setRefreshing(false);

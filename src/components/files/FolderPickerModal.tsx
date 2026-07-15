@@ -49,8 +49,8 @@ export default function FolderPickerModal({
       setLoading(true);
       const data = await foldersService.list();
       setFolders(data);
-    } catch (e) {
-      console.error(e);
+    } catch (e: any) {
+      console.error('Failed to load folders:', e?.message ?? 'Unknown error');
     } finally {
       setLoading(false);
     }
