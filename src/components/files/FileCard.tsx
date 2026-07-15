@@ -96,13 +96,7 @@ export default function FileCard({
       delayLongPress={350}
     >
       <View style={styles.icon}>
-        {selectionMode ? (
-          <View style={[styles.checkbox, selected && styles.checkboxChecked]}>
-            {selected && (
-              <MaterialCommunityIcons name="check" size={14} color="#FFFFFF" />
-            )}
-          </View>
-        ) : isImage && thumbUrl ? (
+        {isImage && thumbUrl ? (
           <Image
             source={{ uri: thumbUrl }}
             style={styles.thumbnail}
@@ -111,6 +105,17 @@ export default function FileCard({
           />
         ) : (
           <MaterialCommunityIcons name={icon(file.mimeType) as any} size={24} color={colors.primary} />
+        )}
+
+        {/* Checkbox overlays the thumbnail/icon instead of replacing
+            it, so image thumbnails stay visible while multi-selecting
+            (matches the Photos-app pattern of a small corner badge). */}
+        {selectionMode && (
+          <View style={[styles.checkboxBadge, selected && styles.checkboxChecked]}>
+            {selected && (
+              <MaterialCommunityIcons name="check" size={12} color="#FFFFFF" />
+            )}
+          </View>
         )}
       </View>
       <View style={styles.content}>
@@ -162,17 +167,26 @@ function getStyles(colors: ColorPalette) {
       width: '100%',
       height: '100%',
     },
-    checkbox: {
-      width: 24,
-      height: 24,
-      borderRadius: 12,
+    // Small corner badge overlaid on top of the thumbnail/icon during
+    // selection mode - deliberately does NOT replace the thumbnail
+    // (that was the bug: image previews used to vanish behind a
+    // full-size checkbox as soon as you started multi-selecting).
+    checkboxBadge: {
+      position: 'absolute',
+      bottom: 2,
+      right: 2,
+      width: 18,
+      height: 18,
+      borderRadius: 9,
       borderWidth: 2,
-      borderColor: colors.primary,
+      borderColor: '#FFFFFF',
+      backgroundColor: 'rgba(255,255,255,0.35)',
       justifyContent: 'center',
       alignItems: 'center',
     },
     checkboxChecked: {
       backgroundColor: colors.primary,
+      borderColor: colors.primary,
     },
     content: { flex: 1, marginLeft: 14 },
     name: { fontSize: 15, fontWeight: '600', color: colors.text },
