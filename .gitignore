@@ -35,3 +35,10 @@ gradle_log*.txt*
 # not source, and too large for git
 *.apk
 *.aab
+
+# Android signing keystores - these are downloaded locally when running
+# `eas credentials` (e.g. "Download existing keystore"). The real
+# credential lives on EAS's servers; a local .jks copy should never be
+# committed.
+*.jks
+*.keystore
