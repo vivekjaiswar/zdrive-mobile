@@ -9,6 +9,7 @@ interface Props {
   busy?: boolean;
   onCancel: () => void;
   onMove: () => void;
+  onDownload: () => void;
   onShare: () => void;
   onDelete: () => void;
 }
@@ -22,6 +23,7 @@ export default function SelectionBar({
   busy = false,
   onCancel,
   onMove,
+  onDownload,
   onShare,
   onDelete,
 }: Props) {
@@ -42,6 +44,9 @@ export default function SelectionBar({
         <View style={styles.actions}>
           <Pressable hitSlop={10} onPress={onMove}>
             <MaterialCommunityIcons name="folder-move-outline" size={22} color={colors.text} />
+          </Pressable>
+          <Pressable hitSlop={10} onPress={onDownload}>
+            <MaterialCommunityIcons name="download-outline" size={22} color={colors.text} />
           </Pressable>
           <Pressable hitSlop={10} onPress={onShare}>
             <MaterialCommunityIcons name="share-variant-outline" size={22} color={colors.text} />

@@ -65,6 +65,7 @@ export default function FolderExplorerScreen() {
     confirmBulkDelete,
     bulkMove,
     bulkShare,
+    bulkDownload,
     bulkBusy,
     downloadingId,
     sharingId,
@@ -164,6 +165,10 @@ export default function FolderExplorerScreen() {
     await bulkShare(getSelectedFiles());
   }
 
+  async function handleBulkDownload() {
+    await bulkDownload(getSelectedFiles());
+  }
+
   async function handleConfirmRenameChildFolder(name: string) {
     if (!renameChildFolder) return;
 
@@ -246,6 +251,7 @@ export default function FolderExplorerScreen() {
           busy={bulkBusy}
           onCancel={clearSelection}
           onMove={() => setBulkMoveVisible(true)}
+          onDownload={handleBulkDownload}
           onShare={handleBulkShare}
           onDelete={handleBulkDelete}
         />

@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Alert, Share } from 'react-native';
 import * as Sharing from 'expo-sharing';
 
-import filesService from '@/services/files.service';
+import filesService, { MAX_BULK_DOWNLOAD_IDS } from '@/services/files.service';
 import { ZDriveFile } from '@/types/file';
 
 // Shared by the Files list's long-press action sheet and the file
@@ -231,13 +231,12 @@ export function useFileActions(onChanged?: () => void) {
     }
   }
 
-  // NOTE: this shares LINKS for each selected file in one message -
-  // there's no backend endpoint to zip multiple files into a single
-  // download, so a true "bulk download to device" would mean firing
-  // the native share/save sheet once per file back-to-back, which is
-  // a broken experience on both iOS and Android. Sharing all the
-  // links together in one Share.share() call is the honest version
-  // of this feature until a zip-export endpoint exists.
+  // NOTE: this shares LINKS for each selected file in one message, not
+  // an actual zip of the files themselves - that's what bulkDownload()
+  // below is for (added once the backend's zip-export endpoint
+  // shipped on 2026-07-15). Kept separate on purpose: this is for
+  // "send someone a link to these files," bulkDownload is for "save
+  // these files to my own device."
   async function bulkShare(files: Pick<ZDriveFile, 'id'>[]): Promise<void> {
     setBulkBusy(true);
 
@@ -271,6 +270,58 @@ export function useFileActions(onChanged?: () => void) {
     }
   }
 
+  // Real zip download for multi-select, backed by the bulk-download-
+  // ticket + bulk-download/content endpoints. The ticket expires 60s
+  // after issuance - that's only the window to *start* the zip
+  // request, not a cap on the download itself, so there's no need to
+  // race anything here beyond not sitting on the ticket unused.
+  //
+  // Known limitation: if the backend has to skip any files (malware
+  // scan flagged, since-deleted, etc.) it lists them in a
+  // _download-errors.txt inside the zip instead of erroring - this
+  // doesn't parse the zip to surface that, so a partial download
+  // currently looks identical to a complete one from the UI's
+  // perspective. Worth revisiting if that turns out to matter.
+  async function bulkDownload(files: Pick<ZDriveFile, 'id'>[]): Promise<void> {
+    if (files.length === 0) return;
+
+    if (files.length > MAX_BULK_DOWNLOAD_IDS) {
+      Alert.alert(
+        'Too Many Files Selected',
+        `You can download up to ${MAX_BULK_DOWNLOAD_IDS} files at once - you have ${files.length} selected.`,
+      );
+      return;
+    }
+
+    setBulkBusy(true);
+
+    try {
+      const fileIds = files.map((file) => file.id);
+      const ticket = await filesService.requestBulkDownloadTicket(fileIds);
+
+      const filename = `ZDrive Files (${ticket.fileCount}).zip`;
+      const downloaded = await filesService.downloadBulkZip(
+        ticket.downloadUrl,
+        filename,
+      );
+
+      const canShare = await Sharing.isAvailableAsync();
+
+      if (canShare) {
+        await Sharing.shareAsync(downloaded.uri);
+      } else {
+        Alert.alert('Downloaded', `Saved to ${downloaded.uri}`);
+      }
+    } catch (error: any) {
+      Alert.alert(
+        'Download Failed',
+        error?.response?.data?.message ?? 'Unable to download these files.',
+      );
+    } finally {
+      setBulkBusy(false);
+    }
+  }
+
   return {
     download,
     share,
@@ -282,6 +333,7 @@ export function useFileActions(onChanged?: () => void) {
     confirmBulkDelete,
     bulkMove,
     bulkShare,
+    bulkDownload,
     bulkBusy,
     downloadingId,
     sharingId,

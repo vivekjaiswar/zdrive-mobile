@@ -6,12 +6,18 @@ import { File, Paths } from 'expo-file-system';
 import api, { API_BASE_URL, WEB_BASE_URL } from './api';
 
 import {
+  BulkDownloadTicket,
   FileDetails,
   ShareResponse,
   SharedFileEntry,
   UploadResponse,
   ZDriveFile,
 } from '@/types/file';
+
+// Hard server-side caps (shipped 2026-07-15 changelog) - validate
+// client-side too so the user gets an immediate, specific message
+// instead of waiting on a round-trip just to get a 400 back.
+export const MAX_BULK_DOWNLOAD_IDS = 200;
 
 class FilesService {
   async list(): Promise<ZDriveFile[]> {
@@ -132,6 +138,37 @@ class FilesService {
     );
 
     return data;
+  }
+
+  // POST /files/bulk-download-ticket - fileIds/folderIds are any mix,
+  // folders get expanded recursively server-side. At least one of the
+  // two arrays must be non-empty (enforced by the backend, but the
+  // multi-select UI only ever passes fileIds today - folder bulk
+  // download is a separate, not-yet-built feature).
+  async requestBulkDownloadTicket(
+    fileIds: string[],
+    folderIds: string[] = [],
+  ): Promise<BulkDownloadTicket> {
+    const { data } = await api.post<BulkDownloadTicket>(
+      '/files/bulk-download-ticket',
+      { fileIds, folderIds },
+    );
+
+    return data;
+  }
+
+  // GET /files/bulk-download/content?ticket=... - streams a zip, no
+  // cookie needed (the ticket itself is the credential). Same
+  // relative-path-needs-API_BASE_URL pattern as download() below, and
+  // same File.downloadFileAsync mechanics - just a much larger,
+  // longer-running response on average.
+  async downloadBulkZip(downloadUrl: string, filename: string): Promise<File> {
+    const absoluteUrl = `${API_BASE_URL}${downloadUrl}`;
+    const destination = new File(Paths.document, filename);
+
+    return File.downloadFileAsync(absoluteUrl, destination, {
+      idempotent: true,
+    });
   }
 
   async download(id: string, filename: string): Promise<File> {

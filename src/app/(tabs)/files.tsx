@@ -67,6 +67,7 @@ export default function FilesScreen() {
     confirmBulkDelete,
     bulkMove,
     bulkShare,
+    bulkDownload,
     bulkBusy,
     downloadingId,
     sharingId,
@@ -208,6 +209,10 @@ export default function FilesScreen() {
     await bulkShare(getSelectedFiles());
   }
 
+  async function handleBulkDownload() {
+    await bulkDownload(getSelectedFiles());
+  }
+
   async function handleConfirmRenameFolder(name: string) {
     if (!renameFolder) return;
 
@@ -254,6 +259,7 @@ export default function FilesScreen() {
           busy={bulkBusy}
           onCancel={clearSelection}
           onMove={() => setBulkMoveVisible(true)}
+          onDownload={handleBulkDownload}
           onShare={handleBulkShare}
           onDelete={handleBulkDelete}
         />

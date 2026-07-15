@@ -60,3 +60,16 @@ export interface UploadResponse {
   s3Key: string;
   folderId: string | null;
 }
+
+// Matches POST /files/bulk-download-ticket's actual return shape
+// (shipped 2026-07-15). `downloadUrl` is a relative path with the
+// single-use ticket embedded as a query param - same "relative path,
+// prefix with API_BASE_URL" pattern as FileDetails.previewUrl and
+// the single-file download() flow. The ticket is only valid to
+// *start* the actual zip request within `expiresIn` seconds (60) -
+// it is not a cap on how long the zip itself can take to stream.
+export interface BulkDownloadTicket {
+  downloadUrl: string;
+  expiresIn: number;
+  fileCount: number;
+}
