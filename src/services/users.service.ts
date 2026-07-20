@@ -2,8 +2,13 @@ import api from './api';
 import { UserProfile } from '@/types/user';
 
 class UsersService {
+  // Deliberately /users/me, not /users/profile - the two backend
+  // routes return otherwise-identical shapes, but /users/profile is
+  // missing twoFactorEnabled (confirmed by reading users.service.ts on
+  // the backend directly - looks like an oversight there, not an
+  // intentional split). /users/me has every field this app needs.
   async getProfile(): Promise<UserProfile> {
-    const { data } = await api.get('/users/profile');
+    const { data } = await api.get('/users/me');
     return data;
   }
 

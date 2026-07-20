@@ -1,20 +1,49 @@
 import api from './api';
 import { BillingPlan } from '@/types/user';
 
+export interface RazorpayOrder {
+  orderId: string;
+  // Paise, not rupees - Razorpay's checkout script wants the smallest
+  // currency unit, same as the backend's own order.create() call.
+  amount: number;
+  currency: string;
+  // Razorpay's publishable key_id - safe to expose client-side (it's
+  // meant to be embedded in the checkout script), NOT the key_secret.
+  keyId: string;
+}
+
 class BillingService {
   // GET /billing/plans is public/read-only - safe to call.
-  //
-  // Deliberately NOT implementing changePlan/activate/suspend here:
-  // as of the latest backend review those endpoints are correctly
-  // gated behind JwtGuard + AdminGuard (a regular user's token gets
-  // 403'd), but they're admin/ops tools, not a self-service upgrade
-  // path - a real user calling them would just get rejected. The
-  // actual upgrade flow is meant to run purchase -> WHMCS webhook ->
-  // changePlan server-to-server once WHMCS is integrated. Revisit
-  // this once that exists and there's a real "Upgrade" flow to wire
-  // up (likely a checkout redirect, not a direct call to this route).
   async getPlans(): Promise<BillingPlan[]> {
     const { data } = await api.get('/billing/plans');
+    return data;
+  }
+
+  // v1.4.0: self-service upgrades now exist via Razorpay Standard
+  // Checkout (changePlan/activate/suspend remain admin-only - this is
+  // the actual user-facing path). Creates a pending Payment row
+  // server-side and returns what the checkout script needs to open.
+  async createRazorpayOrder(planCode: string): Promise<RazorpayOrder> {
+    const { data } = await api.post('/billing/razorpay/create-order', {
+      planCode,
+    });
+    return data;
+  }
+
+  // Confirms the payment signature and applies the plan change. There's
+  // also a server-to-server webhook that can do this independently if
+  // the user closes the app before this call fires, but this is what
+  // gives the plan change immediately rather than waiting on that.
+  async verifyRazorpayPayment(
+    razorpayOrderId: string,
+    razorpayPaymentId: string,
+    razorpaySignature: string,
+  ): Promise<{ success: boolean }> {
+    const { data } = await api.post('/billing/razorpay/verify', {
+      razorpayOrderId,
+      razorpayPaymentId,
+      razorpaySignature,
+    });
     return data;
   }
 }
