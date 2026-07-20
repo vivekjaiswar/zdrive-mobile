@@ -2,19 +2,19 @@
   "expo": {
     "name": "ZDrive",
     "slug": "zdrive_mobile",
-    "version": "1.5.1",
+    "version": "1.6.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "zdrivemobile",
     "userInterfaceStyle": "automatic",
     "ios": {
       "bundleIdentifier": "in.zhdrive.app",
-      "buildNumber": "5",
+      "buildNumber": "6",
       "supportsTablet": true
     },
     "android": {
       "package": "in.zhdrive.app",
-      "versionCode": 8,
+      "versionCode": 9,
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
         "foregroundImage": "./assets/images/android-icon-foreground.png",
