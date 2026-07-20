@@ -51,6 +51,17 @@ export default function LoginScreen() {
         password,
       });
 
+      // v1.4.0: a 2FA-enabled account gets no session cookie here at
+      // all - just a short-lived challengeToken - and has to complete
+      // the code-entry screen before setUser/dashboard makes sense.
+      if (response.twoFactorRequired) {
+        router.push({
+          pathname: '/(auth)/two-factor',
+          params: { challengeToken: response.challengeToken },
+        });
+        return;
+      }
+
       // v1.2.1: the session itself arrives as a Set-Cookie header on
       // this same response (httpOnly, handled automatically by the
       // native cookie jar - see api.ts's withCredentials). There's no

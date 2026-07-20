@@ -17,6 +17,7 @@ import SettingsRow from '@/components/settings/SettingsRow';
 import ChangePasswordModal from '@/components/settings/ChangePasswordModal';
 import DeleteAccountModal from '@/components/settings/DeleteAccountModal';
 import PlansModal from '@/components/settings/PlansModal';
+import TwoFactorModal from '@/components/settings/TwoFactorModal';
 import TextPromptModal from '@/components/common/TextPromptModal';
 import usersService from '@/services/users.service';
 import biometricService from '@/services/biometric.service';
@@ -56,6 +57,7 @@ export default function SettingsScreen() {
   const [plansVisible, setPlansVisible] = useState(false);
   const [deleteModalVisible, setDeleteModalVisible] = useState(false);
   const [deletingAccount, setDeletingAccount] = useState(false);
+  const [twoFactorModalVisible, setTwoFactorModalVisible] = useState(false);
 
   useFocusEffect(
     useCallback(() => {
@@ -185,6 +187,16 @@ export default function SettingsScreen() {
     }
   }
 
+  // The backend revokes every session (including this one) as part of
+  // disabling 2FA - there's no "still logged in" state to return to
+  // here, so this mirrors handleDeleteAccount's own forced-logout tail
+  // rather than treating it like a normal settings change.
+  async function handleTwoFactorDisabledLoggedOut() {
+    setTwoFactorModalVisible(false);
+    await logout();
+    router.replace('/(auth)/login');
+  }
+
   function handleLogout() {
     Alert.alert('Log Out?', 'You will need to sign in again.', [
       { text: 'Cancel', style: 'cancel' },
@@ -250,19 +262,28 @@ export default function SettingsScreen() {
           />
         </View>
 
-        {biometricAvailable && (
-          <>
-            <Text style={styles.sectionLabel}>Security</Text>
-            <View style={styles.card}>
-              <SettingsRow
-                icon="fingerprint"
-                label="Unlock with Face ID / Fingerprint"
-                toggleValue={biometricEnabled}
-                onToggleChange={setBiometricEnabled}
-              />
-            </View>
-          </>
-        )}
+        <Text style={styles.sectionLabel}>Security</Text>
+        <View style={styles.card}>
+          {biometricAvailable && (
+            <SettingsRow
+              icon="fingerprint"
+              label="Unlock with Face ID / Fingerprint"
+              toggleValue={biometricEnabled}
+              onToggleChange={setBiometricEnabled}
+            />
+          )}
+          <SettingsRow
+            icon="shield-key-outline"
+            label="Two-Factor Authentication"
+            value={profile.twoFactorEnabled ? 'On' : 'Off'}
+            onPress={() => setTwoFactorModalVisible(true)}
+          />
+          <SettingsRow
+            icon="devices"
+            label="Active Sessions"
+            onPress={() => router.push('/sessions')}
+          />
+        </View>
 
         <Text style={styles.sectionLabel}>Account</Text>
         <View style={styles.card}>
@@ -349,7 +370,9 @@ export default function SettingsScreen() {
       <PlansModal
         visible={plansVisible}
         currentPlan={profile.plan}
+        userEmail={profile.email}
         onClose={() => setPlansVisible(false)}
+        onUpgraded={loadProfile}
       />
 
       <DeleteAccountModal
@@ -357,6 +380,14 @@ export default function SettingsScreen() {
         loading={deletingAccount}
         onCancel={() => setDeleteModalVisible(false)}
         onConfirm={handleDeleteAccount}
+      />
+
+      <TwoFactorModal
+        visible={twoFactorModalVisible}
+        enabled={profile.twoFactorEnabled}
+        onChanged={loadProfile}
+        onDisabledLoggedOut={handleTwoFactorDisabledLoggedOut}
+        onClose={() => setTwoFactorModalVisible(false)}
       />
     </Screen>
   );
