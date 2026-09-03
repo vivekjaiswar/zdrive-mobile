@@ -11,13 +11,17 @@
         "buildType": "apk"
       },
       "env": {
-        "SENTRY_DISABLE_AUTO_UPLOAD": "true"
+        "SENTRY_DISABLE_AUTO_UPLOAD": "true",
+        "EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID": "301504290666-he6a8liurs93lq79dtlmgfbvjub3lohr.apps.googleusercontent.com"
       }
     },
     "preview": {
       "distribution": "internal",
       "android": {
         "buildType": "apk"
+      },
+      "env": {
+        "EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID": "301504290666-he6a8liurs93lq79dtlmgfbvjub3lohr.apps.googleusercontent.com"
       }
     },
     "ios-simulator": {
@@ -30,7 +34,10 @@
       }
     },
     "production": {
-      "autoIncrement": true
+      "autoIncrement": true,
+      "env": {
+        "EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID": "301504290666-he6a8liurs93lq79dtlmgfbvjub3lohr.apps.googleusercontent.com"
+      }
     }
   },
   "submit": {
