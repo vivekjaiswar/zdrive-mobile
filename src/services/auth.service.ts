@@ -6,7 +6,7 @@ export interface LoginRequest {
   password: string;
 }
 
-interface LoginUser {
+export interface LoginUser {
   id: string;
   email: string;
   plan: string;
@@ -47,6 +47,19 @@ class AuthService {
     );
 
     return response.data;
+  }
+
+  // Google sign-in: the app obtains a Google ID token natively (see
+  // GoogleSignInButton) and hands it here. The backend verifies the token
+  // with Google, finds-or-creates the linked account, and sets the same
+  // zd_session httpOnly cookie /auth/login does - so the native cookie jar
+  // (api.ts withCredentials) picks it up automatically and there's nothing
+  // to store. Returns { user }, same shape as a non-2FA login; Google
+  // sign-in never triggers the 2FA challenge (the backend issues the
+  // session directly).
+  async signInWithGoogle(idToken: string): Promise<{ user: LoginUser }> {
+    const { data } = await api.post('/auth/google/token', { idToken });
+    return data;
   }
 
   // Second step of login for a 2FA-enabled account. `code` is either a

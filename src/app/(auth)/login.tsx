@@ -15,6 +15,8 @@ import { useRouter } from 'expo-router';
 
 import PrimaryButton from '@/components/Button/PrimaryButton';
 import AppInput from '@/components/Input/AppInput';
+import AuthDivider from '@/components/auth/AuthDivider';
+import GoogleSignInButton from '@/components/auth/GoogleSignInButton';
 import Screen from '@/components/Layout/Screen';
 import authService from '@/services/auth.service';
 import { useAuthStore } from '@/store/auth.store';
@@ -141,6 +143,10 @@ export default function LoginScreen() {
                 loading={loading}
                 onPress={handleLogin}
               />
+
+              <AuthDivider />
+
+              <GoogleSignInButton />
             </View>
 
             <View style={styles.bottom}>

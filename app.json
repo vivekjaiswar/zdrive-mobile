@@ -2,14 +2,14 @@
   "expo": {
     "name": "ZDrive",
     "slug": "zdrive_mobile",
-    "version": "1.6.0",
+    "version": "1.7.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "zdrivemobile",
     "userInterfaceStyle": "automatic",
     "ios": {
       "bundleIdentifier": "in.zhdrive.app",
-      "buildNumber": "6",
+      "buildNumber": "7",
       "supportsTablet": true,
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
@@ -17,7 +17,7 @@
     },
     "android": {
       "package": "in.zhdrive.app",
-      "versionCode": 10,
+      "versionCode": 11,
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
         "foregroundImage": "./assets/images/android-icon-foreground.png",
@@ -48,6 +48,7 @@
       "expo-secure-store",
       "expo-sharing",
       "expo-document-picker",
+      "@react-native-google-signin/google-signin",
       [
         "expo-local-authentication",
         {

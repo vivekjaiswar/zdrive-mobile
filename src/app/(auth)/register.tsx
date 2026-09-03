@@ -3,6 +3,8 @@ import { Alert, Pressable, Text } from 'react-native';
 import { useRouter } from 'expo-router';
 
 import AuthScreenLayout from '@/components/auth/AuthScreenLayout';
+import AuthDivider from '@/components/auth/AuthDivider';
+import GoogleSignInButton from '@/components/auth/GoogleSignInButton';
 import PrimaryButton from '@/components/Button/PrimaryButton';
 import AppInput from '@/components/Input/AppInput';
 import authService from '@/services/auth.service';
@@ -116,6 +118,10 @@ export default function RegisterScreen() {
       />
 
       <PrimaryButton title="Create Account" loading={loading} onPress={handleRegister} />
+
+      <AuthDivider />
+
+      <GoogleSignInButton label="Sign up with Google" />
 
       <Text style={authStyles.legalText}>
         By creating an account, you agree to our{' '}

@@ -1,10 +1,11 @@
 {
   "name": "zdrive_mobile",
   "main": "expo-router/entry",
-  "version": "1.6.0",
+  "version": "1.7.0",
   "dependencies": {
     "@expo/ui": "~56.0.21",
     "@expo/vector-icons": "^15.0.2",
+    "@react-native-google-signin/google-signin": "^16.1.5",
     "@sentry/react-native": "~7.11.0",
     "axios": "^1.18.1",
     "expo": "~56.0.15",

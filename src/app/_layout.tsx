@@ -7,6 +7,7 @@ import * as Sentry from '@sentry/react-native';
 
 import LockScreen from '@/components/security/LockScreen';
 import { setUnauthorizedHandler } from '@/services/api';
+import { configureGoogleSignin } from '@/constants/google';
 import { SENTRY_DSN } from '@/constants/sentry';
 import { useAuthStore } from '@/store/auth.store';
 import { useSecurityStore } from '@/store/security.store';
@@ -85,6 +86,8 @@ function RootLayout() {
 
   useEffect(() => {
     hydrateSecurity();
+    // Idempotent; no-op if no web client ID was provided at build time.
+    configureGoogleSignin();
   }, []);
 
   // Wired once at app boot. api.ts can't import auth.store.ts directly
