@@ -105,6 +105,28 @@ class FilesService {
     return data;
   }
 
+  // Semantic (AI) search over image files - CLIP embeddings, so a query
+  // like "beach at sunset" matches photos by content, not filename.
+  // Returns file rows plus a `distance` (lower = closer). The backend
+  // keeps this separate from document search below because the two
+  // embedding spaces aren't comparable and can't be ranked together.
+  async searchSemantic(query: string): Promise<ZDriveFile[]> {
+    const { data } = await api.get(
+      `/files/search-semantic/${encodeURIComponent(query)}`,
+    );
+    return data;
+  }
+
+  // Semantic search over PDF document *contents* (a different embedding
+  // model than searchSemantic). Separate call/result set on purpose -
+  // see the comment above.
+  async searchSemanticDocuments(query: string): Promise<ZDriveFile[]> {
+    const { data } = await api.get(
+      `/files/search-semantic-documents/${encodeURIComponent(query)}`,
+    );
+    return data;
+  }
+
   // Response shape is StorageService.uploadFile()'s return value:
   // { id, name, size, mimeType, s3Key, folderId }. There is no
   // `success` flag - a non-2xx response throws, so success is

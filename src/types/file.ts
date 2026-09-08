@@ -12,6 +12,15 @@ export interface ZDriveFile {
   // straight off the Prisma File row) but was missing from this type
   // until now - null means the file lives at root ("My Drive").
   folderId: string | null;
+  // Content-moderation verdict (add_moderation_status migration).
+  // 'FLAGGED' is the only value the UI reacts to (a warning badge);
+  // the backend already blocks sharing a FLAGGED file server-side.
+  // Optional because older/plain list rows may omit it.
+  moderationStatus?: 'NOT_APPLICABLE' | 'CLEAN' | 'FLAGGED' | 'UNCHECKED';
+  moderationScore?: number | null;
+  // Only present on semantic-search results (cosine distance to the
+  // query embedding - lower = closer). Not returned by normal listing.
+  distance?: number;
 }
 
 // Matches FilesService.findOne()'s actual return shape.

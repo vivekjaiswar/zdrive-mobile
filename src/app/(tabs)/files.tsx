@@ -37,6 +37,11 @@ export default function FilesScreen() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [query, setQuery] = useState('');
+  // 'keyword' = substring filename match (GET /files/search); 'smart' =
+  // AI semantic search across image content + PDF text (the two new
+  // backend endpoints), results merged into one list.
+  const [searchMode, setSearchMode] = useState<'keyword' | 'smart'>('keyword');
+  const [searching, setSearching] = useState(false);
 
   // File currently open in the long-press action sheet, and the
   // follow-on rename/move modals it can launch.
@@ -112,6 +117,8 @@ export default function FilesScreen() {
     }
   }, [params.createFolder]);
 
+  // Re-runs when the query OR the mode changes, so toggling Keyword/Smart
+  // with text already entered re-searches immediately.
   useEffect(() => {
     const timer = setTimeout(() => {
       if (!query.trim()) {
@@ -122,7 +129,7 @@ export default function FilesScreen() {
     }, 300);
 
     return () => clearTimeout(timer);
-  }, [query]);
+  }, [query, searchMode]);
 
   async function loadContents() {
     try {
@@ -146,10 +153,38 @@ export default function FilesScreen() {
 
   async function searchFiles(text: string) {
     try {
-      const data = await filesService.search(text);
-      setSearchResults(data);
+      setSearching(true);
+
+      if (searchMode === 'keyword') {
+        setSearchResults(await filesService.search(text));
+        return;
+      }
+
+      // Smart search: the backend keeps image and document semantic
+      // search as two separate endpoints (different embedding models
+      // that can't be ranked on one scale), so run both and concatenate
+      // - images first, then documents - deduping by id rather than
+      // claiming a single unified relevance order across the two.
+      const [images, documents] = await Promise.all([
+        filesService.searchSemantic(text),
+        filesService.searchSemanticDocuments(text),
+      ]);
+
+      const seen = new Set<string>();
+      const merged: ZDriveFile[] = [];
+      for (const file of [...images, ...documents]) {
+        if (seen.has(file.id)) continue;
+        seen.add(file.id);
+        merged.push(file);
+      }
+      setSearchResults(merged);
     } catch (e: any) {
       console.error('Search failed:', e?.message ?? 'Unknown error');
+      // Surface an empty result set rather than leaving stale results
+      // from a previous query/mode on screen after a failure.
+      setSearchResults([]);
+    } finally {
+      setSearching(false);
     }
   }
 
@@ -289,6 +324,43 @@ export default function FilesScreen() {
 
       <SearchBar value={query} onChangeText={setQuery} />
 
+      {isSearching && (
+        <View style={styles.searchModeRow}>
+          {(['keyword', 'smart'] as const).map((mode) => (
+            <Pressable
+              key={mode}
+              onPress={() => setSearchMode(mode)}
+              style={[
+                styles.searchModePill,
+                searchMode === mode && styles.searchModePillActive,
+              ]}
+            >
+              <MaterialCommunityIcons
+                name={mode === 'smart' ? 'star-four-points-outline' : 'magnify'}
+                size={14}
+                color={searchMode === mode ? '#FFFFFF' : colors.textSecondary}
+              />
+              <Text
+                style={[
+                  styles.searchModeText,
+                  searchMode === mode && styles.searchModeTextActive,
+                ]}
+              >
+                {mode === 'smart' ? 'Smart' : 'Keyword'}
+              </Text>
+            </Pressable>
+          ))}
+
+          {searching && (
+            <ActivityIndicator
+              size="small"
+              color={colors.primary}
+              style={styles.searchSpinner}
+            />
+          )}
+        </View>
+      )}
+
       <FolderContents
         folders={isSearching ? [] : folders}
         files={isSearching ? searchResults! : files}
@@ -423,6 +495,38 @@ function getStyles(colors: ColorPalette) {
       backgroundColor: colors.primarySoft,
       justifyContent: 'center',
       alignItems: 'center',
+    },
+    searchModeRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 8,
+      marginTop: 12,
+    },
+    searchModePill: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 5,
+      paddingHorizontal: 12,
+      paddingVertical: 6,
+      borderRadius: 20,
+      backgroundColor: colors.surface,
+      borderWidth: 1,
+      borderColor: colors.border,
+    },
+    searchModePillActive: {
+      backgroundColor: colors.primary,
+      borderColor: colors.primary,
+    },
+    searchModeText: {
+      fontSize: 12.5,
+      fontWeight: '600',
+      color: colors.textSecondary,
+    },
+    searchModeTextActive: {
+      color: '#FFFFFF',
+    },
+    searchSpinner: {
+      marginLeft: 'auto',
     },
     loadingSpinner: {
       marginTop: 60,

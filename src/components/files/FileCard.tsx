@@ -53,6 +53,7 @@ export default function FileCard({
   const styles = getStyles(colors);
 
   const isImage = file.mimeType?.startsWith('image/') ?? false;
+  const isFlagged = file.moderationStatus === 'FLAGGED';
   const [thumbUrl, setThumbUrl] = useState<string | null>(null);
 
   // The list endpoint (GET /files, /folders/:id/explorer) doesn't return
@@ -120,7 +121,14 @@ export default function FileCard({
       </View>
       <View style={styles.content}>
         <Text numberOfLines={1} style={styles.name}>{file.name}</Text>
-        <Text style={styles.meta}>{formatSize(file.size)}</Text>
+        {isFlagged ? (
+          <View style={styles.flaggedRow}>
+            <MaterialCommunityIcons name="alert-circle-outline" size={13} color={colors.danger} />
+            <Text style={styles.flaggedText}>Flagged · sharing disabled</Text>
+          </View>
+        ) : (
+          <Text style={styles.meta}>{formatSize(file.size)}</Text>
+        )}
       </View>
       {selectionMode ? null : (
         <Pressable
@@ -191,5 +199,16 @@ function getStyles(colors: ColorPalette) {
     content: { flex: 1, marginLeft: 14 },
     name: { fontSize: 15, fontWeight: '600', color: colors.text },
     meta: { marginTop: 3, fontSize: 12.5, color: colors.textSecondary },
+    flaggedRow: {
+      marginTop: 3,
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 4,
+    },
+    flaggedText: {
+      fontSize: 12,
+      fontWeight: '600',
+      color: colors.danger,
+    },
   });
 }
