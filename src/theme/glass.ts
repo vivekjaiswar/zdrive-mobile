@@ -69,9 +69,12 @@ const light: GlassTheme = {
   orbB: 'rgba(139,92,246,0.28)',
   blurTint: 'light',
   blurIntensity: 30,
-  glassFill: 'rgba(255,255,255,0.55)',
-  glassFillStrong: 'rgba(255,255,255,0.82)',
-  glassBorder: 'rgba(255,255,255,0.85)',
+  glassFill: 'rgba(255,255,255,0.62)',
+  glassFillStrong: 'rgba(255,255,255,0.86)',
+  // Soft neutral hairline, NOT a near-white edge - a white border over a
+  // white-ish blur created a visible "box inside a box" seam. This defines
+  // the card edge cleanly without the double-frame look.
+  glassBorder: 'rgba(120,130,165,0.20)',
   glassHighlight: 'rgba(255,255,255,0.95)',
   accent: '#2F6BFF',
   accentGradient: ['#2F6BFF', '#6C4CFF'],
