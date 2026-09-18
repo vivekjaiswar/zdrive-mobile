@@ -74,7 +74,7 @@ export default function FilesScreen() {
   const [createFolderVisible, setCreateFolderVisible] = useState(false);
   const [creatingFolder, setCreatingFolder] = useState(false);
 
-  const { uploading, progress, pickAndUpload } = useFileUpload();
+  const { uploading, progress, pickAndUpload, pickPhotosAndUpload } = useFileUpload();
   const tabBarHeight = useTabBarHeight();
   const onScroll = useTabBarScrollHandler();
   const setPreviewFileIds = useFilePreviewStore((state) => state.setFileIds);
@@ -209,12 +209,24 @@ export default function FilesScreen() {
     loadContents();
   }, []);
 
-  async function handleUpload() {
-    const result = await pickAndUpload();
-
-    if (result && result.uploaded.length > 0) {
-      await loadContents();
-    }
+  function handleUpload() {
+    Alert.alert('Upload', 'Choose a source', [
+      {
+        text: 'Photos',
+        onPress: async () => {
+          const result = await pickPhotosAndUpload();
+          if (result && result.uploaded.length > 0) await loadContents();
+        },
+      },
+      {
+        text: 'Files',
+        onPress: async () => {
+          const result = await pickAndUpload();
+          if (result && result.uploaded.length > 0) await loadContents();
+        },
+      },
+      { text: 'Cancel', style: 'cancel' },
+    ]);
   }
 
   async function handleConfirmRename(name: string) {

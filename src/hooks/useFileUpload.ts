@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Alert } from 'react-native';
 import { useRouter } from 'expo-router';
 import * as DocumentPicker from 'expo-document-picker';
+import * as ImagePicker from 'expo-image-picker';
 
 import filesService from '@/services/files.service';
 import { UploadResponse } from '@/types/file';
@@ -31,34 +32,20 @@ export function useFileUpload() {
   const [uploading, setUploading] = useState(false);
   const [progress, setProgress] = useState<UploadProgress | null>(null);
 
-  async function pickAndUpload(
+  // Shared upload loop for both pickers. Sequential (the backend's
+  // /storage/upload takes one file per request - there's no multi-file
+  // endpoint); stops the batch on a subscription-expired error since every
+  // remaining file would fail identically.
+  async function uploadAssets(
+    assets: { uri: string; name: string; mimeType: string }[],
     folderId?: string,
-  ): Promise<UploadBatchResult | null> {
-    // Backend's /storage/upload uses NestJS's FileInterceptor('file'),
-    // which only ever accepts one file per request - there's no
-    // multi-file endpoint. Multi-select here just means picking many
-    // files client-side and uploading them one at a time.
-    const result = await DocumentPicker.getDocumentAsync({
-      type: '*/*',
-      multiple: true,
-      copyToCacheDirectory: true,
-    });
-
-    if (result.canceled || !result.assets?.length) {
-      return null;
-    }
-
-    const assets = result.assets;
+  ): Promise<UploadBatchResult> {
     const uploaded: UploadResponse[] = [];
     const failed: string[] = [];
 
     try {
       setUploading(true);
 
-      // Sequential, not Promise.all - uploading many files at once
-      // would compete for the same connection with no way to show
-      // meaningful progress, and one bad file shouldn't abort the
-      // rest of the batch.
       for (let i = 0; i < assets.length; i++) {
         setProgress({ current: i + 1, total: assets.length });
         const asset = assets[i];
@@ -67,14 +54,11 @@ export function useFileUpload() {
           const response = await filesService.upload(
             asset.uri,
             asset.name,
-            asset.mimeType ?? 'application/octet-stream',
+            asset.mimeType,
             folderId,
           );
           uploaded.push(response);
         } catch (error: any) {
-          // Every remaining file would fail for the exact same reason,
-          // so stop the batch immediately instead of burning through
-          // the rest of the queue one confusing failure at a time.
           if (isSubscriptionExpiredError(error)) {
             for (let j = i; j < assets.length; j++) {
               failed.push(assets[j].name);
@@ -85,10 +69,7 @@ export function useFileUpload() {
               'Your plan has expired, so new uploads are paused. Renew or check your current plan in Settings to continue uploading.',
               [
                 { text: 'Later', style: 'cancel' },
-                {
-                  text: 'View Plan',
-                  onPress: () => router.push('/(tabs)/settings'),
-                },
+                { text: 'View Plan', onPress: () => router.push('/(tabs)/settings') },
               ],
             );
 
@@ -115,5 +96,64 @@ export function useFileUpload() {
     }
   }
 
-  return { uploading, progress, pickAndUpload };
+  // Pick any files via the system file picker (permission-free SAF/Files).
+  async function pickAndUpload(
+    folderId?: string,
+  ): Promise<UploadBatchResult | null> {
+    const result = await DocumentPicker.getDocumentAsync({
+      type: '*/*',
+      multiple: true,
+      copyToCacheDirectory: true,
+    });
+
+    if (result.canceled || !result.assets?.length) return null;
+
+    return uploadAssets(
+      result.assets.map((a) => ({
+        uri: a.uri,
+        name: a.name,
+        mimeType: a.mimeType ?? 'application/octet-stream',
+      })),
+      folderId,
+    );
+  }
+
+  // Pick from the photo gallery. Requests media-library permission first -
+  // this is the permission prompt the user sees the first time - then
+  // uploads the chosen images/videos through the same endpoint.
+  async function pickPhotosAndUpload(
+    folderId?: string,
+  ): Promise<UploadBatchResult | null> {
+    const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (!perm.granted) {
+      Alert.alert(
+        'Photo Access Needed',
+        'Allow photo access to upload from your gallery. You can enable it anytime in your phone Settings.',
+      );
+      return null;
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ['images', 'videos'],
+      allowsMultipleSelection: true,
+      quality: 1,
+    });
+
+    if (result.canceled || !result.assets?.length) return null;
+
+    return uploadAssets(
+      result.assets.map((a, i) => {
+        const mimeType = a.mimeType ?? 'image/jpeg';
+        const ext = mimeType.split('/')[1] ?? 'jpg';
+        return {
+          uri: a.uri,
+          name: a.fileName ?? `upload-${Date.now()}-${i}.${ext}`,
+          mimeType,
+        };
+      }),
+      folderId,
+    );
+  }
+
+  return { uploading, progress, pickAndUpload, pickPhotosAndUpload };
 }

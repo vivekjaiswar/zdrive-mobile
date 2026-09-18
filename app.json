@@ -53,6 +53,12 @@
       "expo-secure-store",
       "expo-sharing",
       "expo-document-picker",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Allow ZDrive to access your photos so you can upload them to your cloud."
+        }
+      ],
       "@react-native-google-signin/google-signin",
       [
         "expo-local-authentication",

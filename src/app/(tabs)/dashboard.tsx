@@ -1,5 +1,6 @@
 import { useCallback, useState } from 'react';
 import {
+  Alert,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -42,7 +43,7 @@ export default function DashboardScreen() {
   const styles = getStyles(g);
   const user = useAuthStore((state) => state.user);
   const tabBarHeight = useTabBarHeight();
-  const { uploading, pickAndUpload } = useFileUpload();
+  const { uploading, pickAndUpload, pickPhotosAndUpload } = useFileUpload();
   const onScroll = useTabBarScrollHandler();
 
   const [stats, setStats] = useState<DashboardStats | null>(null);
@@ -61,9 +62,24 @@ export default function DashboardScreen() {
     }
   }
 
-  async function handleUpload() {
-    const result = await pickAndUpload();
-    if (result && result.uploaded.length > 0) loadDashboard();
+  function handleUpload() {
+    Alert.alert('Upload', 'Choose a source', [
+      {
+        text: 'Photos',
+        onPress: async () => {
+          const result = await pickPhotosAndUpload();
+          if (result && result.uploaded.length > 0) loadDashboard();
+        },
+      },
+      {
+        text: 'Files',
+        onPress: async () => {
+          const result = await pickAndUpload();
+          if (result && result.uploaded.length > 0) loadDashboard();
+        },
+      },
+      { text: 'Cancel', style: 'cancel' },
+    ]);
   }
 
   const name = stats?.userName ?? user?.email.split('@')[0] ?? 'there';
