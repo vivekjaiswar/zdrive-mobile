@@ -6,7 +6,6 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import AuthScreenLayout from '@/components/auth/AuthScreenLayout';
 import PrimaryButton from '@/components/Button/PrimaryButton';
 import { getAuthStyles } from '@/components/auth/authStyles';
-import { useAuthStore } from '@/store/auth.store';
 import { useConsentStore } from '@/store/consent.store';
 import { ColorPalette } from '@/theme/palette';
 import { useColors } from '@/theme/useColors';
@@ -23,7 +22,6 @@ export default function ConsentScreen() {
   const authStyles = getAuthStyles(colors);
   const styles = getStyles(colors);
 
-  const user = useAuthStore((state) => state.user);
   const accept = useConsentStore((state) => state.accept);
   const [agreed, setAgreed] = useState(false);
   const [continuing, setContinuing] = useState(false);
@@ -33,7 +31,10 @@ export default function ConsentScreen() {
 
     setContinuing(true);
     await accept();
-    router.replace(user ? '/(tabs)/dashboard' : '/(auth)/login');
+    // Consent is always followed by the one-time permissions primer on a
+    // fresh install; the primer screen decides the final destination
+    // (dashboard vs login) once it's dismissed.
+    router.replace('/onboarding');
   }
 
   return (

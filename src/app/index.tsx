@@ -5,6 +5,7 @@ import { Redirect } from 'expo-router';
 import { useColors } from '@/theme/useColors';
 import { useAuthStore } from '@/store/auth.store';
 import { useConsentStore } from '@/store/consent.store';
+import { useOnboardingStore } from '@/store/onboarding.store';
 
 export default function Index() {
   const colors = useColors();
@@ -16,12 +17,17 @@ export default function Index() {
   const hasAcceptedTerms = useConsentStore((state) => state.hasAccepted);
   const hydrateConsent = useConsentStore((state) => state.hydrate);
 
+  const onboardingHydrated = useOnboardingStore((state) => state.isHydrated);
+  const hasSeenPrimer = useOnboardingStore((state) => state.hasSeenPrimer);
+  const hydrateOnboarding = useOnboardingStore((state) => state.hydrate);
+
   useEffect(() => {
     hydrate();
     hydrateConsent();
+    hydrateOnboarding();
   }, []);
 
-  if (!isHydrated || !consentHydrated) {
+  if (!isHydrated || !consentHydrated || !onboardingHydrated) {
     return (
       <View
         style={{
@@ -44,6 +50,15 @@ export default function Index() {
   // the hydrated user itself to decide where "Continue" sends them next.
   if (!hasAcceptedTerms) {
     return <Redirect href="/consent" />;
+  }
+
+  // Permissions primer: shown once per device, right after consent.
+  // Existing installs that accepted terms before this shipped will see
+  // it once on their next launch, then never again. It explains (does
+  // not request) the permissions ZDrive uses - the real OS prompts
+  // still fire contextually at point of use.
+  if (!hasSeenPrimer) {
+    return <Redirect href="/onboarding" />;
   }
 
   // v1.2.1: there's no local token to check anymore - hydrate() above
