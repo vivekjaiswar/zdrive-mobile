@@ -43,9 +43,9 @@ const dark: GlassTheme = {
   orbA: 'rgba(59,130,246,0.45)',
   orbB: 'rgba(139,92,246,0.38)',
   blurTint: 'dark',
-  blurIntensity: 40,
-  glassFill: 'rgba(255,255,255,0.06)',
-  glassFillStrong: 'rgba(20,28,52,0.62)',
+  blurIntensity: 52,
+  glassFill: 'rgba(255,255,255,0.07)',
+  glassFillStrong: 'rgba(20,28,52,0.66)',
   glassBorder: 'rgba(255,255,255,0.14)',
   glassHighlight: 'rgba(255,255,255,0.22)',
   accent: '#4C8DFF',
@@ -64,17 +64,18 @@ const dark: GlassTheme = {
 
 const light: GlassTheme = {
   scheme: 'light',
-  gradient: ['#E8F0FF', '#EFEAFF', '#F7FAFF'],
-  orbA: 'rgba(76,141,255,0.35)',
-  orbB: 'rgba(139,92,246,0.28)',
+  // Richer, more saturated blue->lavender so the pale washed-out look is
+  // gone and white cards visibly lift off the backdrop.
+  gradient: ['#CFE0FF', '#DAD2FF', '#E9F0FF'],
+  orbA: 'rgba(76,141,255,0.45)',
+  orbB: 'rgba(139,92,246,0.38)',
   blurTint: 'light',
-  blurIntensity: 30,
-  glassFill: 'rgba(255,255,255,0.62)',
-  glassFillStrong: 'rgba(255,255,255,0.86)',
-  // Soft neutral hairline, NOT a near-white edge - a white border over a
-  // white-ish blur created a visible "box inside a box" seam. This defines
-  // the card edge cleanly without the double-frame look.
-  glassBorder: 'rgba(120,130,165,0.20)',
+  blurIntensity: 44,
+  // Clean, near-opaque white cards - crisper than translucent glass on a
+  // light backdrop (translucent-white-on-light just reads as muddy/cheap).
+  glassFill: 'rgba(255,255,255,0.78)',
+  glassFillStrong: 'rgba(255,255,255,0.92)',
+  glassBorder: 'rgba(120,130,165,0.22)',
   glassHighlight: 'rgba(255,255,255,0.95)',
   accent: '#2F6BFF',
   accentGradient: ['#2F6BFF', '#6C4CFF'],

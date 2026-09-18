@@ -61,9 +61,9 @@ const styles = StyleSheet.create({
     // Soft elevation - kept subtle so it reads as "floating glass" not a
     // heavy Material card. Low opacity + wide radius = a diffuse lift with
     // no hard halo ring around the card.
-    shadowOpacity: 0.12,
-    shadowRadius: 24,
-    shadowOffset: { width: 0, height: 12 },
-    elevation: 4,
+    shadowOpacity: 0.18,
+    shadowRadius: 20,
+    shadowOffset: { width: 0, height: 10 },
+    elevation: 6,
   },
 });

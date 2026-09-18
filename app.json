@@ -2,14 +2,14 @@
   "expo": {
     "name": "ZDrive",
     "slug": "zdrive_mobile",
-    "version": "1.9.0",
+    "version": "1.9.1",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "zdrivemobile",
     "userInterfaceStyle": "automatic",
     "ios": {
       "bundleIdentifier": "in.zhdrive.app",
-      "buildNumber": "9",
+      "buildNumber": "10",
       "supportsTablet": true,
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
@@ -17,7 +17,7 @@
     },
     "android": {
       "package": "in.zhdrive.app",
-      "versionCode": 13,
+      "versionCode": 14,
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
         "foregroundImage": "./assets/images/android-icon-foreground.png",
@@ -39,10 +39,15 @@
       [
         "expo-splash-screen",
         {
-          "backgroundColor": "#208AEF",
-          "image": "./assets/logo.png",
-          "imageWidth": 180,
-          "resizeMode": "contain"
+          "backgroundColor": "#0B1120",
+          "image": "./assets/images/logo-mark.png",
+          "imageWidth": 120,
+          "resizeMode": "contain",
+          "dark": {
+            "backgroundColor": "#0B1120",
+            "image": "./assets/images/logo-mark.png",
+            "imageWidth": 120
+          }
         }
       ],
       "expo-secure-store",
