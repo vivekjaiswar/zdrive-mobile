@@ -42,7 +42,6 @@ export default function GlassInput({
       <BlurView
         intensity={g.blurIntensity}
         tint={g.blurTint}
-        experimentalBlurMethod="dimezisBlurView"
         style={StyleSheet.absoluteFill}
       />
       {/* Slightly stronger fill than a plain glass card - typed text has to

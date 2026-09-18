@@ -41,7 +41,6 @@ export default function GlassCard({
         tint={g.blurTint}
         // Android needs this to blur real content behind the view rather
         // than falling back to a flat translucent rectangle.
-        experimentalBlurMethod="dimezisBlurView"
         style={StyleSheet.absoluteFill}
       />
       <View

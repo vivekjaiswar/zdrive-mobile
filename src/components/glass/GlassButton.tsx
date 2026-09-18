@@ -88,7 +88,6 @@ export default function GlassButton({
           <BlurView
             intensity={g.blurIntensity}
             tint={g.blurTint}
-            experimentalBlurMethod="dimezisBlurView"
             style={StyleSheet.absoluteFill}
           />
           <View

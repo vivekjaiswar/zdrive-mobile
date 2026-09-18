@@ -28,7 +28,6 @@ export default function TabsLayout() {
             <BlurView
               intensity={g.blurIntensity + 15}
               tint={g.blurTint}
-              experimentalBlurMethod="dimezisBlurView"
               style={StyleSheet.absoluteFill}
             />
             <View
