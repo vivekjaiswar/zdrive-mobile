@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import {
   Alert,
-  Image,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -10,36 +9,35 @@ import {
   Text,
   View,
 } from 'react-native';
-
 import { useRouter } from 'expo-router';
 
-import PrimaryButton from '@/components/Button/PrimaryButton';
-import AppInput from '@/components/Input/AppInput';
-import AuthDivider from '@/components/auth/AuthDivider';
-import GoogleSignInButton from '@/components/auth/GoogleSignInButton';
-import Screen from '@/components/Layout/Screen';
+import GlassScreen from '@/components/glass/GlassScreen';
+import GlassCard from '@/components/glass/GlassCard';
+import GlassButton from '@/components/glass/GlassButton';
+import GlassInput from '@/components/glass/GlassInput';
+import Logo from '@/components/glass/Logo';
+import { useGoogleSignIn } from '@/hooks/useGoogleSignIn';
 import authService from '@/services/auth.service';
 import { useAuthStore } from '@/store/auth.store';
-import { ColorPalette } from '@/theme/palette';
-import { useColors } from '@/theme/useColors';
+import { GlassTheme, useGlass } from '@/theme/glass';
 
 export default function LoginScreen() {
   const router = useRouter();
-  const colors = useColors();
-  const styles = getStyles(colors);
+  const g = useGlass();
+  const styles = getStyles(g);
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
 
   const setUser = useAuthStore((state) => state.setUser);
+  const google = useGoogleSignIn();
 
   async function handleLogin() {
     if (!email.trim()) {
       Alert.alert('Validation', 'Please enter your email.');
       return;
     }
-
     if (!password.trim()) {
       Alert.alert('Validation', 'Please enter your password.');
       return;
@@ -47,15 +45,9 @@ export default function LoginScreen() {
 
     try {
       setLoading(true);
+      const response = await authService.login({ email: email.trim(), password });
 
-      const response = await authService.login({
-        email: email.trim(),
-        password,
-      });
-
-      // v1.4.0: a 2FA-enabled account gets no session cookie here at
-      // all - just a short-lived challengeToken - and has to complete
-      // the code-entry screen before setUser/dashboard makes sense.
+      // 2FA accounts get no session here - just a challenge token.
       if (response.twoFactorRequired) {
         router.push({
           pathname: '/(auth)/two-factor',
@@ -64,25 +56,12 @@ export default function LoginScreen() {
         return;
       }
 
-      // v1.2.1: the session itself arrives as a Set-Cookie header on
-      // this same response (httpOnly, handled automatically by the
-      // native cookie jar - see api.ts's withCredentials). There's no
-      // token in the body anymore to store or attach manually.
       setUser(response.user);
-
       router.replace('/(tabs)/dashboard');
-
     } catch (error: any) {
-      // Falls back to error.message (e.g. "Network Error") before the
-      // generic string, rather than hiding it - that distinction is
-      // exactly what confirmed the v1.2.1 cookie-auth switch itself was
-      // working (a real 401 with a server message, not a silent
-      // client-side failure).
       Alert.alert(
         'Login Failed',
-        error?.response?.data?.message ??
-          error?.message ??
-          'Unable to login.',
+        error?.response?.data?.message ?? error?.message ?? 'Unable to login.',
       );
     } finally {
       setLoading(false);
@@ -90,7 +69,7 @@ export default function LoginScreen() {
   }
 
   return (
-    <Screen>
+    <GlassScreen>
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         style={{ flex: 1 }}
@@ -100,32 +79,26 @@ export default function LoginScreen() {
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
         >
-          <Image
-            source={require('../../../assets/logo.png')}
-            resizeMode="contain"
-            style={styles.logo}
-          />
+          <View style={styles.logoWrap}>
+            <Logo size={52} />
+          </View>
 
-          <View style={styles.card}>
-            <Text style={styles.title}>
-              Welcome Back
-            </Text>
-
-            <Text style={styles.subtitle}>
-              Sign in to continue to your cloud.
-            </Text>
+          <GlassCard padding={24} radius={28}>
+            <Text style={styles.title}>Welcome back</Text>
+            <Text style={styles.subtitle}>Sign in to continue to your cloud.</Text>
 
             <View style={styles.form}>
-              <AppInput
-                placeholder="Email Address"
+              <GlassInput
+                icon="email-outline"
+                placeholder="Email address"
                 autoCapitalize="none"
                 autoCorrect={false}
                 keyboardType="email-address"
                 value={email}
                 onChangeText={setEmail}
               />
-
-              <AppInput
+              <GlassInput
+                icon="lock-outline"
                 placeholder="Password"
                 isPassword
                 value={password}
@@ -133,109 +106,77 @@ export default function LoginScreen() {
               />
 
               <Pressable onPress={() => router.push('/(auth)/forgot-password')}>
-                <Text style={styles.forgot}>
-                  Forgot Password?
-                </Text>
+                <Text style={styles.forgot}>Forgot password?</Text>
               </Pressable>
 
-              <PrimaryButton
-                title="Login"
-                loading={loading}
-                onPress={handleLogin}
-              />
+              <GlassButton title="Login" loading={loading} onPress={handleLogin} />
 
-              <AuthDivider />
+              {google.available && (
+                <>
+                  <View style={styles.dividerRow}>
+                    <View style={styles.line} />
+                    <Text style={styles.or}>or</Text>
+                    <View style={styles.line} />
+                  </View>
 
-              <GoogleSignInButton />
+                  <GlassButton
+                    title="Continue with Google"
+                    variant="google"
+                    loading={google.loading}
+                    onPress={google.signIn}
+                  />
+                </>
+              )}
             </View>
+          </GlassCard>
 
-            <View style={styles.bottom}>
-              <Text style={styles.bottomText}>
-                Don't have an account?
-              </Text>
-
-              <Pressable onPress={() => router.push('/(auth)/register')}>
-                <Text style={styles.register}>
-                  Create Account
-                </Text>
-              </Pressable>
-            </View>
+          <View style={styles.bottom}>
+            <Text style={styles.bottomText}>Don't have an account?</Text>
+            <Pressable onPress={() => router.push('/(auth)/register')}>
+              <Text style={styles.register}>Create Account</Text>
+            </Pressable>
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
-    </Screen>
+    </GlassScreen>
   );
 }
 
-function getStyles(colors: ColorPalette) {
+function getStyles(g: GlassTheme) {
   return StyleSheet.create({
-    scroll: {
-      flexGrow: 1,
-      justifyContent: 'center',
-      paddingVertical: 40,
-    },
-
-    logo: {
-      width: 210,
-      height: 70,
-      alignSelf: 'center',
-      marginBottom: 24,
-    },
-
-    card: {
-      backgroundColor: colors.surface,
-      borderRadius: 24,
-      borderWidth: 1,
-      borderColor: colors.border,
-
-      paddingHorizontal: 24,
-      paddingVertical: 28,
-    },
-
+    scroll: { flexGrow: 1, justifyContent: 'center', paddingVertical: 40 },
+    logoWrap: { alignItems: 'center', marginBottom: 28 },
     title: {
       fontSize: 26,
-      fontWeight: '700',
-      color: colors.text,
+      fontWeight: '800',
+      color: g.text,
       textAlign: 'center',
+      letterSpacing: -0.5,
     },
-
     subtitle: {
-      marginTop: 10,
+      marginTop: 8,
       fontSize: 14.5,
-      color: colors.textSecondary,
+      color: g.textSecondary,
       textAlign: 'center',
-      lineHeight: 21,
     },
-
-    form: {
-      marginTop: 28,
-      gap: 16,
-    },
-
+    form: { marginTop: 26, gap: 15 },
     forgot: {
       textAlign: 'right',
-      color: colors.primary,
+      color: g.accent,
       fontWeight: '600',
-      marginTop: 2,
-      marginBottom: 6,
+      marginTop: -2,
+      marginBottom: 4,
     },
-
+    dividerRow: { flexDirection: 'row', alignItems: 'center', gap: 12, marginVertical: 2 },
+    line: { flex: 1, height: 1, backgroundColor: g.glassBorder },
+    or: { color: g.textFaint, fontSize: 13, fontWeight: '600' },
     bottom: {
-      marginTop: 28,
+      marginTop: 26,
       flexDirection: 'row',
       justifyContent: 'center',
+      gap: 5,
     },
-
-    bottomText: {
-      color: colors.textSecondary,
-      fontSize: 15,
-    },
-
-    register: {
-      marginLeft: 5,
-      color: colors.primary,
-      fontWeight: '700',
-      fontSize: 15,
-    },
+    bottomText: { color: g.textSecondary, fontSize: 15 },
+    register: { color: g.accent, fontWeight: '700', fontSize: 15 },
   });
 }
