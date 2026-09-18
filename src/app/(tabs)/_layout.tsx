@@ -6,8 +6,6 @@ import AnimatedTabBar from '@/components/glass/AnimatedTabBar';
 import { TabBarVisibility } from '@/hooks/useTabBarScroll';
 
 export default function TabsLayout() {
-  // 1 = tab bar shown, 0 = hidden. Shared with each screen's scroll handler
-  // (via TabBarVisibility) so scrolling down hides the bar and up reveals it.
   const tabBarVisible = useSharedValue(1);
 
   return (
@@ -20,8 +18,12 @@ export default function TabsLayout() {
           name="dashboard"
           options={{
             title: 'Home',
-            tabBarIcon: ({ color, size }) => (
-              <MaterialCommunityIcons name="view-dashboard-outline" size={size} color={color} />
+            tabBarIcon: ({ focused, color, size }) => (
+              <MaterialCommunityIcons
+                name={focused ? 'home-variant' : 'home-variant-outline'}
+                size={size}
+                color={color}
+              />
             ),
           }}
         />
@@ -29,8 +31,12 @@ export default function TabsLayout() {
           name="files"
           options={{
             title: 'Files',
-            tabBarIcon: ({ color, size }) => (
-              <MaterialCommunityIcons name="folder-outline" size={size} color={color} />
+            tabBarIcon: ({ focused, color, size }) => (
+              <MaterialCommunityIcons
+                name={focused ? 'folder' : 'folder-outline'}
+                size={size}
+                color={color}
+              />
             ),
           }}
         />
@@ -38,8 +44,12 @@ export default function TabsLayout() {
           name="shared"
           options={{
             title: 'Shared',
-            tabBarIcon: ({ color, size }) => (
-              <MaterialCommunityIcons name="share-variant-outline" size={size} color={color} />
+            tabBarIcon: ({ focused, color, size }) => (
+              <MaterialCommunityIcons
+                name={focused ? 'share-variant' : 'share-variant-outline'}
+                size={size}
+                color={color}
+              />
             ),
           }}
         />
@@ -47,8 +57,12 @@ export default function TabsLayout() {
           name="settings"
           options={{
             title: 'Settings',
-            tabBarIcon: ({ color, size }) => (
-              <MaterialCommunityIcons name="cog-outline" size={size} color={color} />
+            tabBarIcon: ({ focused, color, size }) => (
+              <MaterialCommunityIcons
+                name={focused ? 'cog' : 'cog-outline'}
+                size={size}
+                color={color}
+              />
             ),
           }}
         />

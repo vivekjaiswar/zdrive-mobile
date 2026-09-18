@@ -1,9 +1,10 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
 
-import { ColorPalette } from '@/theme/palette';
-import { useColors } from '@/theme/useColors';
+import GlassCard from '@/components/glass/GlassCard';
 import { RecentFile, RecentFolder } from '@/services/dashboard.service';
+import { GlassTheme, useGlass } from '@/theme/glass';
 
 interface Props {
   files: RecentFile[];
@@ -12,148 +13,173 @@ interface Props {
   onFolderPress: (folder: RecentFolder) => void;
 }
 
-function iconFor(mime?: string) {
-  if (!mime) return 'file-outline';
+function getFileIcon(mime: string = ''): keyof typeof MaterialCommunityIcons.glyphMap {
   if (mime.includes('pdf')) return 'file-pdf-box';
   if (mime.includes('image')) return 'file-image';
   if (mime.includes('video')) return 'file-video';
   if (mime.includes('audio')) return 'file-music';
-  if (mime.includes('zip')) return 'folder-zip';
-  return 'file-outline' as const;
+  return 'file-outline';
 }
 
-// Backed entirely by data /dashboard/stats already returns on every
-// load - recentFiles/recentFolders were fetched by the app since day
-// one but never rendered anywhere until now.
-export default function RecentActivity({ files, folders, onFilePress, onFolderPress }: Props) {
-  const colors = useColors();
-  const styles = getStyles(colors);
+function formatDate(isoDate: string) {
+  try {
+    const d = new Date(isoDate);
+    const now = new Date();
+    const diffMs = now.getTime() - d.getTime();
+    const diffHours = diffMs / (1000 * 60 * 60);
 
-  if (files.length === 0 && folders.length === 0) return null;
+    if (diffHours < 24) {
+      if (diffHours < 1) return 'Just now';
+      return `${Math.floor(diffHours)}h ago`;
+    }
+    if (diffHours < 48) return 'Yesterday';
+    return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+  } catch {
+    return 'Recent';
+  }
+}
+
+export default function RecentActivity({
+  files,
+  folders,
+  onFilePress,
+  onFolderPress,
+}: Props) {
+  const router = useRouter();
+  const g = useGlass();
+  const styles = getStyles(g);
+
+  const hasItems = files.length > 0 || folders.length > 0;
 
   return (
     <View style={styles.container}>
-      <Text style={styles.heading}>Recent</Text>
+      <View style={styles.header}>
+        <Text style={styles.title}>Recent Activity</Text>
+        <Pressable onPress={() => router.push('/(tabs)/files')} hitSlop={8}>
+          <Text style={styles.seeAllText}>See all</Text>
+        </Pressable>
+      </View>
 
-      {folders.length > 0 && (
-        <View style={styles.folderRow}>
-          {folders.map((folder) => (
-            <Pressable
-              key={folder.id}
-              style={styles.folderChip}
-              onPress={() => onFolderPress(folder)}
-            >
-              <MaterialCommunityIcons name="folder" size={17} color={colors.primary} />
-              <Text numberOfLines={1} style={styles.folderChipText}>
-                {folder.name}
-              </Text>
-            </Pressable>
-          ))}
-        </View>
-      )}
+      <GlassCard strong padding={6} radius={24}>
+        {!hasItems ? (
+          <View style={styles.empty}>
+            <MaterialCommunityIcons name="cloud-upload-outline" size={28} color={g.textFaint} />
+            <Text style={styles.emptyText}>No recent files</Text>
+          </View>
+        ) : (
+          <View style={styles.list}>
+            {folders.map((folder) => (
+              <Pressable
+                key={`folder-${folder.id}`}
+                style={styles.row}
+                onPress={() => onFolderPress(folder)}
+              >
+                <View style={styles.iconWrap}>
+                  <MaterialCommunityIcons name="folder" size={20} color={g.accent} />
+                </View>
 
-      {files.length > 0 && (
-        <View style={styles.card}>
-          {files.map((file, index) => (
-            <Pressable
-              key={file.id}
-              onPress={() => onFilePress(file)}
-              style={[
-                styles.fileRow,
-                index === files.length - 1 && styles.fileRowLast,
-              ]}
-            >
-              <MaterialCommunityIcons
-                name={iconFor(file.mimeType)}
-                size={19}
-                color={colors.primary}
-              />
+                <View style={styles.rowInfo}>
+                  <Text style={styles.rowName} numberOfLines={1}>
+                    {folder.name}
+                  </Text>
+                  <Text style={styles.rowMeta}>Folder • {formatDate(folder.createdAt)}</Text>
+                </View>
 
-              <Text numberOfLines={1} style={styles.fileName}>
-                {file.name}
-              </Text>
+                <MaterialCommunityIcons name="chevron-right" size={18} color={g.textFaint} />
+              </Pressable>
+            ))}
 
-              <Text style={styles.fileDate}>
-                {new Date(file.createdAt).toLocaleDateString()}
-              </Text>
-            </Pressable>
-          ))}
-        </View>
-      )}
+            {files.map((file) => (
+              <Pressable
+                key={`file-${file.id}`}
+                style={styles.row}
+                onPress={() => onFilePress(file)}
+              >
+                <View style={styles.iconWrap}>
+                  <MaterialCommunityIcons name={getFileIcon(file.mimeType)} size={20} color={g.accent} />
+                </View>
+
+                <View style={styles.rowInfo}>
+                  <Text style={styles.rowName} numberOfLines={1}>
+                    {file.name}
+                  </Text>
+                  <Text style={styles.rowMeta}>{formatDate(file.createdAt)}</Text>
+                </View>
+
+                <MaterialCommunityIcons name="chevron-right" size={18} color={g.textFaint} />
+              </Pressable>
+            ))}
+          </View>
+        )}
+      </GlassCard>
     </View>
   );
 }
 
-function getStyles(colors: ColorPalette) {
+function getStyles(g: GlassTheme) {
   return StyleSheet.create({
     container: {
-      marginTop: 32,
+      marginBottom: 20,
     },
-
-    heading: {
-      fontSize: 18,
-      fontWeight: '700',
-      color: colors.text,
-      marginBottom: 14,
-    },
-
-    folderRow: {
-      flexDirection: 'row',
-      flexWrap: 'wrap',
-      gap: 10,
-      marginBottom: 14,
-    },
-
-    folderChip: {
+    header: {
       flexDirection: 'row',
       alignItems: 'center',
-      gap: 8,
-      backgroundColor: colors.surface,
-      paddingVertical: 10,
-      paddingHorizontal: 14,
-      borderRadius: 14,
-      maxWidth: 160,
-      borderWidth: 1,
-      borderColor: colors.border,
+      justifyContent: 'space-between',
+      marginBottom: 12,
     },
-
-    folderChipText: {
-      fontSize: 13.5,
+    title: {
+      fontSize: 13,
       fontWeight: '600',
-      color: colors.text,
+      color: g.textSecondary,
+      textTransform: 'uppercase',
+      letterSpacing: 0.5,
     },
-
-    card: {
-      backgroundColor: colors.surface,
-      borderRadius: 18,
-      paddingHorizontal: 16,
-      borderWidth: 1,
-      borderColor: colors.border,
+    seeAllText: {
+      fontSize: 13,
+      fontWeight: '600',
+      color: g.accent,
     },
-
-    fileRow: {
+    empty: {
+      alignItems: 'center',
+      justifyContent: 'center',
+      paddingVertical: 28,
+      gap: 6,
+    },
+    emptyText: {
+      fontSize: 13,
+      color: g.textSecondary,
+    },
+    list: {
+      paddingVertical: 4,
+    },
+    row: {
       flexDirection: 'row',
       alignItems: 'center',
       gap: 12,
-      paddingVertical: 14,
-      borderBottomWidth: 1,
-      borderBottomColor: colors.border,
+      paddingVertical: 12,
+      paddingHorizontal: 12,
     },
-
-    fileRowLast: {
-      borderBottomWidth: 0,
+    iconWrap: {
+      width: 40,
+      height: 40,
+      borderRadius: 14,
+      backgroundColor: g.accentSoft,
+      alignItems: 'center',
+      justifyContent: 'center',
     },
-
-    fileName: {
+    rowInfo: {
       flex: 1,
+    },
+    rowName: {
       fontSize: 14.5,
       fontWeight: '600',
-      color: colors.text,
+      color: g.text,
+      letterSpacing: -0.2,
     },
-
-    fileDate: {
+    rowMeta: {
+      marginTop: 2,
       fontSize: 12,
-      color: colors.textSecondary,
+      color: g.textSecondary,
     },
   });
 }

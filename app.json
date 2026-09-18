@@ -59,6 +59,14 @@
           "photosPermission": "Allow ZDrive to access your photos so you can upload them to your cloud."
         }
       ],
+      [
+        "expo-media-library",
+        {
+          "photosPermission": "Allow ZDrive to read your photos so it can back them up to your cloud.",
+          "savePhotosPermission": "Allow ZDrive to save photos to your device.",
+          "isAccessMediaLocationEnabled": true
+        }
+      ],
       "@react-native-google-signin/google-signin",
       [
         "expo-local-authentication",

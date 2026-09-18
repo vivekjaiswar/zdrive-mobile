@@ -12,6 +12,7 @@ import * as DocumentPicker from 'expo-document-picker';
 import * as Sentry from '@sentry/react-native';
 
 import Screen from '@/components/Layout/Screen';
+import SettingsSkeleton from '@/components/settings/SettingsSkeleton';
 import ProfileHeader from '@/components/settings/ProfileHeader';
 import SettingsRow from '@/components/settings/SettingsRow';
 import ChangePasswordModal from '@/components/settings/ChangePasswordModal';
@@ -20,6 +21,7 @@ import PlansModal from '@/components/settings/PlansModal';
 import TwoFactorModal from '@/components/settings/TwoFactorModal';
 import TextPromptModal from '@/components/common/TextPromptModal';
 import usersService from '@/services/users.service';
+import billingService, { SubscriptionDetails } from '@/services/billing.service';
 import biometricService from '@/services/biometric.service';
 import { useAuthStore } from '@/store/auth.store';
 import { useSecurityStore } from '@/store/security.store';
@@ -50,6 +52,7 @@ export default function SettingsScreen() {
   const setBiometricEnabled = useSecurityStore((state) => state.setBiometricEnabled);
 
   const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [subDetails, setSubDetails] = useState<SubscriptionDetails | null>(null);
   const [loading, setLoading] = useState(true);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const [nameModalVisible, setNameModalVisible] = useState(false);
@@ -69,8 +72,12 @@ export default function SettingsScreen() {
 
   async function loadProfile() {
     try {
-      const data = await usersService.getProfile();
+      const [data, sub] = await Promise.all([
+        usersService.getProfile(),
+        billingService.getSubscription().catch(() => null),
+      ]);
       setProfile(data);
+      setSubDetails(sub);
     } catch (e: any) {
       console.error('Failed to load profile:', e?.message ?? 'Unknown error');
     } finally {
@@ -216,9 +223,7 @@ export default function SettingsScreen() {
   if (loading || !profile) {
     return (
       <Screen edges={['top', 'left', 'right']}>
-        <View style={styles.center}>
-          <ActivityIndicator size="large" color={colors.primary} />
-        </View>
+        <SettingsSkeleton />
       </Screen>
     );
   }
@@ -264,6 +269,22 @@ export default function SettingsScreen() {
             value={profile.subscriptionStatus}
             showChevron={false}
           />
+          {subDetails?.subscriptionExpiresAt && (
+            <SettingsRow
+              icon="clock-outline"
+              label="Expires In"
+              value={
+                (() => {
+                  const days = Math.ceil(
+                    (new Date(subDetails.subscriptionExpiresAt).getTime() - Date.now()) /
+                      (1000 * 60 * 60 * 24),
+                  );
+                  return days > 0 ? `${days} days left` : 'Expired';
+                })()
+              }
+              showChevron={false}
+            />
+          )}
         </View>
 
         <Text style={styles.sectionLabel}>Security</Text>

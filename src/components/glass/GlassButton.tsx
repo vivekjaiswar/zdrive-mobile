@@ -7,10 +7,10 @@ import {
   View,
   ViewStyle,
 } from 'react-native';
-import { BlurView } from 'expo-blur';
 import { LinearGradient } from 'expo-linear-gradient';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 
+import GoogleLogo from '@/components/common/GoogleLogo';
 import { useGlass } from '@/theme/glass';
 
 type Variant = 'primary' | 'glass' | 'google' | 'danger';
@@ -25,11 +25,6 @@ interface Props {
   style?: StyleProp<ViewStyle>;
 }
 
-// One button, four looks:
-//  primary - filled accent gradient (the main CTA)
-//  glass   - frosted/translucent (secondary actions on a glass screen)
-//  google  - light frosted with the Google glyph
-//  danger  - frosted with danger-tinted label
 export default function GlassButton({
   title,
   onPress,
@@ -42,25 +37,30 @@ export default function GlassButton({
   const g = useGlass();
   const busy = loading || disabled;
 
-  const label =
+  const labelColor =
     variant === 'primary'
       ? g.onAccent
       : variant === 'danger'
         ? g.danger
         : g.text;
 
+  const bgFill =
+    variant === 'primary'
+      ? undefined
+      : g.scheme === 'dark'
+        ? 'rgba(255, 255, 255, 0.06)'
+        : 'rgba(0, 0, 0, 0.03)';
+
   const body = loading ? (
     <ActivityIndicator color={variant === 'primary' ? g.onAccent : g.accent} />
   ) : (
     <View style={styles.row}>
-      {(icon || variant === 'google') && (
-        <MaterialCommunityIcons
-          name={variant === 'google' ? 'google' : icon!}
-          size={19}
-          color={label}
-        />
+      {variant === 'google' ? (
+        <GoogleLogo size={20} />
+      ) : (
+        icon && <MaterialCommunityIcons name={icon} size={19} color={labelColor} />
       )}
-      <Text style={[styles.label, { color: label }]}>{title}</Text>
+      <Text style={[styles.label, { color: labelColor }]}>{title}</Text>
     </View>
   );
 
@@ -70,30 +70,22 @@ export default function GlassButton({
       disabled={busy}
       style={({ pressed }) => [
         styles.wrap,
-        { borderColor: g.glassBorder },
+        {
+          backgroundColor: bgFill,
+          borderColor: g.glassBorder,
+        },
         pressed && styles.pressed,
         busy && styles.busy,
         style,
       ]}
     >
-      {variant === 'primary' ? (
+      {variant === 'primary' && (
         <LinearGradient
           colors={g.accentGradient}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
           style={StyleSheet.absoluteFill}
         />
-      ) : (
-        <>
-          <BlurView
-            intensity={g.blurIntensity}
-            tint={g.blurTint}
-            style={StyleSheet.absoluteFill}
-          />
-          <View
-            style={[StyleSheet.absoluteFill, { backgroundColor: g.glassFill }]}
-          />
-        </>
       )}
       {body}
     </Pressable>
@@ -102,7 +94,7 @@ export default function GlassButton({
 
 const styles = StyleSheet.create({
   wrap: {
-    height: 54,
+    height: 52,
     borderRadius: 16,
     borderWidth: 1,
     overflow: 'hidden',
@@ -111,6 +103,6 @@ const styles = StyleSheet.create({
   },
   pressed: { opacity: 0.88 },
   busy: { opacity: 0.6 },
-  row: { flexDirection: 'row', alignItems: 'center', gap: 9 },
-  label: { fontSize: 16, fontWeight: '700' },
+  row: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  label: { fontSize: 15.5, fontWeight: '700' },
 });

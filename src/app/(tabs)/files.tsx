@@ -4,6 +4,7 @@ import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 import Screen from '@/components/Layout/Screen';
+import ListSkeleton from '@/components/common/ListSkeleton';
 import { ColorPalette } from '@/theme/palette';
 import { useColors } from '@/theme/useColors';
 import SearchBar from '@/components/files/SearchBar';
@@ -45,7 +46,7 @@ export default function FilesScreen() {
   const [searching, setSearching] = useState(false);
   const [sortBy, setSortBy] = useState<SortKey>('name');
   const [sortDir, setSortDir] = useState<SortDir>('asc');
-  const [viewMode, setViewMode] = useState<'list' | 'grid'>('list');
+  const [viewMode, setViewMode] = useState<'grid' | 'list' | 'tile'>('grid');
 
   // Tapping a sort chip: switch to that key (default ascending), or flip
   // direction if it's already the active key.
@@ -306,8 +307,7 @@ export default function FilesScreen() {
   if (loading) {
     return (
       <Screen edges={['top', 'left', 'right']}>
-        <ActivityIndicator size="large" color={colors.primary} style={styles.loadingSpinner} />
-        <Text style={styles.loading}>Loading files...</Text>
+        <ListSkeleton count={6} showSearchBar />
       </Screen>
     );
   }
@@ -432,17 +432,34 @@ export default function FilesScreen() {
 
           <View style={{ flex: 1 }} />
 
-          <Pressable
-            hitSlop={10}
-            onPress={() => setViewMode((m) => (m === 'list' ? 'grid' : 'list'))}
-            style={styles.viewToggle}
-          >
-            <MaterialCommunityIcons
-              name={viewMode === 'list' ? 'view-grid-outline' : 'format-list-bulleted'}
-              size={20}
-              color={colors.primary}
-            />
-          </Pressable>
+          <View style={{ flexDirection: 'row', gap: 6 }}>
+            {(['grid', 'list', 'tile'] as const).map((mode) => {
+              const active = viewMode === mode;
+              const iconName =
+                mode === 'grid'
+                  ? 'view-grid-outline'
+                  : mode === 'list'
+                    ? 'format-list-bulleted'
+                    : 'view-module-outline';
+              return (
+                <Pressable
+                  key={mode}
+                  hitSlop={6}
+                  onPress={() => setViewMode(mode)}
+                  style={[
+                    styles.viewToggle,
+                    active && { backgroundColor: colors.primary },
+                  ]}
+                >
+                  <MaterialCommunityIcons
+                    name={iconName}
+                    size={18}
+                    color={active ? '#FFFFFF' : colors.primary}
+                  />
+                </Pressable>
+              );
+            })}
+          </View>
         </View>
       )}
 

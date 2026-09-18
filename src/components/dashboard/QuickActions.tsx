@@ -1,107 +1,182 @@
-import { StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 
-import { ColorPalette } from '@/theme/palette';
-import { useColors } from '@/theme/useColors';
-import ActionCard from './ActionCard';
-import { useFileUpload } from '@/hooks/useFileUpload';
+import GlassCard from '@/components/glass/GlassCard';
+import { GlassTheme, useGlass } from '@/theme/glass';
 
 interface Props {
-  // Called after a successful upload so the dashboard can refresh
-  // storage stats.
-  onUploaded?: () => void;
+  uploading: boolean;
+  onUpload: () => void;
+  fileCount: number;
+  sharedCount: number;
 }
 
-export default function QuickActions({ onUploaded }: Props) {
+export default function QuickActions({
+  uploading,
+  onUpload,
+  fileCount,
+  sharedCount,
+}: Props) {
   const router = useRouter();
-  const colors = useColors();
-  const styles = getStyles(colors);
-  const { uploading, pickAndUpload } = useFileUpload();
+  const g = useGlass();
+  const styles = getStyles(g);
 
-  async function handleUpload() {
-    const result = await pickAndUpload();
-
-    if (result && result.uploaded.length > 0) {
-      onUploaded?.();
-    }
-  }
-
-  function handleCreateFolder() {
-    // Files screen picks this up via useLocalSearchParams and opens
-    // the create-folder sheet immediately (see files.tsx).
-    router.push('/(tabs)/files?createFolder=1');
-  }
-
-  function handleTrash() {
-    router.push('/trash');
-  }
+  // Dribbox Folder Cards
+  const folderCards = [
+    {
+      title: 'All Files',
+      subtitle: `${fileCount} items`,
+      icon: 'folder' as const,
+      color: '#38BDF8',
+      bgColor: 'rgba(56, 189, 248, 0.14)',
+      onPress: () => router.push('/(tabs)/files'),
+    },
+    {
+      title: 'Photos',
+      subtitle: 'Media gallery',
+      icon: 'image-multiple' as const,
+      color: '#A855F7',
+      bgColor: 'rgba(168, 85, 247, 0.14)',
+      onPress: () => router.push('/photos'),
+    },
+    {
+      title: 'Shared Links',
+      subtitle: `${sharedCount} links`,
+      icon: 'share-variant' as const,
+      color: '#10B981',
+      bgColor: 'rgba(16, 185, 129, 0.14)',
+      onPress: () => router.push('/(tabs)/shared'),
+    },
+    {
+      title: 'Trash',
+      subtitle: 'Deleted items',
+      icon: 'trash-can' as const,
+      color: '#EC4899',
+      bgColor: 'rgba(236, 72, 153, 0.14)',
+      onPress: () => router.push('/trash'),
+    },
+  ];
 
   return (
     <View style={styles.container}>
-      <Text style={styles.heading}>
-        Quick Actions
-      </Text>
-
-      <View style={styles.row}>
-        <ActionCard
-          icon="cloud-upload-outline"
-          title="Upload"
-          subtitle="New File"
-          onPress={handleUpload}
-          loading={uploading}
-        />
-
-        <View style={styles.space} />
-
-        <ActionCard
-          icon="folder-plus-outline"
-          title="Folder"
-          subtitle="Create"
-          onPress={handleCreateFolder}
-        />
+      {/* Upload Primary Action Header */}
+      <View style={styles.header}>
+        <Text style={styles.sectionTitle}>MY STORAGE</Text>
+        <Pressable
+          style={styles.uploadBtn}
+          onPress={onUpload}
+          disabled={uploading}
+          hitSlop={6}
+        >
+          {uploading ? (
+            <ActivityIndicator size="small" color="#FFFFFF" />
+          ) : (
+            <MaterialCommunityIcons name="plus" size={18} color="#FFFFFF" />
+          )}
+          <Text style={styles.uploadBtnText}>
+            {uploading ? 'Uploading...' : 'Upload File'}
+          </Text>
+        </Pressable>
       </View>
 
-      <View style={styles.row}>
-        <ActionCard
-          icon="share-variant-outline"
-          title="Shared"
-          subtitle="Links"
-          onPress={() => router.push('/(tabs)/shared')}
-        />
+      {/* Dribbox-style 2x2 Folder Cards Grid */}
+      <View style={styles.grid}>
+        {folderCards.map((card) => (
+          <Pressable
+            key={card.title}
+            style={styles.gridCard}
+            onPress={card.onPress}
+          >
+            <GlassCard radius={22} padding={16}>
+              <View style={styles.cardHeader}>
+                <View style={[styles.folderIconBadge, { backgroundColor: card.bgColor }]}>
+                  <MaterialCommunityIcons name={card.icon} size={22} color={card.color} />
+                </View>
+                <MaterialCommunityIcons name="dots-vertical" size={18} color={g.textFaint} />
+              </View>
 
-        <View style={styles.space} />
-
-        <ActionCard
-          icon="delete-outline"
-          title="Trash"
-          subtitle="Restore"
-          onPress={handleTrash}
-        />
+              <Text style={styles.cardTitle} numberOfLines={1}>
+                {card.title}
+              </Text>
+              <Text style={styles.cardSubtitle}>{card.subtitle}</Text>
+            </GlassCard>
+          </Pressable>
+        ))}
       </View>
     </View>
   );
 }
 
-function getStyles(colors: ColorPalette) {
+function getStyles(g: GlassTheme) {
   return StyleSheet.create({
     container: {
-      marginTop: 32,
+      marginBottom: 22,
     },
-
-    heading: {
-      fontSize: 18,
-      fontWeight: '700',
-      color: colors.text,
-      marginBottom: 14,
-    },
-
-    row: {
+    header: {
       flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
       marginBottom: 12,
     },
+    sectionTitle: {
+      fontSize: 11.5,
+      fontWeight: '700',
+      color: g.textSecondary,
+      letterSpacing: 0.6,
+    },
+    uploadBtn: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 6,
+      backgroundColor: g.accent,
+      paddingHorizontal: 14,
+      paddingVertical: 8,
+      borderRadius: 14,
 
-    space: {
-      width: 12,
+      shadowColor: g.accent,
+      shadowOpacity: 0.3,
+      shadowRadius: 8,
+      shadowOffset: { width: 0, height: 4 },
+      elevation: 3,
+    },
+    uploadBtnText: {
+      color: '#FFFFFF',
+      fontSize: 13,
+      fontWeight: '700',
+    },
+    grid: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: 12,
+    },
+    gridCard: {
+      width: '48%',
+      flexGrow: 1,
+    },
+    cardHeader: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      marginBottom: 12,
+    },
+    folderIconBadge: {
+      width: 42,
+      height: 42,
+      borderRadius: 14,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    cardTitle: {
+      fontSize: 15,
+      fontWeight: '700',
+      color: g.text,
+      letterSpacing: -0.2,
+    },
+    cardSubtitle: {
+      marginTop: 3,
+      fontSize: 12,
+      color: g.textSecondary,
     },
   });
 }

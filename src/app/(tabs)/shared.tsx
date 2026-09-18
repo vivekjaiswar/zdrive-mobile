@@ -3,6 +3,7 @@ import { ActivityIndicator, Alert, FlatList, RefreshControl, Share, StyleSheet, 
 import { useFocusEffect, useRouter } from 'expo-router';
 
 import Screen from '@/components/Layout/Screen';
+import ListSkeleton from '@/components/common/ListSkeleton';
 import SharedFileRow from '@/components/files/SharedFileRow';
 import EmptyFiles from '@/components/files/EmptyFiles';
 import filesService from '@/services/files.service';
@@ -92,8 +93,7 @@ export default function SharedScreen() {
   if (loading) {
     return (
       <Screen edges={['top', 'left', 'right']}>
-        <ActivityIndicator size="large" color={colors.primary} style={styles.loadingSpinner} />
-        <Text style={styles.loading}>Loading shared files...</Text>
+        <ListSkeleton count={5} />
       </Screen>
     );
   }

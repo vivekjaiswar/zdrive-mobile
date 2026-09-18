@@ -19,6 +19,7 @@ import { ZDriveFolder } from '@/types/folder';
 
 export type SortKey = 'name' | 'date' | 'size';
 export type SortDir = 'asc' | 'desc';
+export type ViewMode = 'grid' | 'list' | 'tile';
 
 function sortItems<T extends { name: string; createdAt: string; size?: string }>(
   items: T[],
@@ -31,7 +32,6 @@ function sortItems<T extends { name: string; createdAt: string; size?: string }>
     if (key === 'date') {
       cmp = new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
     } else if (key === 'size') {
-      // Folders have no size - fall back to name so they order sensibly.
       cmp = (Number(a.size) || 0) - (Number(b.size) || 0);
       if (cmp === 0) cmp = a.name.localeCompare(b.name);
     } else {
@@ -50,26 +50,17 @@ interface Props {
   onFolderLongPress: (folder: ZDriveFolder) => void;
   onFilePress: (file: ZDriveFile) => void;
   onFileLongPress: (file: ZDriveFile) => void;
-  // Long-press enters selection mode (onFileLongPress above); once
-  // active, tapping a row toggles it instead of navigating, and the
-  // per-row kebab menu opens the single-file action sheet in its
-  // place. Folders are excluded from multi-select entirely - their
-  // taps are disabled (not just re-purposed) while selecting.
   onFileToggleSelect?: (file: ZDriveFile) => void;
   onFileMenuPress?: (file: ZDriveFile) => void;
   selectionMode?: boolean;
   selectedIds?: Set<string>;
   bottomSpacing: number;
-  // Optional scroll handler (used to drive the collapsing tab bar).
   onScroll?: (e: import('react-native').NativeSyntheticEvent<import('react-native').NativeScrollEvent>) => void;
   sortBy?: SortKey;
   sortDir?: SortDir;
-  viewMode?: 'list' | 'grid';
+  viewMode?: ViewMode;
 }
 
-// Shared list presentation for the root "My Drive" screen and the
-// Folder Explorer screen - both show the same "folders, then files"
-// layout, just backed by different API calls.
 export default function FolderContents({
   folders,
   files,
@@ -87,14 +78,22 @@ export default function FolderContents({
   onScroll,
   sortBy = 'name',
   sortDir = 'asc',
-  viewMode = 'list',
+  viewMode = 'grid',
 }: Props) {
   const colors = useColors();
   const styles = getStyles(colors);
   const { width } = useWindowDimensions();
+
+  // Grid (2 cols), Tile (3 cols), List (1 col)
   const isGrid = viewMode === 'grid';
-  // 2-col grid inside the Screen's 24px horizontal padding, 14px gutter.
-  const cellWidth = (width - 48 - 14) / 2;
+  const isTile = viewMode === 'tile';
+  const numColumns = isTile ? 3 : isGrid ? 2 : 1;
+
+  const cellWidth = isTile
+    ? (width - 48 - 16) / 3
+    : isGrid
+      ? (width - 48 - 14) / 2
+      : width - 48;
 
   const sortedFolders = useMemo(
     () => sortItems(folders, sortBy, sortDir),
@@ -109,14 +108,12 @@ export default function FolderContents({
 
   return (
     <FlatList
-      // Remount when switching layouts - FlatList can't change numColumns
-      // on the fly.
       key={viewMode}
       data={sortedFiles}
       keyExtractor={(item) => item.id}
       style={styles.list}
-      numColumns={isGrid ? 2 : 1}
-      columnWrapperStyle={isGrid ? { justifyContent: 'space-between' } : undefined}
+      numColumns={numColumns}
+      columnWrapperStyle={numColumns > 1 ? { justifyContent: 'space-between' } : undefined}
       onScroll={onScroll}
       scrollEventThrottle={16}
       contentContainerStyle={
@@ -159,19 +156,24 @@ export default function FolderContents({
         const onLongPress = () => {
           if (!selectionMode) onFileLongPress(item);
         };
-        return isGrid ? (
+
+        if (viewMode === 'list') {
+          return (
+            <FileCard
+              file={item}
+              selectionMode={selectionMode}
+              selected={selectedIds?.has(item.id) ?? false}
+              onPress={onPress}
+              onLongPress={onLongPress}
+              onMenuPress={() => onFileMenuPress?.(item)}
+            />
+          );
+        }
+
+        return (
           <FileGridCell
             file={item}
             width={cellWidth}
-            selectionMode={selectionMode}
-            selected={selectedIds?.has(item.id) ?? false}
-            onPress={onPress}
-            onLongPress={onLongPress}
-            onMenuPress={() => onFileMenuPress?.(item)}
-          />
-        ) : (
-          <FileCard
-            file={item}
             selectionMode={selectionMode}
             selected={selectedIds?.has(item.id) ?? false}
             onPress={onPress}
@@ -190,11 +192,9 @@ function getStyles(colors: ColorPalette) {
     list: {
       marginTop: 8,
     },
-
     foldersSection: {
       marginBottom: 4,
     },
-
     sectionLabel: {
       fontSize: 12.5,
       fontWeight: '700',

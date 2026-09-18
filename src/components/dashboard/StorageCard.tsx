@@ -1,168 +1,176 @@
-import { StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
 
-import { ColorPalette } from '@/theme/palette';
-import { useColors } from '@/theme/useColors';
+import GlassCard from '@/components/glass/GlassCard';
+import { GlassTheme, useGlass } from '@/theme/glass';
 
 interface Props {
-  storageUsed: string;
-  storageLimit: string;
+  storageUsed: string | number;
+  storageLimit: string | number;
   usagePercentage: number;
+  fileCount: number;
+  folderCount: number;
+  sharedCount: number;
 }
 
-function formatBytes(bytes: number) {
-  if (!bytes) return '0 B';
-
-  const units = ['B', 'KB', 'MB', 'GB', 'TB'];
-
-  let index = 0;
-  let value = bytes;
-
-  while (value >= 1024 && index < units.length - 1) {
-    value /= 1024;
-    index++;
-  }
-
-  return `${value.toFixed(2)} ${units[index]}`;
+function formatBytes(value: string | number) {
+  const bytes = Number(value) || 0;
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+  if (bytes < 1024 * 1024 * 1024) return `${(bytes / 1024 / 1024).toFixed(1)} MB`;
+  return `${(bytes / 1024 / 1024 / 1024).toFixed(2)} GB`;
 }
 
 export default function StorageCard({
   storageUsed,
   storageLimit,
   usagePercentage,
+  fileCount,
+  folderCount,
+  sharedCount,
 }: Props) {
-  const colors = useColors();
-  const styles = getStyles(colors);
+  const router = useRouter();
+  const g = useGlass();
+  const styles = getStyles(g);
+
+  const pct = Math.min(Math.max(usagePercentage || 0, 0), 100);
+
+  // Segment colors inspired by Dribbox UI Kit
+  const segments = [
+    { label: 'Files', count: fileCount, color: '#38BDF8', widthPct: Math.max(pct * 0.55, 4) },
+    { label: 'Folders', count: folderCount, color: '#F59E0B', widthPct: Math.max(pct * 0.30, 3) },
+    { label: 'Shared', count: sharedCount, color: '#A855F7', widthPct: Math.max(pct * 0.15, 2) },
+  ];
 
   return (
-    <View style={styles.card}>
-      <View style={styles.topRow}>
-        <View>
-          <Text style={styles.smallTitle}>Cloud storage</Text>
+    <Pressable onPress={() => router.push('/(tabs)/settings')}>
+      <GlassCard radius={26} padding={22} style={styles.card}>
+        {/* Top Header Row */}
+        <View style={styles.topRow}>
+          <View>
+            <Text style={styles.label}>STORAGE DETAILS</Text>
+            <Text style={styles.usedText}>
+              {formatBytes(storageUsed)}
+              <Text style={styles.limitText}> / {formatBytes(storageLimit)}</Text>
+            </Text>
+          </View>
 
-          <Text style={styles.bigStorage}>
-            {formatBytes(Number(storageLimit))}
-          </Text>
+          <View style={styles.badge}>
+            <Text style={styles.badgeText}>{pct}%</Text>
+          </View>
         </View>
 
-        <View style={styles.circle}>
-          <Text style={styles.circleText}>{usagePercentage}%</Text>
+        {/* Dribbox-style Segmented Progress Bar */}
+        <View style={styles.segmentTrack}>
+          {segments.map((seg, idx) => (
+            <View
+              key={idx}
+              style={[
+                styles.segmentFill,
+                { width: `${seg.widthPct}%`, backgroundColor: seg.color },
+              ]}
+            />
+          ))}
+          <View style={{ flex: 1, backgroundColor: g.glassBorder }} />
         </View>
-      </View>
 
-      <Text style={styles.usedText}>
-        {formatBytes(Number(storageUsed))} used
-      </Text>
+        {/* Category Legend Pills */}
+        <View style={styles.legendRow}>
+          {segments.map((seg, idx) => (
+            <View key={idx} style={styles.legendItem}>
+              <View style={[styles.dot, { backgroundColor: seg.color }]} />
+              <Text style={styles.legendLabel}>
+                {seg.label} <Text style={styles.legendCount}>({seg.count})</Text>
+              </Text>
+            </View>
+          ))}
 
-      <View style={styles.progressBackground}>
-        <View
-          style={[
-            styles.progressFill,
-            { width: `${Math.min(usagePercentage, 100)}%` },
-          ]}
-        />
-      </View>
-
-      <View style={styles.bottomRow}>
-        <Text style={styles.bottomLabel}>Available</Text>
-
-        <Text style={styles.bottomValue}>
-          {formatBytes(Number(storageLimit) - Number(storageUsed))}
-        </Text>
-      </View>
-    </View>
+          <MaterialCommunityIcons name="chevron-right" size={18} color={g.textFaint} />
+        </View>
+      </GlassCard>
+    </Pressable>
   );
 }
 
-function getStyles(colors: ColorPalette) {
+function getStyles(g: GlassTheme) {
   return StyleSheet.create({
     card: {
-      backgroundColor: colors.primary,
-      borderRadius: 24,
-      padding: 24,
-
-      // Neutral shadow instead of the old brand-colored one - reads
-      // less "default template," more like considered elevation.
-      shadowColor: colors.shadow,
-      shadowOpacity: 0.18,
-      shadowRadius: 16,
-      shadowOffset: { width: 0, height: 8 },
-      elevation: 6,
+      marginBottom: 22,
     },
-
     topRow: {
       flexDirection: 'row',
+      alignItems: 'flex-start',
       justifyContent: 'space-between',
-      alignItems: 'center',
     },
-
-    smallTitle: {
-      color: 'rgba(255,255,255,0.75)',
-      fontSize: 14,
-      fontWeight: '500',
-    },
-
-    bigStorage: {
-      marginTop: 6,
-      fontSize: 30,
+    label: {
+      fontSize: 11.5,
       fontWeight: '700',
-      letterSpacing: -0.5,
-      color: '#FFFFFF',
+      color: g.textSecondary,
+      letterSpacing: 0.6,
     },
-
-    circle: {
-      width: 68,
-      height: 68,
-      borderRadius: 34,
-      backgroundColor: 'rgba(255,255,255,0.14)',
-
-      justifyContent: 'center',
-      alignItems: 'center',
-
-      borderWidth: 1.5,
-      borderColor: 'rgba(255,255,255,0.3)',
-    },
-
-    circleText: {
-      color: '#FFFFFF',
-      fontWeight: '700',
-      fontSize: 16,
-    },
-
     usedText: {
-      marginTop: 24,
-      color: 'rgba(255,255,255,0.85)',
+      marginTop: 6,
+      fontSize: 24,
+      fontWeight: '800',
+      color: g.text,
+      letterSpacing: -0.5,
+    },
+    limitText: {
       fontSize: 14,
+      fontWeight: '600',
+      color: g.textSecondary,
     },
-
-    progressBackground: {
-      marginTop: 10,
-      height: 8,
-      borderRadius: 20,
-      backgroundColor: 'rgba(255,255,255,0.2)',
-      overflow: 'hidden',
+    badge: {
+      paddingHorizontal: 12,
+      paddingVertical: 5,
+      borderRadius: 14,
+      backgroundColor: g.accentSoft,
+      borderWidth: 1,
+      borderColor: g.glassBorder,
     },
-
-    progressFill: {
-      height: 8,
-      borderRadius: 20,
-      backgroundColor: '#FFFFFF',
+    badgeText: {
+      fontSize: 13,
+      fontWeight: '800',
+      color: g.accent,
     },
-
-    bottomRow: {
-      marginTop: 18,
+    segmentTrack: {
       flexDirection: 'row',
+      height: 8,
+      borderRadius: 4,
+      overflow: 'hidden',
+      marginTop: 18,
+      marginBottom: 18,
+      gap: 3,
+    },
+    segmentFill: {
+      height: '100%',
+      borderRadius: 2,
+    },
+    legendRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
       justifyContent: 'space-between',
     },
-
-    bottomLabel: {
-      color: 'rgba(255,255,255,0.75)',
-      fontSize: 13,
+    legendItem: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 6,
     },
-
-    bottomValue: {
-      color: '#FFFFFF',
-      fontWeight: '700',
-      fontSize: 14,
+    dot: {
+      width: 8,
+      height: 8,
+      borderRadius: 4,
+    },
+    legendLabel: {
+      fontSize: 12.5,
+      fontWeight: '600',
+      color: g.text,
+    },
+    legendCount: {
+      fontSize: 12,
+      fontWeight: '500',
+      color: g.textSecondary,
     },
   });
 }

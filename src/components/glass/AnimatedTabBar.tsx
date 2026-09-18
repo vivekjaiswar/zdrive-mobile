@@ -8,11 +8,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { GlassTheme, useGlass } from '@/theme/glass';
 
-const BAR_HEIGHT = 62;
+const BAR_HEIGHT = 58;
 
-// The navigator (expo-router / react-navigation bottom tabs) passes the
-// standard BottomTabBarProps; those types aren't cleanly importable here, so
-// the nav-shaped props are typed loosely and only `visible` is strict.
 interface Props {
   state: any;
   descriptors: any;
@@ -20,35 +17,36 @@ interface Props {
   visible: SharedValue<number>;
 }
 
-// Instagram-style floating pill tab bar: a frosted rounded bar that slides
-// down out of view on scroll-down and back up on scroll-up (driven by the
-// `visible` shared value, animated on the UI thread). Custom bar rather than
-// the default so we can animate its position and give it the pill shape.
+// Instagram-style subtle floating bottom bar
 export default function AnimatedTabBar({ state, descriptors, navigation, visible }: Props) {
   const g = useGlass();
   const insets = useSafeAreaInsets();
   const styles = getStyles(g);
 
   const animStyle = useAnimatedStyle(() => ({
-    // Slide fully off-screen (bar height + its bottom offset) when hidden.
-    transform: [{ translateY: (1 - visible.value) * (BAR_HEIGHT + insets.bottom + 30) }],
-    opacity: 0.35 + visible.value * 0.65,
+    transform: [{ translateY: (1 - visible.value) * (BAR_HEIGHT + insets.bottom + 20) }],
+    opacity: 0.2 + visible.value * 0.8,
   }));
 
   return (
     <Animated.View
-      style={[styles.wrap, { bottom: insets.bottom + 10 }, animStyle]}
+      style={[styles.wrap, { bottom: insets.bottom + 8 }, animStyle]}
       pointerEvents="box-none"
     >
       <BlurView
-        intensity={g.blurIntensity + 20}
+        intensity={g.blurIntensity + 15}
         tint={g.blurTint}
         style={StyleSheet.absoluteFill}
       />
       <View
         style={[
           StyleSheet.absoluteFill,
-          { backgroundColor: g.glassFillStrong, borderColor: g.glassBorder, borderWidth: 1, borderRadius: 30 },
+          {
+            backgroundColor: g.scheme === 'dark' ? 'rgba(15, 23, 42, 0.75)' : 'rgba(255, 255, 255, 0.85)',
+            borderColor: g.glassBorder,
+            borderWidth: 1,
+            borderRadius: 32,
+          },
         ]}
       />
 
@@ -70,9 +68,15 @@ export default function AnimatedTabBar({ state, descriptors, navigation, visible
         };
 
         return (
-          <Pressable key={route.key} style={styles.tab} onPress={onPress} hitSlop={6}>
-            {options.tabBarIcon?.({ focused, color, size: 23 })}
-            <Text style={[styles.label, { color }]} numberOfLines={1}>
+          <Pressable key={route.key} style={styles.tab} onPress={onPress} hitSlop={8}>
+            {options.tabBarIcon?.({ focused, color, size: 22 })}
+            <Text
+              style={[
+                styles.label,
+                { color: focused ? g.accent : g.textFaint, fontWeight: focused ? '700' : '500' },
+              ]}
+              numberOfLines={1}
+            >
               {label}
             </Text>
           </Pressable>
@@ -86,27 +90,31 @@ function getStyles(g: GlassTheme) {
   return StyleSheet.create({
     wrap: {
       position: 'absolute',
-      left: 16,
-      right: 16,
+      left: 20,
+      right: 20,
       height: BAR_HEIGHT,
-      borderRadius: 30,
+      borderRadius: 32,
       overflow: 'hidden',
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'space-around',
-      shadowColor: '#000',
-      shadowOpacity: 0.28,
-      shadowRadius: 18,
-      shadowOffset: { width: 0, height: 10 },
-      elevation: 12,
+
+      shadowColor: '#000000',
+      shadowOpacity: 0.15,
+      shadowRadius: 16,
+      shadowOffset: { width: 0, height: 8 },
+      elevation: 8,
     },
     tab: {
       flex: 1,
       alignItems: 'center',
       justifyContent: 'center',
-      gap: 3,
+      gap: 2,
       height: '100%',
     },
-    label: { fontSize: 11, fontWeight: '600' },
+    label: {
+      fontSize: 10.5,
+      letterSpacing: 0.1,
+    },
   });
 }

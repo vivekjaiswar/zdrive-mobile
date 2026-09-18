@@ -8,7 +8,6 @@ import {
   View,
   ViewStyle,
 } from 'react-native';
-import { BlurView } from 'expo-blur';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 import { useGlass } from '@/theme/glass';
@@ -31,25 +30,22 @@ export default function GlassInput({
   const [focused, setFocused] = useState(false);
   const [visible, setVisible] = useState(false);
 
+  const bgFill =
+    g.scheme === 'dark'
+      ? 'rgba(255, 255, 255, 0.05)'
+      : 'rgba(0, 0, 0, 0.025)';
+
   return (
     <View
       style={[
         styles.wrap,
-        { borderColor: focused ? g.accent : g.glassBorder },
+        {
+          backgroundColor: bgFill,
+          borderColor: focused ? g.accent : g.glassBorder,
+        },
         containerStyle,
       ]}
     >
-      <BlurView
-        intensity={g.blurIntensity}
-        tint={g.blurTint}
-        style={StyleSheet.absoluteFill}
-      />
-      {/* Slightly stronger fill than a plain glass card - typed text has to
-          stay readable over whatever scrolls behind the field. */}
-      <View
-        style={[StyleSheet.absoluteFill, { backgroundColor: g.glassFillStrong }]}
-      />
-
       {icon && (
         <MaterialCommunityIcons name={icon} size={19} color={g.textSecondary} />
       )}
@@ -57,8 +53,6 @@ export default function GlassInput({
       <TextInput
         {...props}
         secureTextEntry={isPassword ? !visible : secureTextEntry}
-        // isPassword owns these so a masked field never silently
-        // auto-capitalizes/corrects what actually gets submitted.
         autoCapitalize={isPassword ? 'none' : props.autoCapitalize}
         autoCorrect={isPassword ? false : props.autoCorrect}
         placeholderTextColor={g.textFaint}
@@ -89,9 +83,9 @@ export default function GlassInput({
 
 const styles = StyleSheet.create({
   wrap: {
-    height: 54,
+    height: 52,
     borderRadius: 16,
-    borderWidth: 1.5,
+    borderWidth: 1,
     overflow: 'hidden',
     flexDirection: 'row',
     alignItems: 'center',
@@ -100,6 +94,6 @@ const styles = StyleSheet.create({
   },
   input: {
     flex: 1,
-    fontSize: 15.5,
+    fontSize: 15,
   },
 });
