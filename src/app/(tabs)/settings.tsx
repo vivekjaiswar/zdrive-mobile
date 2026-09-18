@@ -24,6 +24,7 @@ import biometricService from '@/services/biometric.service';
 import { useAuthStore } from '@/store/auth.store';
 import { useSecurityStore } from '@/store/security.store';
 import { useTabBarHeight } from '@/hooks/useTabBarHeight';
+import { useTabBarScrollHandler } from '@/hooks/useTabBarScroll';
 import { ColorPalette } from '@/theme/palette';
 import { useColors } from '@/theme/useColors';
 import { UserProfile } from '@/types/user';
@@ -41,6 +42,7 @@ export default function SettingsScreen() {
   const colors = useColors();
   const styles = getStyles(colors);
   const tabBarHeight = useTabBarHeight();
+  const onScroll = useTabBarScrollHandler();
   const logout = useAuthStore((state) => state.logout);
 
   const biometricAvailable = useSecurityStore((state) => state.biometricAvailable);
@@ -225,6 +227,8 @@ export default function SettingsScreen() {
     <Screen edges={['top', 'left', 'right']}>
       <ScrollView
         showsVerticalScrollIndicator={false}
+        onScroll={onScroll}
+        scrollEventThrottle={16}
         contentContainerStyle={{ paddingBottom: tabBarHeight + 24 }}
       >
         <ProfileHeader

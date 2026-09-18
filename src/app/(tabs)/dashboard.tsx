@@ -16,6 +16,7 @@ import dashboardService, { DashboardStats } from '@/services/dashboard.service';
 import { useAuthStore } from '@/store/auth.store';
 import { useFileUpload } from '@/hooks/useFileUpload';
 import { useTabBarHeight } from '@/hooks/useTabBarHeight';
+import { useTabBarScrollHandler } from '@/hooks/useTabBarScroll';
 import { GlassTheme, useGlass } from '@/theme/glass';
 
 function formatBytes(value: string | number) {
@@ -42,6 +43,7 @@ export default function DashboardScreen() {
   const user = useAuthStore((state) => state.user);
   const tabBarHeight = useTabBarHeight();
   const { uploading, pickAndUpload } = useFileUpload();
+  const onScroll = useTabBarScrollHandler();
 
   const [stats, setStats] = useState<DashboardStats | null>(null);
 
@@ -78,6 +80,8 @@ export default function DashboardScreen() {
     <GlassScreen edges={['top', 'left', 'right']}>
       <ScrollView
         showsVerticalScrollIndicator={false}
+        onScroll={onScroll}
+        scrollEventThrottle={16}
         contentContainerStyle={{ paddingBottom: tabBarHeight + 24, paddingTop: 8 }}
       >
         {/* Header */}

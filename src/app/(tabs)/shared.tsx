@@ -8,6 +8,7 @@ import EmptyFiles from '@/components/files/EmptyFiles';
 import filesService from '@/services/files.service';
 import { WEB_BASE_URL } from '@/services/api';
 import { useTabBarHeight } from '@/hooks/useTabBarHeight';
+import { useTabBarScrollHandler } from '@/hooks/useTabBarScroll';
 import { ColorPalette } from '@/theme/palette';
 import { useColors } from '@/theme/useColors';
 import { SharedFileEntry } from '@/types/file';
@@ -15,6 +16,7 @@ import { SharedFileEntry } from '@/types/file';
 export default function SharedScreen() {
   const router = useRouter();
   const tabBarHeight = useTabBarHeight();
+  const onScroll = useTabBarScrollHandler();
   const colors = useColors();
   const styles = getStyles(colors);
 
@@ -103,6 +105,8 @@ export default function SharedScreen() {
       <FlatList
         data={entries}
         keyExtractor={(item) => item.id}
+        onScroll={onScroll}
+        scrollEventThrottle={16}
         contentContainerStyle={
           entries.length === 0
             ? { flexGrow: 1, justifyContent: 'center', paddingBottom: tabBarHeight + 40 }

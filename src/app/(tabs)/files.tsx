@@ -21,6 +21,7 @@ import { useFileActions } from '@/hooks/useFileActions';
 import { useFolderActions } from '@/hooks/useFolderActions';
 import { useMultiSelect } from '@/hooks/useMultiSelect';
 import { useTabBarHeight } from '@/hooks/useTabBarHeight';
+import { useTabBarScrollHandler } from '@/hooks/useTabBarScroll';
 import { useFilePreviewStore } from '@/store/filePreview.store';
 import { ZDriveFile } from '@/types/file';
 import { ZDriveFolder } from '@/types/folder';
@@ -61,6 +62,7 @@ export default function FilesScreen() {
 
   const { uploading, progress, pickAndUpload } = useFileUpload();
   const tabBarHeight = useTabBarHeight();
+  const onScroll = useTabBarScrollHandler();
   const setPreviewFileIds = useFilePreviewStore((state) => state.setFileIds);
 
   const {
@@ -382,6 +384,7 @@ export default function FilesScreen() {
         selectionMode={selectionMode}
         selectedIds={selectedIds}
         bottomSpacing={tabBarHeight + 88}
+        onScroll={onScroll}
       />
 
       <UploadFAB onPress={handleUpload} loading={uploading} progress={progress} />

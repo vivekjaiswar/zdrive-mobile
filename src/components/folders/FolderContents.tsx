@@ -27,6 +27,8 @@ interface Props {
   selectionMode?: boolean;
   selectedIds?: Set<string>;
   bottomSpacing: number;
+  // Optional scroll handler (used to drive the collapsing tab bar).
+  onScroll?: (e: import('react-native').NativeSyntheticEvent<import('react-native').NativeScrollEvent>) => void;
 }
 
 // Shared list presentation for the root "My Drive" screen and the
@@ -46,6 +48,7 @@ export default function FolderContents({
   selectionMode = false,
   selectedIds,
   bottomSpacing,
+  onScroll,
 }: Props) {
   const colors = useColors();
   const styles = getStyles(colors);
@@ -57,6 +60,8 @@ export default function FolderContents({
       data={files}
       keyExtractor={(item) => item.id}
       style={styles.list}
+      onScroll={onScroll}
+      scrollEventThrottle={16}
       contentContainerStyle={
         isEmpty
           ? { flexGrow: 1, justifyContent: 'center', paddingBottom: bottomSpacing }
