@@ -1,7 +1,8 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
+  Linking,
   ScrollView,
   StyleSheet,
   Text,
@@ -23,8 +24,10 @@ import TextPromptModal from '@/components/common/TextPromptModal';
 import usersService from '@/services/users.service';
 import billingService, { SubscriptionDetails } from '@/services/billing.service';
 import biometricService from '@/services/biometric.service';
+import backupService from '@/services/backup.service';
 import { useAuthStore } from '@/store/auth.store';
 import { useSecurityStore } from '@/store/security.store';
+import { useBackupStore } from '@/store/backup.store';
 import { useTabBarHeight } from '@/hooks/useTabBarHeight';
 import { useTabBarScrollHandler } from '@/hooks/useTabBarScroll';
 import { ColorPalette } from '@/theme/palette';
@@ -51,6 +54,9 @@ export default function SettingsScreen() {
   const biometricEnabled = useSecurityStore((state) => state.biometricEnabled);
   const setBiometricEnabled = useSecurityStore((state) => state.setBiometricEnabled);
 
+  const autoBackupEnabled = useBackupStore((state) => state.autoBackupEnabled);
+  const setAutoBackupEnabled = useBackupStore((state) => state.setAutoBackupEnabled);
+
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [subDetails, setSubDetails] = useState<SubscriptionDetails | null>(null);
   const [loading, setLoading] = useState(true);
@@ -63,10 +69,13 @@ export default function SettingsScreen() {
   const [deleteModalVisible, setDeleteModalVisible] = useState(false);
   const [deletingAccount, setDeletingAccount] = useState(false);
   const [twoFactorModalVisible, setTwoFactorModalVisible] = useState(false);
+  const [backingUp, setBackingUp] = useState(false);
+  const [backedUpCount, setBackedUpCount] = useState(0);
 
   useFocusEffect(
     useCallback(() => {
       loadProfile();
+      backupService.backedUpCount().then(setBackedUpCount).catch(() => {});
     }, []),
   );
 
@@ -82,6 +91,45 @@ export default function SettingsScreen() {
       console.error('Failed to load profile:', e?.message ?? 'Unknown error');
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function handleToggleAutoBackup(enabled: boolean) {
+    if (enabled) {
+      const perm = await backupService.requestPermission();
+      if (!perm.granted) {
+        Alert.alert(
+          'Permission Needed',
+          'Photo Library permission is required to enable auto photo backup. Tap Open Settings to grant access.',
+          [
+            { text: 'Cancel', style: 'cancel' },
+            { text: 'Open Settings', onPress: () => Linking.openSettings() },
+          ],
+        );
+        return;
+      }
+      await setAutoBackupEnabled(true);
+      await backupService.registerBackgroundTask();
+      Alert.alert('Auto Backup Enabled', 'ZDrive will now back up new photos in the background.');
+    } else {
+      await setAutoBackupEnabled(false);
+      await backupService.unregisterBackgroundTask();
+    }
+  }
+
+  async function handleSyncNow() {
+    try {
+      setBackingUp(true);
+      const result = await backupService.run(() => {});
+      const count = await backupService.backedUpCount();
+      setBackedUpCount(count);
+      if (result === 'complete') {
+        Alert.alert('Sync Complete', 'All photos on your device are backed up to ZDrive.');
+      }
+    } catch {
+      Alert.alert('Sync Failed', 'Could not sync photos. Check your connection.');
+    } finally {
+      setBackingUp(false);
     }
   }
 
@@ -102,9 +150,6 @@ export default function SettingsScreen() {
         asset.name,
         asset.mimeType ?? 'image/jpeg',
       );
-      // The upload response's avatarUrl is a raw S3 key, not a
-      // renderable URL - re-fetch the profile to get the resolved
-      // pre-signed URL.
       await loadProfile();
     } catch (error: any) {
       Alert.alert(
@@ -141,12 +186,6 @@ export default function SettingsScreen() {
     try {
       setChangingPassword(true);
       await usersService.changePassword(currentPassword, newPassword);
-
-      // v1.2.1: the server still bumps tokenVersion and issues a fresh
-      // session as part of this change, but it now arrives as a
-      // Set-Cookie header on this same response - the native cookie jar
-      // (see api.ts's withCredentials) swaps it in automatically. There's
-      // no token in the response body left to persist or re-attach.
       setPasswordModalVisible(false);
       Alert.alert('Success', 'Your password has been updated.');
     } catch (error: any) {
@@ -160,16 +199,6 @@ export default function SettingsScreen() {
   }
 
   async function handleDeleteAccount() {
-    // Security review finding: this is an irreversible, account-wide
-    // delete previously gated only by typing "DELETE" in the modal -
-    // anyone with momentary access to an already-unlocked device
-    // could wipe the account without proving identity again. Force a
-    // fresh biometric check immediately before the actual API call,
-    // on top of (not instead of) the existing confirmation modal.
-    // Note: this only proves "this device's owner is present," not
-    // "knows the account password" - real defense-in-depth would also
-    // have the backend require re-entering the password on this
-    // endpoint, which is a joint client+backend change beyond this fix.
     if (biometricAvailable) {
       const reauthed = await biometricService.authenticate();
       if (!reauthed) return;
@@ -178,11 +207,6 @@ export default function SettingsScreen() {
     try {
       setDeletingAccount(true);
       await usersService.deleteAccount();
-
-      // Account is gone server-side - clear the local session
-      // immediately rather than waiting for a 401 on some future
-      // request, and don't leave the delete modal open underneath
-      // the login screen.
       setDeleteModalVisible(false);
       await logout();
       router.replace('/(auth)/login');
@@ -196,10 +220,6 @@ export default function SettingsScreen() {
     }
   }
 
-  // The backend revokes every session (including this one) as part of
-  // disabling 2FA - there's no "still logged in" state to return to
-  // here, so this mirrors handleDeleteAccount's own forced-logout tail
-  // rather than treating it like a normal settings change.
   async function handleTwoFactorDisabledLoggedOut() {
     setTwoFactorModalVisible(false);
     await logout();
@@ -287,6 +307,29 @@ export default function SettingsScreen() {
           )}
         </View>
 
+        <Text style={styles.sectionLabel}>Photo Backup & Permissions</Text>
+        <View style={styles.card}>
+          <SettingsRow
+            icon="cloud-sync-outline"
+            label="Auto Photo Backup"
+            toggleValue={autoBackupEnabled}
+            onToggleChange={handleToggleAutoBackup}
+          />
+          <SettingsRow
+            icon="image-multiple-outline"
+            label="Photos Backed Up"
+            value={`${backedUpCount} photos`}
+            onPress={handleSyncNow}
+            loading={backingUp}
+          />
+          <SettingsRow
+            icon="cog-outline"
+            label="System Permissions"
+            value="Manage in Settings"
+            onPress={() => Linking.openSettings()}
+          />
+        </View>
+
         <Text style={styles.sectionLabel}>Security</Text>
         <View style={styles.card}>
           {biometricAvailable && (
@@ -346,32 +389,6 @@ export default function SettingsScreen() {
             onPress={() => router.push('/legal/terms')}
           />
         </View>
-
-        {/* __DEV__ only - lets us confirm Sentry is actually wired up
-            end-to-end without shipping a test-crash button to real
-            users. This whole card is stripped out of production/EAS
-            builds since __DEV__ is false there. */}
-        {__DEV__ && (
-          <>
-            <Text style={styles.sectionLabel}>Debug</Text>
-            <View style={styles.card}>
-              <SettingsRow
-                icon="bug-outline"
-                label="Send Test Error to Sentry"
-                showChevron={false}
-                onPress={() => {
-                  Sentry.captureException(
-                    new Error('ZDrive test error - Sentry wired up correctly'),
-                  );
-                  Alert.alert(
-                    'Sent',
-                    'Check your Sentry dashboard - it may take a few seconds to appear.',
-                  );
-                }}
-              />
-            </View>
-          </>
-        )}
       </ScrollView>
 
       <TextPromptModal
@@ -420,12 +437,6 @@ export default function SettingsScreen() {
 
 function getStyles(colors: ColorPalette) {
   return StyleSheet.create({
-    center: {
-      flex: 1,
-      justifyContent: 'center',
-      alignItems: 'center',
-    },
-
     sectionLabel: {
       marginTop: 8,
       marginBottom: 8,
@@ -435,7 +446,6 @@ function getStyles(colors: ColorPalette) {
       textTransform: 'uppercase',
       letterSpacing: 0.5,
     },
-
     card: {
       backgroundColor: colors.surface,
       borderRadius: 18,
