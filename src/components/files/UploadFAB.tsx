@@ -1,8 +1,9 @@
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { ActivityIndicator, Pressable, StyleSheet, Text } from 'react-native';
+import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 
-import { ColorPalette } from '@/theme/palette';
-import { useColors } from '@/theme/useColors';
+import { useTabBarHeight } from '@/hooks/useTabBarHeight';
+import { GlassTheme, useGlass } from '@/theme/glass';
 
 interface Props {
   onPress: () => void;
@@ -11,13 +12,17 @@ interface Props {
 }
 
 export default function UploadFAB({ onPress, loading = false, progress }: Props) {
-  const colors = useColors();
-  const styles = getStyles(colors);
+  const g = useGlass();
+  const styles = getStyles(g);
+  // Sit above the (now floating/absolute) tab bar - the hook already folds
+  // in the device's bottom safe-area inset, so this clears the bar and the
+  // gesture nav on any device rather than a fixed guess that overlapped.
+  const tabBarHeight = useTabBarHeight();
 
   const label = loading
     ? progress && progress.total > 1
       ? `Uploading ${progress.current}/${progress.total}`
-      : 'Uploading...'
+      : 'Uploading…'
     : 'Upload';
 
   return (
@@ -25,44 +30,51 @@ export default function UploadFAB({ onPress, loading = false, progress }: Props)
       disabled={loading}
       style={({ pressed }) => [
         styles.button,
-        pressed && { opacity: 0.9, transform: [{ scale: 0.97 }] },
+        { bottom: tabBarHeight + 16 },
+        pressed && { opacity: 0.92, transform: [{ scale: 0.97 }] },
         loading && styles.disabled,
       ]}
       onPress={onPress}
     >
-      {loading ? (
-        <ActivityIndicator size="small" color="#FFFFFF" />
-      ) : (
-        <MaterialCommunityIcons name="plus" size={22} color="#FFFFFF" />
-      )}
-
-      <Text style={styles.text}>{label}</Text>
+      <LinearGradient
+        colors={g.accentGradient}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={StyleSheet.absoluteFill}
+      />
+      <View style={styles.inner}>
+        {loading ? (
+          <ActivityIndicator size="small" color="#FFFFFF" />
+        ) : (
+          <MaterialCommunityIcons name="plus" size={22} color="#FFFFFF" />
+        )}
+        <Text style={styles.text}>{label}</Text>
+      </View>
     </Pressable>
   );
 }
 
-function getStyles(colors: ColorPalette) {
+function getStyles(g: GlassTheme) {
   return StyleSheet.create({
     button: {
       position: 'absolute',
       right: 20,
-      bottom: 24,
       height: 54,
       borderRadius: 27,
-      paddingHorizontal: 22,
-      backgroundColor: colors.primary,
-      flexDirection: 'row',
-      alignItems: 'center',
-
-      shadowColor: colors.shadow,
-      shadowOpacity: 0.25,
-      shadowRadius: 14,
-      shadowOffset: { width: 0, height: 6 },
+      overflow: 'hidden',
+      justifyContent: 'center',
+      shadowColor: g.accent,
+      shadowOpacity: 0.4,
+      shadowRadius: 16,
+      shadowOffset: { width: 0, height: 8 },
       elevation: 8,
     },
-
-    disabled: { opacity: 0.7 },
-
+    inner: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingHorizontal: 22,
+    },
+    disabled: { opacity: 0.75 },
     text: {
       marginLeft: 9,
       color: '#FFFFFF',
