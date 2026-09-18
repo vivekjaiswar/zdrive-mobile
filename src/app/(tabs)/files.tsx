@@ -11,7 +11,7 @@ import UploadFAB from '@/components/files/UploadFAB';
 import FileActionSheet from '@/components/files/FileActionSheet';
 import TextPromptModal from '@/components/common/TextPromptModal';
 import FolderPickerModal from '@/components/files/FolderPickerModal';
-import FolderContents from '@/components/folders/FolderContents';
+import FolderContents, { SortKey, SortDir } from '@/components/folders/FolderContents';
 import FolderActionSheet from '@/components/folders/FolderActionSheet';
 import SelectionBar from '@/components/files/SelectionBar';
 import filesService from '@/services/files.service';
@@ -43,6 +43,20 @@ export default function FilesScreen() {
   // backend endpoints), results merged into one list.
   const [searchMode, setSearchMode] = useState<'keyword' | 'smart'>('keyword');
   const [searching, setSearching] = useState(false);
+  const [sortBy, setSortBy] = useState<SortKey>('name');
+  const [sortDir, setSortDir] = useState<SortDir>('asc');
+  const [viewMode, setViewMode] = useState<'list' | 'grid'>('list');
+
+  // Tapping a sort chip: switch to that key (default ascending), or flip
+  // direction if it's already the active key.
+  function chooseSort(key: SortKey) {
+    if (key === sortBy) {
+      setSortDir((d) => (d === 'asc' ? 'desc' : 'asc'));
+    } else {
+      setSortBy(key);
+      setSortDir('asc');
+    }
+  }
 
   // File currently open in the long-press action sheet, and the
   // follow-on rename/move modals it can launch.
@@ -324,7 +338,15 @@ export default function FilesScreen() {
         </View>
       )}
 
-      <SearchBar value={query} onChangeText={setQuery} />
+      <SearchBar
+        value={query}
+        onChangeText={setQuery}
+        placeholder={
+          searchMode === 'smart'
+            ? "Describe it — 'beach photos', 'invoice'…"
+            : 'Search files, or try Smart search'
+        }
+      />
 
       {isSearching && (
         <View style={styles.searchModeRow}>
@@ -363,9 +385,61 @@ export default function FilesScreen() {
         </View>
       )}
 
+      {isSearching && searchMode === 'smart' && (
+        <Text style={styles.smartHint}>
+          AI search finds photos and document contents by meaning — not just
+          file names.
+        </Text>
+      )}
+
+      {!isSearching && (
+        <View style={styles.searchModeRow}>
+          {(['name', 'date', 'size'] as const).map((key) => {
+            const active = sortBy === key;
+            return (
+              <Pressable
+                key={key}
+                onPress={() => chooseSort(key)}
+                style={[styles.searchModePill, active && styles.searchModePillActive]}
+              >
+                <Text
+                  style={[styles.searchModeText, active && styles.searchModeTextActive]}
+                >
+                  {key === 'name' ? 'Name' : key === 'date' ? 'Date' : 'Size'}
+                </Text>
+                {active && (
+                  <MaterialCommunityIcons
+                    name={sortDir === 'asc' ? 'arrow-up' : 'arrow-down'}
+                    size={13}
+                    color="#FFFFFF"
+                  />
+                )}
+              </Pressable>
+            );
+          })}
+
+          <View style={{ flex: 1 }} />
+
+          <Pressable
+            hitSlop={10}
+            onPress={() => setViewMode((m) => (m === 'list' ? 'grid' : 'list'))}
+            style={styles.viewToggle}
+          >
+            <MaterialCommunityIcons
+              name={viewMode === 'list' ? 'view-grid-outline' : 'format-list-bulleted'}
+              size={20}
+              color={colors.primary}
+            />
+          </Pressable>
+        </View>
+      )}
+
       <FolderContents
         folders={isSearching ? [] : folders}
         files={isSearching ? searchResults! : files}
+        sortBy={sortBy}
+        sortDir={sortDir}
+        viewMode={viewMode}
         refreshing={refreshing}
         onRefresh={onRefresh}
         onFolderPress={(folder) => router.push(`/folders/${folder.id}`)}
@@ -530,6 +604,20 @@ function getStyles(colors: ColorPalette) {
     },
     searchSpinner: {
       marginLeft: 'auto',
+    },
+    viewToggle: {
+      width: 34,
+      height: 34,
+      borderRadius: 17,
+      backgroundColor: colors.primarySoft,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    smartHint: {
+      marginTop: 8,
+      fontSize: 12,
+      lineHeight: 17,
+      color: colors.textSecondary,
     },
     loadingSpinner: {
       marginTop: 60,

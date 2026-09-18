@@ -12,11 +12,13 @@ import { useColors } from '@/theme/useColors';
 interface Props {
   value: string;
   onChangeText: (text: string) => void;
+  placeholder?: string;
 }
 
 export default function SearchBar({
   value,
   onChangeText,
+  placeholder = 'Search files...',
 }: Props) {
   const colors = useColors();
   const styles = getStyles(colors);
@@ -31,7 +33,7 @@ export default function SearchBar({
 
       <TextInput
         style={styles.input}
-        placeholder="Search files..."
+        placeholder={placeholder}
         placeholderTextColor={colors.textSecondary}
         value={value}
         onChangeText={onChangeText}

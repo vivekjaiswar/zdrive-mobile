@@ -71,6 +71,7 @@ export default function DashboardScreen() {
 
   const actions = [
     { icon: 'cloud-upload-outline' as const, label: 'Upload', onPress: handleUpload, busy: uploading },
+    { icon: 'image-multiple-outline' as const, label: 'Photos', onPress: () => router.push('/photos') },
     { icon: 'folder-plus-outline' as const, label: 'New Folder', onPress: () => router.push('/(tabs)/files?createFolder=1') },
     { icon: 'share-variant-outline' as const, label: 'Shared', onPress: () => router.push('/(tabs)/shared') },
     { icon: 'trash-can-outline' as const, label: 'Trash', onPress: () => router.push('/trash') },
