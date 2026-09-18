@@ -1,6 +1,5 @@
 import { ReactNode } from 'react';
 import {
-  Image,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
@@ -9,9 +8,10 @@ import {
   View,
 } from 'react-native';
 
-import Screen from '@/components/Layout/Screen';
-import { ColorPalette } from '@/theme/palette';
-import { useColors } from '@/theme/useColors';
+import GlassScreen from '@/components/glass/GlassScreen';
+import GlassCard from '@/components/glass/GlassCard';
+import Logo from '@/components/glass/Logo';
+import { GlassTheme, useGlass } from '@/theme/glass';
 
 interface Props {
   title: string;
@@ -20,15 +20,16 @@ interface Props {
   footer?: ReactNode;
 }
 
-// Shared shell for every (auth) screen (login, register, forgot/reset
-// password, verify email) so they look consistent instead of each
-// re-declaring the same card/logo/scroll boilerplate.
+// GLASS REDESIGN: shared shell for register / forgot-password /
+// reset-password / verify-email. Rewriting this one component flips all of
+// them to the glass look - gradient backdrop, dynamic logo (no white box),
+// frosted card - matching the redesigned Login screen.
 export default function AuthScreenLayout({ title, subtitle, children, footer }: Props) {
-  const colors = useColors();
-  const styles = getStyles(colors);
+  const g = useGlass();
+  const styles = getStyles(g);
 
   return (
-    <Screen>
+    <GlassScreen>
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         style={{ flex: 1 }}
@@ -38,76 +39,49 @@ export default function AuthScreenLayout({ title, subtitle, children, footer }: 
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
         >
-          <Image
-            source={require('../../../assets/logo.png')}
-            resizeMode="contain"
-            style={styles.logo}
-          />
+          <View style={styles.logoWrap}>
+            <Logo size={48} />
+          </View>
 
-          <View style={styles.card}>
+          <GlassCard padding={24} radius={28}>
             <Text style={styles.title}>{title}</Text>
             <Text style={styles.subtitle}>{subtitle}</Text>
 
             <View style={styles.form}>{children}</View>
 
             {footer && <View style={styles.bottom}>{footer}</View>}
-          </View>
+          </GlassCard>
         </ScrollView>
       </KeyboardAvoidingView>
-    </Screen>
+    </GlassScreen>
   );
 }
 
-function getStyles(colors: ColorPalette) {
+function getStyles(g: GlassTheme) {
   return StyleSheet.create({
-    scroll: {
-      flexGrow: 1,
-      justifyContent: 'center',
-      paddingVertical: 40,
-    },
-
-    logo: {
-      width: 210,
-      height: 70,
-      alignSelf: 'center',
-      marginBottom: 24,
-    },
-
-    card: {
-      backgroundColor: colors.surface,
-      borderRadius: 24,
-      borderWidth: 1,
-      borderColor: colors.border,
-
-      paddingHorizontal: 24,
-      paddingVertical: 28,
-    },
-
+    scroll: { flexGrow: 1, justifyContent: 'center', paddingVertical: 40 },
+    logoWrap: { alignItems: 'center', marginBottom: 26 },
     title: {
-      fontSize: 26,
-      fontWeight: '700',
-      color: colors.text,
+      fontSize: 25,
+      fontWeight: '800',
+      color: g.text,
       textAlign: 'center',
+      letterSpacing: -0.5,
     },
-
     subtitle: {
-      marginTop: 10,
+      marginTop: 8,
       fontSize: 14.5,
-      color: colors.textSecondary,
+      color: g.textSecondary,
       textAlign: 'center',
       lineHeight: 21,
     },
-
-    form: {
-      marginTop: 28,
-      gap: 16,
-    },
-
+    form: { marginTop: 24, gap: 15 },
     bottom: {
-      marginTop: 28,
+      marginTop: 24,
       flexDirection: 'row',
       justifyContent: 'center',
       flexWrap: 'wrap',
+      gap: 5,
     },
   });
 }

@@ -1,8 +1,10 @@
+import { StyleSheet, View } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Tabs } from 'expo-router';
+import { BlurView } from 'expo-blur';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { useColors } from '@/theme/useColors';
+import { useGlass } from '@/theme/glass';
 import {
   TAB_BAR_CONTENT_HEIGHT,
   TAB_BAR_VERTICAL_PADDING,
@@ -10,44 +12,48 @@ import {
 
 export default function TabsLayout() {
   const insets = useSafeAreaInsets();
-  const colors = useColors();
+  const g = useGlass();
 
   return (
     <Tabs
       screenOptions={{
         headerShown: false,
-
-        tabBarActiveTintColor: colors.primary,
-
-        tabBarInactiveTintColor: colors.textSecondary,
-
+        tabBarActiveTintColor: g.accent,
+        tabBarInactiveTintColor: g.textSecondary,
+        // Frosted glass tab bar: the bar itself is transparent and a
+        // BlurView + translucent overlay renders behind it, so it reads as
+        // a frosted strip over the gradient rather than a solid bar.
+        tabBarBackground: () => (
+          <View style={StyleSheet.absoluteFill}>
+            <BlurView
+              intensity={g.blurIntensity + 15}
+              tint={g.blurTint}
+              experimentalBlurMethod="dimezisBlurView"
+              style={StyleSheet.absoluteFill}
+            />
+            <View
+              style={[
+                StyleSheet.absoluteFill,
+                {
+                  backgroundColor: g.glassFill,
+                  borderTopWidth: 1,
+                  borderTopColor: g.glassBorder,
+                },
+              ]}
+            />
+          </View>
+        ),
         tabBarStyle: {
-          // Height/padding derive from the device's actual bottom
-          // safe-area inset instead of a fixed guess, so the bar
-          // doesn't crowd (or leave a gap above) the gesture nav
-          // bar / home indicator on any given device.
           height:
-            TAB_BAR_CONTENT_HEIGHT +
-            TAB_BAR_VERTICAL_PADDING +
-            insets.bottom,
+            TAB_BAR_CONTENT_HEIGHT + TAB_BAR_VERTICAL_PADDING + insets.bottom,
           paddingBottom: insets.bottom + 8,
           paddingTop: 8,
           borderTopWidth: 0,
-          backgroundColor: colors.surface,
-
-          elevation: 12,
-
-          shadowColor: colors.shadow,
-
-          shadowOpacity: 0.08,
-
-          shadowRadius: 10,
-
-          shadowOffset: {
-            width: 0,
-            height: -2,
-          },
+          backgroundColor: 'transparent',
+          elevation: 0,
+          position: 'absolute',
         },
+        tabBarLabelStyle: { fontSize: 11.5, fontWeight: '600' },
       }}
     >
       <Tabs.Screen
@@ -55,53 +61,34 @@ export default function TabsLayout() {
         options={{
           title: 'Home',
           tabBarIcon: ({ color, size }) => (
-            <MaterialCommunityIcons
-              name="view-dashboard-outline"
-              size={size}
-              color={color}
-            />
+            <MaterialCommunityIcons name="view-dashboard-outline" size={size} color={color} />
           ),
         }}
       />
-
       <Tabs.Screen
         name="files"
         options={{
           title: 'Files',
           tabBarIcon: ({ color, size }) => (
-            <MaterialCommunityIcons
-              name="folder-outline"
-              size={size}
-              color={color}
-            />
+            <MaterialCommunityIcons name="folder-outline" size={size} color={color} />
           ),
         }}
       />
-
       <Tabs.Screen
         name="shared"
         options={{
           title: 'Shared',
           tabBarIcon: ({ color, size }) => (
-            <MaterialCommunityIcons
-              name="share-variant-outline"
-              size={size}
-              color={color}
-            />
+            <MaterialCommunityIcons name="share-variant-outline" size={size} color={color} />
           ),
         }}
       />
-
       <Tabs.Screen
         name="settings"
         options={{
           title: 'Settings',
           tabBarIcon: ({ color, size }) => (
-            <MaterialCommunityIcons
-              name="cog-outline"
-              size={size}
-              color={color}
-            />
+            <MaterialCommunityIcons name="cog-outline" size={size} color={color} />
           ),
         }}
       />

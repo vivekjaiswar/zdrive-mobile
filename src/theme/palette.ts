@@ -34,45 +34,53 @@ export interface ColorPalette {
   statusBarStyle: 'dark' | 'light';
 }
 
+// GLASS REDESIGN: these values are now aligned to the glassmorphism theme
+// (see glass.ts). `background` is transparent because every screen renders
+// the gradient backdrop (GradientBackground, via Screen/GlassScreen) behind
+// its content; `surface`/`surfaceAlt` are translucent glass fills so the old
+// components that predate the glass primitives still read correctly on the
+// gradient. Prominent surfaces (cards, sheets, tab bar) additionally use a
+// real BlurView for the frosted effect; these tokens are the "glass-lite"
+// fallback for everything else. Same key set as before, so no component
+// needs structural changes.
 export const lightColors: ColorPalette = {
-  primary: '#2563EB',
-  primaryDark: '#1D4ED8',
-  primarySoft: '#EEF4FF',
-  secondary: '#3B82F6',
-  success: '#16A34A',
-  warning: '#F59E0B',
-  danger: '#DC2626',
-  background: '#F8FAFC',
-  surface: '#FFFFFF',
-  surfaceAlt: '#F1F5F9',
-  text: '#0F172A',
-  textSecondary: '#64748B',
-  border: '#E2E8F0',
-  shadow: '#0F172A',
-  progressBackground: '#E7EDF5',
-  progressFill: '#2563EB',
+  primary: '#2F6BFF',
+  primaryDark: '#6C4CFF',
+  primarySoft: 'rgba(47,107,255,0.12)',
+  secondary: '#6C4CFF',
+  success: '#10B981',
+  warning: '#D97706',
+  danger: '#E23D3D',
+  background: 'transparent',
+  surface: 'rgba(255,255,255,0.72)',
+  surfaceAlt: 'rgba(255,255,255,0.5)',
+  text: '#111A33',
+  textSecondary: '#55618A',
+  border: 'rgba(120,130,165,0.20)',
+  shadow: '#1A2340',
+  progressBackground: 'rgba(120,130,165,0.22)',
+  progressFill: '#2F6BFF',
   statusBarStyle: 'dark',
 };
 
 export const darkColors: ColorPalette = {
-  primary: '#3B82F6',
-  primaryDark: '#60A5FA',
-  primarySoft: 'rgba(59, 130, 246, 0.16)',
-  secondary: '#60A5FA',
-  success: '#22C55E',
+  primary: '#4C8DFF',
+  primaryDark: '#7C6BFF',
+  primarySoft: 'rgba(76,141,255,0.18)',
+  secondary: '#7C6BFF',
+  success: '#34D399',
   warning: '#FBBF24',
-  danger: '#F87171',
-  // Same near-black navy already used for the image-preview backdrop
-  // (ZoomableImage's '#0B1120') - intentional continuity rather than
-  // a second, different "dark" invented from scratch.
-  background: '#0B1120',
-  surface: '#161F30',
-  surfaceAlt: '#1E293B',
-  text: '#F1F5F9',
-  textSecondary: '#94A3B8',
-  border: '#25324A',
+  danger: '#FF6B6B',
+  background: 'transparent',
+  // Translucent frosted panels over the dark gradient - opaque enough to
+  // keep content legible even where there's no BlurView behind them.
+  surface: 'rgba(20,28,52,0.72)',
+  surfaceAlt: 'rgba(255,255,255,0.06)',
+  text: '#F4F7FF',
+  textSecondary: '#AEB8D4',
+  border: 'rgba(255,255,255,0.14)',
   shadow: '#000000',
-  progressBackground: '#25324A',
-  progressFill: '#3B82F6',
+  progressBackground: 'rgba(255,255,255,0.14)',
+  progressFill: '#4C8DFF',
   statusBarStyle: 'light',
 };
