@@ -11,6 +11,7 @@ import { configureGoogleSignin } from '@/constants/google';
 import { SENTRY_DSN } from '@/constants/sentry';
 import { useAuthStore } from '@/store/auth.store';
 import { useSecurityStore } from '@/store/security.store';
+import { useBackupStore } from '@/store/backup.store';
 import { useColors } from '@/theme/useColors';
 
 // Must run once at module scope (not inside the component) so it's
@@ -86,6 +87,12 @@ function RootLayout() {
 
   useEffect(() => {
     hydrateSecurity();
+    // Read the persisted auto-photo-backup preference back from SecureStore
+    // at boot. Without this the store always initialised to `false`, so the
+    // Settings toggle silently reset to OFF on every launch even after the
+    // user turned it on. getState() avoids adding a re-render subscription
+    // here; the Settings screen reads the hydrated value via its selector.
+    useBackupStore.getState().hydrate();
     // Idempotent; no-op if no web client ID was provided at build time.
     configureGoogleSignin();
   }, []);
