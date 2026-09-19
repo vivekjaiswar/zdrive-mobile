@@ -90,6 +90,7 @@ export default function FilesScreen() {
     bulkMove,
     bulkShare,
     bulkDownload,
+    downloadFolderZip,
     bulkBusy,
     downloadingId,
     sharingId,
@@ -517,7 +518,12 @@ export default function FilesScreen() {
       <FolderActionSheet
         folder={actionFolder}
         deleting={actionFolder?.id === deletingFolderId}
+        downloadingZip={bulkBusy}
         onClose={() => setActionFolder(null)}
+        onDownloadZip={(folder) => {
+          setActionFolder(null);
+          downloadFolderZip(folder);
+        }}
         onRename={(folder) => {
           setActionFolder(null);
           setRenameFolder(folder);

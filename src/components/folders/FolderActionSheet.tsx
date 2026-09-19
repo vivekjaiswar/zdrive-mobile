@@ -8,20 +8,21 @@ import { ZDriveFolder } from '@/types/folder';
 interface Props {
   folder: ZDriveFolder | null;
   deleting?: boolean;
+  downloadingZip?: boolean;
   onClose: () => void;
   onRename: (folder: ZDriveFolder) => void;
   onDelete: (folder: ZDriveFolder) => void;
+  onDownloadZip?: (folder: ZDriveFolder) => void;
 }
 
-// Deliberately just Rename/Delete - the backend has no folder-move
-// endpoint (UpdateFolderDto only accepts `name`), so there's no
-// "Move" action to offer here, unlike FileActionSheet.
 export default function FolderActionSheet({
   folder,
   deleting,
+  downloadingZip = false,
   onClose,
   onRename,
   onDelete,
+  onDownloadZip,
 }: Props) {
   const colors = useColors();
   const styles = getStyles(colors);
@@ -44,6 +45,14 @@ export default function FolderActionSheet({
           )}
 
           <View style={styles.rows}>
+            {onDownloadZip && (
+              <FileActionRow
+                icon="folder-zip-outline"
+                label="Download Zip Archive"
+                loading={downloadingZip}
+                onPress={() => folder && onDownloadZip(folder)}
+              />
+            )}
             <FileActionRow
               icon="pencil-outline"
               label="Rename"

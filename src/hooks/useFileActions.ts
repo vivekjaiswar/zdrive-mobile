@@ -4,6 +4,7 @@ import * as Sharing from 'expo-sharing';
 
 import filesService, { MAX_BULK_DOWNLOAD_IDS } from '@/services/files.service';
 import { ZDriveFile } from '@/types/file';
+import { ZDriveFolder } from '@/types/folder';
 
 // Shared by the Files list's long-press action sheet and the file
 // preview screen's quick download/share icons, so both stay in sync
@@ -282,8 +283,11 @@ export function useFileActions(onChanged?: () => void) {
   // doesn't parse the zip to surface that, so a partial download
   // currently looks identical to a complete one from the UI's
   // perspective. Worth revisiting if that turns out to matter.
-  async function bulkDownload(files: Pick<ZDriveFile, 'id'>[]): Promise<void> {
-    if (files.length === 0) return;
+  async function bulkDownload(
+    files: Pick<ZDriveFile, 'id'>[] = [],
+    folders: Pick<ZDriveFolder, 'id' | 'name'>[] = [],
+  ): Promise<void> {
+    if (files.length === 0 && folders.length === 0) return;
 
     if (files.length > MAX_BULK_DOWNLOAD_IDS) {
       Alert.alert(
@@ -297,9 +301,18 @@ export function useFileActions(onChanged?: () => void) {
 
     try {
       const fileIds = files.map((file) => file.id);
-      const ticket = await filesService.requestBulkDownloadTicket(fileIds);
+      const folderIds = folders.map((folder) => folder.id);
 
-      const filename = `ZDrive Files (${ticket.fileCount}).zip`;
+      const ticket = await filesService.requestBulkDownloadTicket(
+        fileIds,
+        folderIds,
+      );
+
+      const filename =
+        folders.length === 1 && files.length === 0
+          ? `${folders[0].name}.zip`
+          : `ZDrive Archive (${ticket.fileCount} files).zip`;
+
       const downloaded = await filesService.downloadBulkZip(
         ticket.downloadUrl,
         filename,
@@ -310,16 +323,22 @@ export function useFileActions(onChanged?: () => void) {
       if (canShare) {
         await Sharing.shareAsync(downloaded.uri);
       } else {
-        Alert.alert('Downloaded', `Saved to ${downloaded.uri}`);
+        Alert.alert('Downloaded Archive', `Saved to ${downloaded.uri}`);
       }
     } catch (error: any) {
       Alert.alert(
         'Download Failed',
-        error?.response?.data?.message ?? 'Unable to download these files.',
+        error?.response?.data?.message ?? 'Unable to download this zip archive.',
       );
     } finally {
       setBulkBusy(false);
     }
+  }
+
+  async function downloadFolderZip(
+    folder: Pick<ZDriveFolder, 'id' | 'name'>,
+  ): Promise<void> {
+    return bulkDownload([], [folder]);
   }
 
   return {
@@ -334,6 +353,7 @@ export function useFileActions(onChanged?: () => void) {
     bulkMove,
     bulkShare,
     bulkDownload,
+    downloadFolderZip,
     bulkBusy,
     downloadingId,
     sharingId,

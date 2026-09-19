@@ -66,6 +66,7 @@ export default function FolderExplorerScreen() {
     bulkMove,
     bulkShare,
     bulkDownload,
+    downloadFolderZip,
     bulkBusy,
     downloadingId,
     sharingId,
@@ -323,7 +324,12 @@ export default function FolderExplorerScreen() {
       <FolderActionSheet
         folder={actionChildFolder}
         deleting={actionChildFolder?.id === deletingFolderId}
+        downloadingZip={bulkBusy}
         onClose={() => setActionChildFolder(null)}
+        onDownloadZip={(child) => {
+          setActionChildFolder(null);
+          downloadFolderZip(child);
+        }}
         onRename={(child) => {
           setActionChildFolder(null);
           setRenameChildFolder(child);
@@ -337,7 +343,12 @@ export default function FolderExplorerScreen() {
       <FolderActionSheet
         folder={showCurrentFolderMenu ? folder : null}
         deleting={folder.id === deletingFolderId}
+        downloadingZip={bulkBusy}
         onClose={() => setShowCurrentFolderMenu(false)}
+        onDownloadZip={(f) => {
+          setShowCurrentFolderMenu(false);
+          downloadFolderZip(f);
+        }}
         onRename={() => {
           // Reuse the same rename sheet, pre-filled for this folder.
           setShowCurrentFolderMenu(false);
