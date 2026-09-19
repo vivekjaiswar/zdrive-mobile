@@ -91,7 +91,7 @@ export default function LegalDocScreen() {
       <GlassCard strong padding={20} radius={26} style={styles.docCard}>
         <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scroll}>
           <Text style={styles.docHeaderTitle}>{title}</Text>
-          <Text style={styles.docSub}>Last updated: September 2026 • ZennialHub</Text>
+          <Text style={styles.docSub}>ZennialHub</Text>
 
           {sections.map((sec, idx) => (
             <View key={idx} style={styles.sectionBlock}>
