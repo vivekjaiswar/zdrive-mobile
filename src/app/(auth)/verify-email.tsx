@@ -1,62 +1,75 @@
-import { useState } from 'react';
-import { Alert, Pressable, Text } from 'react-native';
+import { useEffect, useState } from 'react';
+import { Alert, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 
 import AuthScreenLayout from '@/components/auth/AuthScreenLayout';
-import PrimaryButton from '@/components/Button/PrimaryButton';
-import AppInput from '@/components/Input/AppInput';
+import GlassButton from '@/components/glass/GlassButton';
+import GlassInput from '@/components/glass/GlassInput';
 import authService from '@/services/auth.service';
-import { getAuthStyles } from '@/components/auth/authStyles';
-import { useColors } from '@/theme/useColors';
+import { GlassTheme, useGlass } from '@/theme/glass';
 
 export default function VerifyEmailScreen() {
   const router = useRouter();
-  const colors = useColors();
-  const authStyles = getAuthStyles(colors);
-  const { email: emailParam } = useLocalSearchParams<{ email?: string }>();
+  const g = useGlass();
+  const styles = getStyles(g);
+
+  const { email: emailParam, token: tokenParam } = useLocalSearchParams<{
+    email?: string;
+    token?: string;
+  }>();
 
   const [email, setEmail] = useState(emailParam ?? '');
-  const [token, setToken] = useState('');
+  const [token, setToken] = useState(tokenParam ?? '');
   const [verifying, setVerifying] = useState(false);
   const [resending, setResending] = useState(false);
 
-  async function handleVerify() {
-    if (!token.trim()) {
-      Alert.alert('Validation', 'Paste the verification code from your email.');
-      return;
+  // Auto-verify if opened via deep link with ?token=xyz
+  useEffect(() => {
+    if (tokenParam && tokenParam.trim().length > 0) {
+      verifyToken(tokenParam.trim());
     }
+  }, [tokenParam]);
 
+  async function verifyToken(tokenToVerify: string) {
     try {
       setVerifying(true);
-      await authService.verifyEmail(token.trim());
+      await authService.verifyEmail(tokenToVerify);
 
-      Alert.alert('Verified', 'Your email has been verified. You can log in now.', [
-        { text: 'OK', onPress: () => router.replace('/(auth)/login') },
+      Alert.alert('Email Verified', 'Your email has been successfully verified! You can log in now.', [
+        { text: 'Log In', onPress: () => router.replace('/(auth)/login') },
       ]);
     } catch (error: any) {
       Alert.alert(
         'Verification Failed',
-        error?.response?.data?.message ?? 'This code is invalid or has expired.',
+        error?.response?.data?.message ?? 'This verification link is invalid or has expired.',
       );
     } finally {
       setVerifying(false);
     }
   }
 
+  async function handleVerify() {
+    if (!token.trim()) {
+      Alert.alert('Validation', 'Please enter or paste the verification code.');
+      return;
+    }
+    await verifyToken(token.trim());
+  }
+
   async function handleResend() {
     if (!email.trim()) {
-      Alert.alert('Validation', 'Enter your email to resend the verification link.');
+      Alert.alert('Validation', 'Enter your email address to resend the verification link.');
       return;
     }
 
     try {
       setResending(true);
       const response = await authService.resendVerification(email.trim());
-      Alert.alert('Email Sent', response.message ?? 'Check your inbox for a new link.');
+      Alert.alert('Verification Sent', response.message ?? 'Check your inbox for a new verification link.');
     } catch (error: any) {
       Alert.alert(
         'Unable to Resend',
-        error?.response?.data?.message ?? 'Something went wrong.',
+        error?.response?.data?.message ?? 'Could not send verification email. Try again.',
       );
     } finally {
       setResending(false);
@@ -65,29 +78,34 @@ export default function VerifyEmailScreen() {
 
   return (
     <AuthScreenLayout
-      title="Verify Your Email"
-      subtitle={
-        'We emailed you a verification link. Open it on this device and copy the ' +
-        'code from the link (the part after "token="), then paste it below.'
-      }
+      title="Verify Email"
+      subtitle="Enter your verification code or open the link from your email."
       footer={
         <Pressable onPress={() => router.replace('/(auth)/login')}>
-          <Text style={authStyles.linkStandalone}>Back to Login</Text>
+          <Text style={styles.linkText}>Back to Login</Text>
         </Pressable>
       }
     >
-      <AppInput
-        placeholder="Verification Code"
+      <GlassInput
+        icon="shield-check-outline"
+        placeholder="Verification code"
         autoCapitalize="none"
         autoCorrect={false}
         value={token}
         onChangeText={setToken}
       />
 
-      <PrimaryButton title="Verify Email" loading={verifying} onPress={handleVerify} />
+      <GlassButton title="Verify Email" loading={verifying} onPress={handleVerify} />
 
-      <AppInput
-        placeholder="Email Address (to resend)"
+      <View style={styles.dividerRow}>
+        <View style={styles.line} />
+        <Text style={styles.or}>or resend</Text>
+        <View style={styles.line} />
+      </View>
+
+      <GlassInput
+        icon="email-outline"
+        placeholder="Email address (for resend)"
         autoCapitalize="none"
         autoCorrect={false}
         keyboardType="email-address"
@@ -95,11 +113,38 @@ export default function VerifyEmailScreen() {
         onChangeText={setEmail}
       />
 
-      <Pressable onPress={handleResend} disabled={resending}>
-        <Text style={authStyles.linkStandalone}>
-          {resending ? 'Sending...' : 'Resend Verification Email'}
-        </Text>
-      </Pressable>
+      <GlassButton
+        title={resending ? 'Sending Email...' : 'Resend Verification Email'}
+        variant="glass"
+        loading={resending}
+        onPress={handleResend}
+      />
     </AuthScreenLayout>
   );
+}
+
+function getStyles(g: GlassTheme) {
+  return StyleSheet.create({
+    dividerRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 12,
+      marginVertical: 6,
+    },
+    line: {
+      flex: 1,
+      height: 1,
+      backgroundColor: g.glassBorder,
+    },
+    or: {
+      color: g.textFaint,
+      fontSize: 12.5,
+      fontWeight: '600',
+    },
+    linkText: {
+      color: g.accent,
+      fontWeight: '700',
+      fontSize: 14.5,
+    },
+  });
 }

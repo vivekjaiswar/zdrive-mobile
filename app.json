@@ -5,7 +5,7 @@
     "version": "1.9.2",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "zdrivemobile",
+    "scheme": ["zdrive", "zdrivemobile"],
     "userInterfaceStyle": "automatic",
     "ios": {
       "bundleIdentifier": "in.zhdrive.app",

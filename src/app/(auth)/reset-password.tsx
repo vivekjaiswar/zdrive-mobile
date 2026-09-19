@@ -1,28 +1,35 @@
-import { useState } from 'react';
-import { Alert, Pressable, Text } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useEffect, useState } from 'react';
+import { Alert, Pressable, StyleSheet, Text } from 'react-native';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 
 import AuthScreenLayout from '@/components/auth/AuthScreenLayout';
-import PrimaryButton from '@/components/Button/PrimaryButton';
-import AppInput from '@/components/Input/AppInput';
+import GlassButton from '@/components/glass/GlassButton';
+import GlassInput from '@/components/glass/GlassInput';
 import authService from '@/services/auth.service';
-import { getAuthStyles } from '@/components/auth/authStyles';
-import { useColors } from '@/theme/useColors';
+import { GlassTheme, useGlass } from '@/theme/glass';
 import { getPasswordError, PASSWORD_HINT } from '@/utils/validation';
 
 export default function ResetPasswordScreen() {
   const router = useRouter();
-  const colors = useColors();
-  const authStyles = getAuthStyles(colors);
+  const g = useGlass();
+  const styles = getStyles(g);
 
-  const [token, setToken] = useState('');
+  const { token: tokenParam } = useLocalSearchParams<{ token?: string }>();
+
+  const [token, setToken] = useState(tokenParam ?? '');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [loading, setLoading] = useState(false);
 
+  useEffect(() => {
+    if (tokenParam) {
+      setToken(tokenParam);
+    }
+  }, [tokenParam]);
+
   async function handleSubmit() {
     if (!token.trim()) {
-      Alert.alert('Validation', 'Paste the reset code from your email.');
+      Alert.alert('Validation', 'Please enter or paste the reset code from your email.');
       return;
     }
     const passwordError = getPasswordError(password);
@@ -39,13 +46,13 @@ export default function ResetPasswordScreen() {
       setLoading(true);
       await authService.resetPassword(token.trim(), password);
 
-      Alert.alert('Password Reset', 'Your password has been changed. Please log in.', [
-        { text: 'OK', onPress: () => router.replace('/(auth)/login') },
+      Alert.alert('Password Reset', 'Your password has been changed successfully. Please log in.', [
+        { text: 'Log In', onPress: () => router.replace('/(auth)/login') },
       ]);
     } catch (error: any) {
       Alert.alert(
         'Reset Failed',
-        error?.response?.data?.message ?? 'This code is invalid or has expired.',
+        error?.response?.data?.message ?? 'This reset code is invalid or has expired.',
       );
     } finally {
       setLoading(false);
@@ -55,34 +62,57 @@ export default function ResetPasswordScreen() {
   return (
     <AuthScreenLayout
       title="Reset Password"
-      subtitle="Paste the code from your reset email and choose a new password."
+      subtitle="Enter the code from your reset email and choose a new password."
       footer={
         <Pressable onPress={() => router.replace('/(auth)/login')}>
-          <Text style={authStyles.linkStandalone}>Back to Login</Text>
+          <Text style={styles.linkText}>Back to Login</Text>
         </Pressable>
       }
     >
-      <AppInput
-        placeholder="Reset Code"
+      <GlassInput
+        icon="key-outline"
+        placeholder="Reset code"
         autoCapitalize="none"
         autoCorrect={false}
         value={token}
         onChangeText={setToken}
       />
-      <AppInput
-        placeholder="New Password"
+
+      <GlassInput
+        icon="lock-outline"
+        placeholder="New password"
         isPassword
         value={password}
         onChangeText={setPassword}
       />
-      <Text style={authStyles.hint}>{PASSWORD_HINT}</Text>
-      <AppInput
-        placeholder="Confirm New Password"
+
+      <Text style={styles.hint}>{PASSWORD_HINT}</Text>
+
+      <GlassInput
+        icon="lock-check-outline"
+        placeholder="Confirm new password"
         isPassword
         value={confirmPassword}
         onChangeText={setConfirmPassword}
       />
-      <PrimaryButton title="Reset Password" loading={loading} onPress={handleSubmit} />
+
+      <GlassButton title="Reset Password" loading={loading} onPress={handleSubmit} />
     </AuthScreenLayout>
   );
+}
+
+function getStyles(g: GlassTheme) {
+  return StyleSheet.create({
+    hint: {
+      fontSize: 12,
+      color: g.textSecondary,
+      marginTop: -4,
+      marginBottom: 2,
+    },
+    linkText: {
+      color: g.accent,
+      fontWeight: '700',
+      fontSize: 14.5,
+    },
+  });
 }
