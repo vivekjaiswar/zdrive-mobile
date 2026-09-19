@@ -1,10 +1,31 @@
 import { File, Paths } from 'expo-file-system';
-import * as MediaLibrary from 'expo-media-library';
-import * as TaskManager from 'expo-task-manager';
-import * as BackgroundFetch from 'expo-background-fetch';
+import * as ImagePicker from 'expo-image-picker';
 
 import filesService from './files.service';
 import foldersService from './folders.service';
+
+// Safe dynamic imports for optional native modules in Expo dev client
+let MediaLibrary: typeof import('expo-media-library') | null = null;
+let TaskManager: typeof import('expo-task-manager') | null = null;
+let BackgroundFetch: typeof import('expo-background-fetch') | null = null;
+
+try {
+  MediaLibrary = require('expo-media-library');
+} catch {
+  // ExpoMediaLibraryNext native module not yet compiled in current dev binary
+}
+
+try {
+  TaskManager = require('expo-task-manager');
+} catch {
+  // TaskManager native module not yet compiled in current dev binary
+}
+
+try {
+  BackgroundFetch = require('expo-background-fetch');
+} catch {
+  // BackgroundFetch native module not yet compiled in current dev binary
+}
 
 export const PHOTO_BACKUP_BACKGROUND_TASK = 'photo-backup-background-task';
 
@@ -63,12 +84,22 @@ class BackupService {
     return this.running;
   }
 
-  async requestPermission(): Promise<MediaLibrary.PermissionResponse> {
-    return MediaLibrary.requestPermissionsAsync();
+  async requestPermission(): Promise<{ granted: boolean }> {
+    if (MediaLibrary?.requestPermissionsAsync) {
+      const res = await MediaLibrary.requestPermissionsAsync();
+      return { granted: res.granted };
+    }
+    const pickerRes = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    return { granted: pickerRes.granted };
   }
 
-  async getPermission(): Promise<MediaLibrary.PermissionResponse> {
-    return MediaLibrary.getPermissionsAsync();
+  async getPermission(): Promise<{ granted: boolean }> {
+    if (MediaLibrary?.getPermissionsAsync) {
+      const res = await MediaLibrary.getPermissionsAsync();
+      return { granted: res.granted };
+    }
+    const pickerRes = await ImagePicker.getMediaLibraryPermissionsAsync();
+    return { granted: pickerRes.granted };
   }
 
   requestCancel() {
@@ -78,6 +109,7 @@ class BackupService {
   // ---- Background Task Management -----------------------------------------
 
   async registerBackgroundTask(): Promise<boolean> {
+    if (!TaskManager || !BackgroundFetch) return false;
     try {
       const isRegistered = await TaskManager.isTaskRegisteredAsync(
         PHOTO_BACKUP_BACKGROUND_TASK,
@@ -97,6 +129,7 @@ class BackupService {
   }
 
   async unregisterBackgroundTask(): Promise<void> {
+    if (!TaskManager || !BackgroundFetch) return;
     try {
       const isRegistered = await TaskManager.isTaskRegisteredAsync(
         PHOTO_BACKUP_BACKGROUND_TASK,
@@ -177,6 +210,8 @@ class BackupService {
     const perm = await this.getPermission();
     if (!perm.granted) return 'no-permission';
 
+    if (!MediaLibrary) return 'error';
+
     this.running = true;
     this.cancelFlag = false;
 
@@ -193,7 +228,7 @@ class BackupService {
       let sinceFlush = 0;
       onProgress({ done, total });
 
-      let after: MediaLibrary.AssetRef | undefined;
+      let after: import('expo-media-library').AssetRef | undefined;
       let hasNextPage = true;
 
       while (hasNextPage) {
@@ -265,15 +300,21 @@ class BackupService {
 
 const backupService = new BackupService();
 
-TaskManager.defineTask(PHOTO_BACKUP_BACKGROUND_TASK, async () => {
+if (TaskManager && BackgroundFetch) {
   try {
-    const result = await backupService.runSilent();
-    return result === 'complete'
-      ? BackgroundFetch.BackgroundFetchResult.NewData
-      : BackgroundFetch.BackgroundFetchResult.NoData;
+    TaskManager.defineTask(PHOTO_BACKUP_BACKGROUND_TASK, async () => {
+      try {
+        const result = await backupService.runSilent();
+        return result === 'complete'
+          ? BackgroundFetch!.BackgroundFetchResult.NewData
+          : BackgroundFetch!.BackgroundFetchResult.NoData;
+      } catch {
+        return BackgroundFetch!.BackgroundFetchResult.Failed;
+      }
+    });
   } catch {
-    return BackgroundFetch.BackgroundFetchResult.Failed;
+    // Task already defined or error
   }
-});
+}
 
 export default backupService;

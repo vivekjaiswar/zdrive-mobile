@@ -20,6 +20,7 @@ import ChangePasswordModal from '@/components/settings/ChangePasswordModal';
 import DeleteAccountModal from '@/components/settings/DeleteAccountModal';
 import PlansModal from '@/components/settings/PlansModal';
 import TwoFactorModal from '@/components/settings/TwoFactorModal';
+import PermissionsModal from '@/components/settings/PermissionsModal';
 import TextPromptModal from '@/components/common/TextPromptModal';
 import usersService from '@/services/users.service';
 import billingService, { SubscriptionDetails } from '@/services/billing.service';
@@ -69,6 +70,7 @@ export default function SettingsScreen() {
   const [deleteModalVisible, setDeleteModalVisible] = useState(false);
   const [deletingAccount, setDeletingAccount] = useState(false);
   const [twoFactorModalVisible, setTwoFactorModalVisible] = useState(false);
+  const [permissionsModalVisible, setPermissionsModalVisible] = useState(false);
   const [backingUp, setBackingUp] = useState(false);
   const [backedUpCount, setBackedUpCount] = useState(0);
 
@@ -325,8 +327,8 @@ export default function SettingsScreen() {
           <SettingsRow
             icon="cog-outline"
             label="System Permissions"
-            value="Manage in Settings"
-            onPress={() => Linking.openSettings()}
+            value="Gallery, Files, Camera"
+            onPress={() => setPermissionsModalVisible(true)}
           />
         </View>
 
@@ -415,6 +417,11 @@ export default function SettingsScreen() {
         userEmail={profile.email}
         onClose={() => setPlansVisible(false)}
         onUpgraded={loadProfile}
+      />
+
+      <PermissionsModal
+        visible={permissionsModalVisible}
+        onClose={() => setPermissionsModalVisible(false)}
       />
 
       <DeleteAccountModal
