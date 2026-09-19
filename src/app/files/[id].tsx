@@ -334,7 +334,7 @@ function getStyles(colors: ColorPalette) {
     },
     textError: {
       fontSize: 14,
-      color: colors.error,
+      color: colors.danger,
       textAlign: 'center',
       marginTop: 20,
     },

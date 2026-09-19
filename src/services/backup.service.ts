@@ -31,7 +31,6 @@ export const PHOTO_BACKUP_BACKGROUND_TASK = 'photo-backup-background-task';
 
 const LEDGER_FILENAME = 'photo-backup-ledger.json';
 const BACKUP_FOLDER_NAME = 'Phone Photos';
-const PAGE_SIZE = 50;
 const LEDGER_FLUSH_EVERY = 15;
 
 type Ledger = Record<string, true>;
@@ -219,72 +218,66 @@ class BackupService {
       const ledger = await this.loadLedger();
       const folderId = await this.getBackupFolderId();
 
-      const firstProbe = await MediaLibrary.getAssetsAsync({
-        mediaType: [MediaLibrary.MediaType.photo],
-        first: 1,
-      });
-      const total = firstProbe.totalCount;
+      // expo-media-library@56 replaced getAssetsAsync/MediaType/SortBy with a
+      // Query builder. exeForMetadata() returns lightweight rows (id,
+      // filename, creationTime, ...) WITHOUT resolving file paths, so it's
+      // cheap to list the whole library up front; we only pay for the heavy
+      // per-asset URI resolution on images we actually upload. Ordering
+      // oldest-first means a partial run still makes forward progress
+      // chronologically.
+      const metas = await new MediaLibrary.Query()
+        .eq(MediaLibrary.AssetField.MEDIA_TYPE, MediaLibrary.MediaType.IMAGE)
+        .orderBy({ key: MediaLibrary.AssetField.CREATION_TIME, ascending: true })
+        .exeForMetadata();
+
+      const total = metas.length;
       let done = 0;
       let sinceFlush = 0;
       onProgress({ done, total });
 
-      let after: import('expo-media-library').AssetRef | undefined;
-      let hasNextPage = true;
-
-      while (hasNextPage) {
+      for (const meta of metas) {
         if (this.cancelFlag) {
           this.saveLedger();
           return 'cancelled';
         }
 
-        const page = await MediaLibrary.getAssetsAsync({
-          mediaType: [MediaLibrary.MediaType.photo],
-          first: PAGE_SIZE,
-          after,
-          sortBy: [MediaLibrary.SortBy.creationTime],
-        });
-
-        for (const asset of page.assets) {
-          if (this.cancelFlag) {
-            this.saveLedger();
-            return 'cancelled';
-          }
-
-          if (ledger[asset.id]) {
-            done += 1;
-            onProgress({ done, total });
-            continue;
-          }
-
-          try {
-            const info = await MediaLibrary.getAssetInfoAsync(asset);
-            const uri = info.localUri ?? asset.uri;
-
-            await filesService.upload(
-              uri,
-              asset.filename,
-              mimeFromFilename(asset.filename),
-              folderId,
-            );
-
-            ledger[asset.id] = true;
-            done += 1;
-            sinceFlush += 1;
-            if (sinceFlush >= LEDGER_FLUSH_EVERY) {
-              this.saveLedger();
-              sinceFlush = 0;
-            }
-            onProgress({ done, total });
-          } catch (error: any) {
-            if (isSubscriptionExpiredError(error)) {
-              this.saveLedger();
-              return 'subscription-expired';
-            }
-          }
+        if (ledger[meta.id]) {
+          done += 1;
+          onProgress({ done, total });
+          continue;
         }
 
-        hasNextPage = page.hasNextPage;
-        after = page.endCursor;
+        try {
+          // Re-instantiate the Asset from its id to reach the async getters.
+          // getUri() resolves a concrete file:// URI FormData can read;
+          // meta.filename can be null on Android, so fall back to the getter.
+          const asset = new MediaLibrary.Asset(meta.id);
+          const uri = await asset.getUri();
+          const filename = meta.filename ?? (await asset.getFilename());
+
+          await filesService.upload(
+            uri,
+            filename,
+            mimeFromFilename(filename),
+            folderId,
+          );
+
+          ledger[meta.id] = true;
+          done += 1;
+          sinceFlush += 1;
+          if (sinceFlush >= LEDGER_FLUSH_EVERY) {
+            this.saveLedger();
+            sinceFlush = 0;
+          }
+          onProgress({ done, total });
+        } catch (error: any) {
+          if (isSubscriptionExpiredError(error)) {
+            this.saveLedger();
+            return 'subscription-expired';
+          }
+          // Skip a single bad/unsupported asset and keep going - one bad
+          // file shouldn't stall the whole backup.
+        }
       }
 
       this.saveLedger();
