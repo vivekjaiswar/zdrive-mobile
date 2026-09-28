@@ -54,3 +54,7 @@ Join our community of developers creating universal apps.
 
 - [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
 - [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+
+## License
+
+MIT, see [LICENSE](LICENSE). Copyright (c) 2026 ZennialHub Technologies - this open-source license covers only this client app; the ZDrive backend/API it talks to is separate and closed-source. "ZDrive" and its logo are ZennialHub Technologies trademarks, not covered by the MIT license.
