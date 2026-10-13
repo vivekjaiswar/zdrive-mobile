@@ -5,6 +5,9 @@ export interface ZDriveFile {
   mimeType?: string;
   createdAt: string;
   folderId: string | null;
+  scanStatus?: 'CLEAN' | 'PENDING' | 'MALICIOUS';
+  contentHash?: string | null;
+  ownerEmail?: string;
   moderationStatus?: 'NOT_APPLICABLE' | 'CLEAN' | 'FLAGGED' | 'UNCHECKED';
   moderationScore?: number | null;
   distance?: number;
@@ -44,6 +47,28 @@ export interface SharedFileEntry {
   };
 }
 
+export interface SharedWithMeFile {
+  id: string;
+  name: string;
+  mimeType: string;
+  size: string;
+  createdAt: string;
+  ownerEmail: string;
+  role: 'OWNER' | 'EDITOR' | 'VIEWER';
+  sharedAt: string;
+}
+
+export interface Collaborator {
+  id: string;
+  role: 'EDITOR' | 'VIEWER';
+  createdAt: string;
+  user: {
+    id: string;
+    email: string;
+    name: string | null;
+  };
+}
+
 export interface UploadResponse {
   id: string;
   name: string;
@@ -58,3 +83,4 @@ export interface BulkDownloadTicket {
   expiresIn: number;
   fileCount: number;
 }
+

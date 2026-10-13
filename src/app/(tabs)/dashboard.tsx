@@ -106,6 +106,7 @@ export default function DashboardScreen() {
               fileCount={stats?.fileCount ?? 0}
               folderCount={stats?.folderCount ?? 0}
               sharedCount={stats?.sharedFiles ?? 0}
+              fileTypeBreakdown={stats?.fileTypeBreakdown}
             />
 
             <QuickActions

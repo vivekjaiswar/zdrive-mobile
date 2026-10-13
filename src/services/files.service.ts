@@ -4,10 +4,12 @@ import api, { API_BASE_URL, WEB_BASE_URL } from './api';
 
 import {
   BulkDownloadTicket,
+  Collaborator,
   FileDetails,
   FileVersion,
   ShareResponse,
   SharedFileEntry,
+  SharedWithMeFile,
   UploadResponse,
   ZDriveFile,
 } from '@/types/file';
@@ -38,6 +40,29 @@ class FilesService {
     }
   }
 
+  // Upload a new revision of an existing file (POST /files/:id/version)
+  async uploadVersion(
+    id: string,
+    uri: string,
+    name: string,
+    mimeType: string,
+  ): Promise<FileVersion> {
+    const form = new FormData();
+    form.append('file', {
+      uri,
+      name,
+      type: mimeType,
+    } as any);
+
+    const { data } = await api.post(`/files/${id}/version`, form, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+
+    return data;
+  }
+
   async share(id: string): Promise<ShareResponse & { absoluteUrl: string }> {
     const { data } = await api.post<ShareResponse>(`/files/${id}/share`);
 
@@ -52,9 +77,44 @@ class FilesService {
     return data;
   }
 
+  // GET /files/shared-with-me - files shared directly with this user
+  async sharedWithMe(): Promise<SharedWithMeFile[]> {
+    const { data } = await api.get('/files/shared-with-me');
+    return data;
+  }
+
   async revokeShare(shareId: string): Promise<void> {
     await api.delete(`/files/share/${shareId}`);
   }
+
+  // Collaborator management (FileCollaborator)
+  async listCollaborators(id: string): Promise<Collaborator[]> {
+    const { data } = await api.get(`/files/${id}/collaborators`);
+    return data;
+  }
+
+  async addCollaborator(
+    id: string,
+    email: string,
+    role: 'EDITOR' | 'VIEWER' = 'VIEWER',
+  ): Promise<any> {
+    const { data } = await api.post(`/files/${id}/collaborators`, { email, role });
+    return data;
+  }
+
+  async updateCollaborator(
+    id: string,
+    collaboratorId: string,
+    role: 'EDITOR' | 'VIEWER',
+  ): Promise<any> {
+    const { data } = await api.patch(`/files/${id}/collaborators/${collaboratorId}`, { role });
+    return data;
+  }
+
+  async removeCollaborator(id: string, collaboratorId: string): Promise<void> {
+    await api.delete(`/files/${id}/collaborators/${collaboratorId}`);
+  }
+
 
   async delete(id: string): Promise<void> {
     await api.delete(`/files/${id}`);

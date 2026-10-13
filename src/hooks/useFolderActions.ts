@@ -60,5 +60,22 @@ export function useFolderActions(onChanged?: () => void) {
     );
   }
 
-  return { rename, confirmDelete, deletingId };
+  async function move(
+    folder: Pick<ZDriveFolder, 'id' | 'name'>,
+    parentId?: string,
+  ): Promise<boolean> {
+    try {
+      await foldersService.move(folder.id, parentId);
+      onChanged?.();
+      return true;
+    } catch (error: any) {
+      Alert.alert(
+        'Move Failed',
+        error?.response?.data?.message ?? 'Unable to move this folder.',
+      );
+      return false;
+    }
+  }
+
+  return { rename, move, confirmDelete, deletingId };
 }

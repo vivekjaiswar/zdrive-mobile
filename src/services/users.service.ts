@@ -1,5 +1,5 @@
 import api from './api';
-import { UserProfile } from '@/types/user';
+import { UserActivity, UserProfile, UserReferralInfo } from '@/types/user';
 
 class UsersService {
   // Deliberately /users/me, not /users/profile - the two backend
@@ -12,9 +12,28 @@ class UsersService {
     return data;
   }
 
-  async updateProfile(name: string): Promise<void> {
-    await api.patch('/users/profile', { name });
+  async updateProfile(
+    input: string | { name?: string; gstin?: string; billingState?: string },
+  ): Promise<void> {
+    const payload = typeof input === 'string' ? { name: input } : input;
+    await api.patch('/users/profile', payload);
   }
+
+  async getStorage(): Promise<{ storageUsed: string; storageLimit: string }> {
+    const { data } = await api.get('/users/storage');
+    return data;
+  }
+
+  async getActivity(): Promise<UserActivity[]> {
+    const { data } = await api.get('/users/activity');
+    return data;
+  }
+
+  async getReferralInfo(): Promise<UserReferralInfo> {
+    const { data } = await api.get('/users/referral');
+    return data;
+  }
+
 
   // POST /users/avatar returns { success, avatarUrl } where
   // avatarUrl is the raw S3 key, not a usable image URL - re-fetch

@@ -1,15 +1,8 @@
 import { useEffect, useState } from 'react';
-import {
-  ActivityIndicator,
-  Modal,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  View,
-} from 'react-native';
+import { Alert, ActivityIndicator, Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { BlurView } from 'expo-blur';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import * as DocumentPicker from 'expo-document-picker';
 
 import GlassCard from '@/components/glass/GlassCard';
 import filesService from '@/services/files.service';
@@ -21,6 +14,7 @@ interface Props {
   fileId: string | null;
   fileName?: string;
   onClose: () => void;
+  onVersionUploaded?: () => void;
 }
 
 function formatSize(size: string) {
@@ -36,12 +30,14 @@ export default function FileVersionModal({
   fileId,
   fileName,
   onClose,
+  onVersionUploaded,
 }: Props) {
   const g = useGlass();
   const styles = getStyles(g);
 
   const [versions, setVersions] = useState<FileVersion[]>([]);
   const [loading, setLoading] = useState(true);
+  const [uploadingVersion, setUploadingVersion] = useState(false);
 
   useEffect(() => {
     if (visible && fileId) {
@@ -58,6 +54,28 @@ export default function FileVersionModal({
       setVersions([]);
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function handleUploadNewVersion() {
+    if (!fileId) return;
+    try {
+      const result = await DocumentPicker.getDocumentAsync({ copyToCacheDirectory: true });
+      if (result.canceled || !result.assets?.length) return;
+      const asset = result.assets[0];
+      setUploadingVersion(true);
+      await filesService.uploadVersion(
+        fileId,
+        asset.uri,
+        asset.name,
+        asset.mimeType ?? 'application/octet-stream',
+      );
+      await loadVersions(fileId);
+      onVersionUploaded?.();
+    } catch (e: any) {
+      Alert.alert('Upload Failed', e?.response?.data?.message ?? 'Could not upload new version.');
+    } finally {
+      setUploadingVersion(false);
     }
   }
 
@@ -84,6 +102,21 @@ export default function FileVersionModal({
                 <MaterialCommunityIcons name="close" size={20} color={g.text} />
               </Pressable>
             </View>
+
+            <Pressable
+              style={styles.uploadBtn}
+              disabled={uploadingVersion}
+              onPress={handleUploadNewVersion}
+            >
+              {uploadingVersion ? (
+                <ActivityIndicator size="small" color="#fff" />
+              ) : (
+                <>
+                  <MaterialCommunityIcons name="cloud-upload-outline" size={18} color="#fff" />
+                  <Text style={styles.uploadBtnText}>Upload New Version</Text>
+                </>
+              )}
+            </Pressable>
 
             <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scroll}>
               {loading ? (
@@ -189,6 +222,21 @@ function getStyles(g: GlassTheme) {
       justifyContent: 'center',
       borderWidth: 1,
       borderColor: g.glassBorder,
+    },
+    uploadBtn: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: 8,
+      backgroundColor: g.accent,
+      borderRadius: 14,
+      paddingVertical: 12,
+      marginBottom: 16,
+    },
+    uploadBtnText: {
+      color: '#fff',
+      fontSize: 14,
+      fontWeight: '700',
     },
     scroll: {
       paddingBottom: 20,

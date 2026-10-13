@@ -276,6 +276,7 @@ export default function FileDetailScreen() {
         fileId={file.id}
         fileName={file.name}
         onClose={() => setVersionModalVisible(false)}
+        onVersionUploaded={() => id && loadDetails(id)}
       />
     </Screen>
   );

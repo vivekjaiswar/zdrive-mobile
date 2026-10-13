@@ -16,9 +16,34 @@ export interface RecentFolder {
   createdAt: string;
 }
 
+export interface FileTypeBreakdown {
+  Images: number;
+  Videos: number;
+  Documents: number;
+  Archives: number;
+  Other: number;
+}
+
+export interface ScanStatusBreakdown {
+  CLEAN: number;
+  PENDING: number;
+  MALICIOUS: number;
+}
+
+export interface UploadTimelineBucket {
+  bucketStart: string;
+  count: number;
+}
+
+export interface UploadTimelineResult {
+  granularity: 'day' | 'hour';
+  from: string;
+  to: string;
+  buckets: UploadTimelineBucket[];
+}
+
 // Matches DashboardService.stats()'s actual return shape on the
-// backend. Note the field is `storagePercent`, not `usagePercentage`,
-// and there is no `subscriptionExpiresAt` in this response.
+// backend.
 export interface DashboardStats {
   userName: string;
   storageUsed: string;
@@ -33,6 +58,8 @@ export interface DashboardStats {
   plan: string;
   subscriptionStatus: string;
   accountCreated: string | null;
+  fileTypeBreakdown?: FileTypeBreakdown;
+  scanStatusBreakdown?: ScanStatusBreakdown;
 }
 
 class DashboardService {
@@ -42,6 +69,15 @@ class DashboardService {
     );
 
     return response.data;
+  }
+
+  async getUploadTimeline(from?: string, to?: string): Promise<UploadTimelineResult> {
+    const params = new URLSearchParams();
+    if (from) params.set('from', from);
+    if (to) params.set('to', to);
+    const queryString = params.toString() ? `?${params.toString()}` : '';
+    const { data } = await api.get(`/dashboard/upload-timeline${queryString}`);
+    return data;
   }
 }
 

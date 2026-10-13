@@ -176,6 +176,11 @@ export default function PlansModal({
                         <View style={styles.planInfo}>
                           <View style={styles.nameRow}>
                             <Text style={styles.planName}>{plan.name}</Text>
+                            {plan.featured && (
+                              <View style={styles.featuredTag}>
+                                <Text style={styles.featuredTagText}>POPULAR</Text>
+                              </View>
+                            )}
                             {isCurrent && (
                               <View style={styles.activeTag}>
                                 <Text style={styles.activeTagText}>CURRENT PLAN</Text>
@@ -335,6 +340,18 @@ function getStyles(g: GlassTheme) {
       fontSize: 16,
       fontWeight: '800',
       color: g.text,
+    },
+    featuredTag: {
+      backgroundColor: 'rgba(245, 158, 11, 0.18)',
+      paddingHorizontal: 8,
+      paddingVertical: 3,
+      borderRadius: 8,
+    },
+    featuredTagText: {
+      fontSize: 10,
+      fontWeight: '800',
+      color: '#F59E0B',
+      letterSpacing: 0.5,
     },
     activeTag: {
       backgroundColor: g.accentSoft,

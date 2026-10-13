@@ -13,6 +13,7 @@ interface Props {
   onClose: () => void;
   onDownload: (file: ZDriveFile) => void;
   onShare: (file: ZDriveFile) => void;
+  onManageCollaborators?: (file: ZDriveFile) => void;
   onRename: (file: ZDriveFile) => void;
   onMove: (file: ZDriveFile) => void;
   onDelete: (file: ZDriveFile) => void;
@@ -26,6 +27,7 @@ export default function FileActionSheet({
   onClose,
   onDownload,
   onShare,
+  onManageCollaborators,
   onRename,
   onMove,
   onDelete,
@@ -59,10 +61,17 @@ export default function FileActionSheet({
             />
             <FileActionRow
               icon="share-variant-outline"
-              label="Share"
+              label="Share Link"
               loading={sharing}
               onPress={() => file && onShare(file)}
             />
+            {onManageCollaborators && (
+              <FileActionRow
+                icon="account-multiple-plus-outline"
+                label="Collaborators"
+                onPress={() => file && onManageCollaborators(file)}
+              />
+            )}
             <FileActionRow
               icon="pencil-outline"
               label="Rename"

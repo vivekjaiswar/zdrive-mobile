@@ -15,6 +15,7 @@ import FolderPickerModal from '@/components/files/FolderPickerModal';
 import FolderContents, { SortKey, SortDir } from '@/components/folders/FolderContents';
 import FolderActionSheet from '@/components/folders/FolderActionSheet';
 import SelectionBar from '@/components/files/SelectionBar';
+import CollaboratorsModal from '@/components/common/CollaboratorsModal';
 import filesService from '@/services/files.service';
 import foldersService from '@/services/folders.service';
 import { useFileUpload } from '@/hooks/useFileUpload';
@@ -72,6 +73,13 @@ export default function FilesScreen() {
   const [actionFolder, setActionFolder] = useState<ZDriveFolder | null>(null);
   const [renameFolder, setRenameFolder] = useState<ZDriveFolder | null>(null);
   const [renamingFolder, setRenamingFolder] = useState(false);
+  const [moveFolder, setMoveFolder] = useState<ZDriveFolder | null>(null);
+  const [movingFolder, setMovingFolder] = useState(false);
+  const [collabTarget, setCollabTarget] = useState<{
+    id: string;
+    name: string;
+    type: 'file' | 'folder';
+  } | null>(null);
   const [createFolderVisible, setCreateFolderVisible] = useState(false);
   const [creatingFolder, setCreatingFolder] = useState(false);
 
@@ -99,6 +107,7 @@ export default function FilesScreen() {
 
   const {
     rename: renameFolderAction,
+    move: moveFolderAction,
     confirmDelete: confirmDeleteFolder,
     deletingId: deletingFolderId,
   } = useFolderActions(loadContents);
@@ -286,6 +295,14 @@ export default function FilesScreen() {
     setRenamingFolder(false);
 
     if (ok) setRenameFolder(null);
+  }
+
+  async function handleConfirmMoveFolder(targetFolderId?: string) {
+    if (!moveFolder) return;
+    setMovingFolder(true);
+    const ok = await moveFolderAction(moveFolder, targetFolderId);
+    setMovingFolder(false);
+    if (ok) setMoveFolder(null);
   }
 
   async function handleCreateFolder(name: string) {
@@ -501,6 +518,10 @@ export default function FilesScreen() {
         onClose={() => setActionFile(null)}
         onDownload={(file) => download(file)}
         onShare={(file) => share(file)}
+        onManageCollaborators={(file) => {
+          setActionFile(null);
+          setCollabTarget({ id: file.id, name: file.name, type: 'file' });
+        }}
         onRename={(file) => {
           setActionFile(null);
           setRenameFile(file);
@@ -523,6 +544,14 @@ export default function FilesScreen() {
         onDownloadZip={(folder) => {
           setActionFolder(null);
           downloadFolderZip(folder);
+        }}
+        onManageCollaborators={(folder) => {
+          setActionFolder(null);
+          setCollabTarget({ id: folder.id, name: folder.name, type: 'folder' });
+        }}
+        onMove={(folder) => {
+          setActionFolder(null);
+          setMoveFolder(folder);
         }}
         onRename={(folder) => {
           setActionFolder(null);
@@ -566,9 +595,19 @@ export default function FilesScreen() {
 
       <FolderPickerModal
         visible={!!moveFile}
+        currentFolderId={moveFile?.folderId}
         submitting={moving}
         onCancel={() => setMoveFile(null)}
         onSelect={handleConfirmMove}
+      />
+
+      <FolderPickerModal
+        visible={!!moveFolder}
+        currentFolderId={moveFolder?.parentId}
+        excludeFolderId={moveFolder?.id}
+        submitting={movingFolder}
+        onCancel={() => setMoveFolder(null)}
+        onSelect={handleConfirmMoveFolder}
       />
 
       <FolderPickerModal
@@ -576,6 +615,14 @@ export default function FilesScreen() {
         submitting={bulkBusy}
         onCancel={() => setBulkMoveVisible(false)}
         onSelect={handleBulkMove}
+      />
+
+      <CollaboratorsModal
+        visible={!!collabTarget}
+        resourceId={collabTarget?.id ?? null}
+        resourceName={collabTarget?.name}
+        resourceType={collabTarget?.type ?? 'file'}
+        onClose={() => setCollabTarget(null)}
       />
     </Screen>
   );

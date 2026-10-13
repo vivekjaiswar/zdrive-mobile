@@ -8,4 +8,15 @@ export interface ZDriveFolder {
   parentId: string | null;
   createdAt: string;
   updatedAt: string;
+  ownerEmail?: string;
 }
+
+export interface SharedWithMeFolder {
+  id: string;
+  name: string;
+  createdAt: string;
+  ownerEmail: string;
+  role: 'OWNER' | 'EDITOR' | 'VIEWER';
+  sharedAt: string;
+}
+

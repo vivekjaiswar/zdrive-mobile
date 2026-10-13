@@ -4,6 +4,7 @@ import { useRouter } from 'expo-router';
 
 import GlassCard from '@/components/glass/GlassCard';
 import { GlassTheme, useGlass } from '@/theme/glass';
+import { FileTypeBreakdown } from '@/services/dashboard.service';
 
 interface Props {
   storageUsed: string | number;
@@ -12,6 +13,7 @@ interface Props {
   fileCount: number;
   folderCount: number;
   sharedCount: number;
+  fileTypeBreakdown?: FileTypeBreakdown;
 }
 
 function formatBytes(value: string | number) {
@@ -29,6 +31,7 @@ export default function StorageCard({
   fileCount,
   folderCount,
   sharedCount,
+  fileTypeBreakdown,
 }: Props) {
   const router = useRouter();
   const g = useGlass();
@@ -36,12 +39,42 @@ export default function StorageCard({
 
   const pct = Math.min(Math.max(usagePercentage || 0, 0), 100);
 
-  // Segment colors inspired by Dribbox UI Kit
-  const segments = [
-    { label: 'Files', count: fileCount, color: '#38BDF8', widthPct: Math.max(pct * 0.55, 4) },
-    { label: 'Folders', count: folderCount, color: '#F59E0B', widthPct: Math.max(pct * 0.30, 3) },
-    { label: 'Shared', count: sharedCount, color: '#A855F7', widthPct: Math.max(pct * 0.15, 2) },
-  ];
+  const totalBreakdownFiles = fileTypeBreakdown
+    ? fileTypeBreakdown.Images +
+      fileTypeBreakdown.Videos +
+      fileTypeBreakdown.Documents +
+      fileTypeBreakdown.Archives +
+      fileTypeBreakdown.Other
+    : 0;
+
+  // Real breakdown if available from backend, otherwise fallback to files/folders/shared
+  const segments =
+    fileTypeBreakdown && totalBreakdownFiles > 0
+      ? [
+          {
+            label: 'Images',
+            count: fileTypeBreakdown.Images,
+            color: '#38BDF8',
+            widthPct: Math.max((fileTypeBreakdown.Images / totalBreakdownFiles) * pct, 2),
+          },
+          {
+            label: 'Videos',
+            count: fileTypeBreakdown.Videos,
+            color: '#A855F7',
+            widthPct: Math.max((fileTypeBreakdown.Videos / totalBreakdownFiles) * pct, 2),
+          },
+          {
+            label: 'Documents',
+            count: fileTypeBreakdown.Documents,
+            color: '#F59E0B',
+            widthPct: Math.max((fileTypeBreakdown.Documents / totalBreakdownFiles) * pct, 2),
+          },
+        ].filter((s) => s.count > 0)
+      : [
+          { label: 'Files', count: fileCount, color: '#38BDF8', widthPct: Math.max(pct * 0.55, 4) },
+          { label: 'Folders', count: folderCount, color: '#F59E0B', widthPct: Math.max(pct * 0.30, 3) },
+          { label: 'Shared', count: sharedCount, color: '#A855F7', widthPct: Math.max(pct * 0.15, 2) },
+        ];
 
   return (
     <Pressable onPress={() => router.push('/(tabs)/settings')}>

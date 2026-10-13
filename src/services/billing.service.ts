@@ -1,5 +1,5 @@
 import api from './api';
-import { BillingPlan } from '@/types/user';
+import { BillingPlan, PaymentReceipt } from '@/types/user';
 
 export interface RazorpayOrder {
   orderId: string;
@@ -16,13 +16,19 @@ export interface SubscriptionDetails {
 }
 
 class BillingService {
-  async getPlans(): Promise<BillingPlan[]> {
-    const { data } = await api.get('/billing/plans');
+  async getPlans(audience?: 'INDIVIDUAL' | 'BUSINESS'): Promise<BillingPlan[]> {
+    const url = audience ? `/billing/plans?audience=${audience}` : '/billing/plans';
+    const { data } = await api.get(url);
     return data;
   }
 
   async getSubscription(): Promise<SubscriptionDetails> {
     const { data } = await api.get('/billing/subscription');
+    return data;
+  }
+
+  async getPayments(): Promise<PaymentReceipt[]> {
+    const { data } = await api.get('/billing/payments');
     return data;
   }
 

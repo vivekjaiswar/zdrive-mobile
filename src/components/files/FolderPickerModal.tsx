@@ -19,6 +19,8 @@ interface Props {
   visible: boolean;
   // The file's current folder, if any - highlighted in the list.
   currentFolderId?: string | null;
+  // Folder being moved (if moving a folder itself) - excluded so it can't move into itself.
+  excludeFolderId?: string;
   // True while a move request triggered from onSelect is in flight -
   // disables the list so a second tap can't fire a duplicate move.
   submitting?: boolean;
@@ -29,6 +31,7 @@ interface Props {
 export default function FolderPickerModal({
   visible,
   currentFolderId,
+  excludeFolderId,
   submitting = false,
   onCancel,
   onSelect,
@@ -42,13 +45,14 @@ export default function FolderPickerModal({
     if (visible) {
       loadFolders();
     }
-  }, [visible]);
+  }, [visible, excludeFolderId]);
 
   async function loadFolders() {
     try {
       setLoading(true);
-      const data = await foldersService.list();
-      setFolders(data);
+      const data = await foldersService.listAll().catch(() => foldersService.list());
+      const filtered = excludeFolderId ? data.filter((f) => f.id !== excludeFolderId) : data;
+      setFolders(filtered);
     } catch (e: any) {
       console.error('Failed to load folders:', e?.message ?? 'Unknown error');
     } finally {

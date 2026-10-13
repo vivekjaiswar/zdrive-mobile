@@ -32,8 +32,17 @@ export interface TwoFactorSetupVerifyResponse {
 }
 
 // v1.2.1: register() no longer echoes back userId/email (part of the
+// v1.2.1: register() no longer echoes back userId/email (part of the
 // anti-enumeration hardening - existing-email and new-email registration
 // attempts now return an identical generic response).
+export interface RegisterRequest {
+  email: string;
+  password: string;
+  name?: string;
+  referralCode?: string;
+  accountType?: 'INDIVIDUAL' | 'BUSINESS';
+}
+
 export interface RegisterResponse {
   success: boolean;
   message: string;
@@ -134,11 +143,18 @@ class AuthService {
     await api.post('/auth/logout');
   }
 
-  // POST /auth/register: { email, password }. Login is blocked
+  // POST /auth/register: { email, password, name?, referralCode?, accountType? }. Login is blocked
   // (401 "Please verify your email address") until the account is
   // verified - this does NOT log the user in.
-  async register(email: string, password: string): Promise<RegisterResponse> {
-    const { data } = await api.post('/auth/register', { email, password });
+  async register(
+    emailOrData: string | RegisterRequest,
+    password?: string,
+  ): Promise<RegisterResponse> {
+    const payload =
+      typeof emailOrData === 'string'
+        ? { email: emailOrData, password: password! }
+        : emailOrData;
+    const { data } = await api.post('/auth/register', payload);
     return data;
   }
 
@@ -171,6 +187,16 @@ class AuthService {
     password: string,
   ): Promise<{ success: boolean; message: string }> {
     const { data } = await api.post('/auth/reset-password', { token, password });
+    return data;
+  }
+
+  async approveDevice(userCode: string): Promise<{ success: boolean }> {
+    const { data } = await api.post<{ success: boolean }>('/auth/device/approve', { userCode });
+    return data;
+  }
+
+  async denyDevice(userCode: string): Promise<{ success: boolean }> {
+    const { data } = await api.post<{ success: boolean }>('/auth/device/deny', { userCode });
     return data;
   }
 }

@@ -13,6 +13,8 @@ interface Props {
   onRename: (folder: ZDriveFolder) => void;
   onDelete: (folder: ZDriveFolder) => void;
   onDownloadZip?: (folder: ZDriveFolder) => void;
+  onMove?: (folder: ZDriveFolder) => void;
+  onManageCollaborators?: (folder: ZDriveFolder) => void;
 }
 
 export default function FolderActionSheet({
@@ -23,6 +25,8 @@ export default function FolderActionSheet({
   onRename,
   onDelete,
   onDownloadZip,
+  onMove,
+  onManageCollaborators,
 }: Props) {
   const colors = useColors();
   const styles = getStyles(colors);
@@ -51,6 +55,20 @@ export default function FolderActionSheet({
                 label="Download Zip Archive"
                 loading={downloadingZip}
                 onPress={() => folder && onDownloadZip(folder)}
+              />
+            )}
+            {onManageCollaborators && (
+              <FileActionRow
+                icon="account-multiple-plus-outline"
+                label="Collaborators"
+                onPress={() => folder && onManageCollaborators(folder)}
+              />
+            )}
+            {onMove && (
+              <FileActionRow
+                icon="folder-move-outline"
+                label="Move"
+                onPress={() => folder && onMove(folder)}
               />
             )}
             <FileActionRow

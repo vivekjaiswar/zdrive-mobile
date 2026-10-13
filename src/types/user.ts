@@ -16,6 +16,8 @@ export interface UserProfile {
   storageUsed: string;
   storageLimit: string;
   twoFactorEnabled: boolean;
+  gstin?: string | null;
+  billingState?: string | null;
   createdAt: string;
 }
 
@@ -24,6 +26,36 @@ export interface BillingPlan {
   name: string;
   storage: string;
   price: number;
+  featured?: boolean;
+  audience?: 'INDIVIDUAL' | 'BUSINESS';
+}
+
+export interface PaymentReceipt {
+  id: string;
+  userId: string | null;
+  gateway: string;
+  gatewayOrderId: string | null;
+  gatewayPaymentId: string | null;
+  amount: number;
+  currency: string;
+  status: string;
+  planCode: string | null;
+  createdAt: string;
+}
+
+export interface UserActivity {
+  id: string;
+  action: string;
+  metadata: Record<string, any>;
+  createdAt: string;
+  formattedDate: string;
+}
+
+export interface UserReferralInfo {
+  referralCode: string;
+  referralUrl: string;
+  referredCount: number;
+  bonusStorageBytes: string;
 }
 
 // GET /auth/sessions - one row per still-valid (not revoked, not
@@ -49,3 +81,4 @@ export interface TwoFactorSetup {
   otpauthUrl: string;
   qrCodeDataUrl: string;
 }
+

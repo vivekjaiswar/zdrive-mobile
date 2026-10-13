@@ -11,6 +11,7 @@ import FolderPickerModal from '@/components/files/FolderPickerModal';
 import FolderContents from '@/components/folders/FolderContents';
 import FolderActionSheet from '@/components/folders/FolderActionSheet';
 import SelectionBar from '@/components/files/SelectionBar';
+import CollaboratorsModal from '@/components/common/CollaboratorsModal';
 import foldersService from '@/services/folders.service';
 import { useFileUpload } from '@/hooks/useFileUpload';
 import { useFileActions } from '@/hooks/useFileActions';
@@ -46,6 +47,11 @@ export default function FolderExplorerScreen() {
   const [renamingChildFolder, setRenamingChildFolder] = useState(false);
   const [createFolderVisible, setCreateFolderVisible] = useState(false);
   const [creatingFolder, setCreatingFolder] = useState(false);
+  const [collabTarget, setCollabTarget] = useState<{
+    id: string;
+    name: string;
+    type: 'file' | 'folder';
+  } | null>(null);
 
   // Menu for the folder currently being viewed (not a child row). Its
   // Rename action reuses the renameChildFolder modal state below -
@@ -307,6 +313,10 @@ export default function FolderExplorerScreen() {
         onClose={() => setActionFile(null)}
         onDownload={(file) => download(file)}
         onShare={(file) => share(file)}
+        onManageCollaborators={(file) => {
+          setActionFile(null);
+          setCollabTarget({ id: file.id, name: file.name, type: 'file' });
+        }}
         onRename={(file) => {
           setActionFile(null);
           setRenameFile(file);
@@ -330,6 +340,10 @@ export default function FolderExplorerScreen() {
           setActionChildFolder(null);
           downloadFolderZip(child);
         }}
+        onManageCollaborators={(child) => {
+          setActionChildFolder(null);
+          setCollabTarget({ id: child.id, name: child.name, type: 'folder' });
+        }}
         onRename={(child) => {
           setActionChildFolder(null);
           setRenameChildFolder(child);
@@ -348,6 +362,10 @@ export default function FolderExplorerScreen() {
         onDownloadZip={(f) => {
           setShowCurrentFolderMenu(false);
           downloadFolderZip(f);
+        }}
+        onManageCollaborators={(f) => {
+          setShowCurrentFolderMenu(false);
+          setCollabTarget({ id: f.id, name: f.name, type: 'folder' });
         }}
         onRename={() => {
           // Reuse the same rename sheet, pre-filled for this folder.
@@ -399,6 +417,14 @@ export default function FolderExplorerScreen() {
         submitting={bulkBusy}
         onCancel={() => setBulkMoveVisible(false)}
         onSelect={handleBulkMove}
+      />
+
+      <CollaboratorsModal
+        visible={!!collabTarget}
+        resourceId={collabTarget?.id ?? null}
+        resourceName={collabTarget?.name}
+        resourceType={collabTarget?.type ?? 'folder'}
+        onClose={() => setCollabTarget(null)}
       />
     </Screen>
   );

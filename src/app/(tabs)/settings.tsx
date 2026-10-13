@@ -4,6 +4,7 @@ import {
   Alert,
   Linking,
   ScrollView,
+  Share,
   StyleSheet,
   Text,
   View,
@@ -21,9 +22,12 @@ import DeleteAccountModal from '@/components/settings/DeleteAccountModal';
 import PlansModal from '@/components/settings/PlansModal';
 import TwoFactorModal from '@/components/settings/TwoFactorModal';
 import PermissionsModal from '@/components/settings/PermissionsModal';
+import PaymentsHistoryModal from '@/components/settings/PaymentsHistoryModal';
+import BillingDetailsModal from '@/components/settings/BillingDetailsModal';
 import TextPromptModal from '@/components/common/TextPromptModal';
 import usersService from '@/services/users.service';
 import billingService, { SubscriptionDetails } from '@/services/billing.service';
+import authService from '@/services/auth.service';
 import biometricService from '@/services/biometric.service';
 import backupService from '@/services/backup.service';
 import { useAuthStore } from '@/store/auth.store';
@@ -33,7 +37,7 @@ import { useTabBarHeight } from '@/hooks/useTabBarHeight';
 import { useTabBarScrollHandler } from '@/hooks/useTabBarScroll';
 import { ColorPalette } from '@/theme/palette';
 import { useColors } from '@/theme/useColors';
-import { UserProfile } from '@/types/user';
+import { UserProfile, UserReferralInfo } from '@/types/user';
 
 function formatBytes(value: string) {
   const bytes = Number(value) || 0;
@@ -58,6 +62,7 @@ export default function SettingsScreen() {
   const autoBackupEnabled = useBackupStore((state) => state.autoBackupEnabled);
   const setAutoBackupEnabled = useBackupStore((state) => state.setAutoBackupEnabled);
 
+  const [referralInfo, setReferralInfo] = useState<UserReferralInfo | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [subDetails, setSubDetails] = useState<SubscriptionDetails | null>(null);
   const [loading, setLoading] = useState(true);
@@ -71,6 +76,11 @@ export default function SettingsScreen() {
   const [deletingAccount, setDeletingAccount] = useState(false);
   const [twoFactorModalVisible, setTwoFactorModalVisible] = useState(false);
   const [permissionsModalVisible, setPermissionsModalVisible] = useState(false);
+  const [paymentsModalVisible, setPaymentsModalVisible] = useState(false);
+  const [billingDetailsModalVisible, setBillingDetailsModalVisible] = useState(false);
+  const [savingBillingDetails, setSavingBillingDetails] = useState(false);
+  const [deviceModalVisible, setDeviceModalVisible] = useState(false);
+  const [approvingDevice, setApprovingDevice] = useState(false);
   const [backingUp, setBackingUp] = useState(false);
   const [backedUpCount, setBackedUpCount] = useState(0);
 
@@ -83,12 +93,14 @@ export default function SettingsScreen() {
 
   async function loadProfile() {
     try {
-      const [data, sub] = await Promise.all([
+      const [data, sub, ref] = await Promise.all([
         usersService.getProfile(),
         billingService.getSubscription().catch(() => null),
+        usersService.getReferralInfo().catch(() => null),
       ]);
       setProfile(data);
       setSubDetails(sub);
+      setReferralInfo(ref);
     } catch (e: any) {
       console.error('Failed to load profile:', e?.message ?? 'Unknown error');
     } finally {
@@ -181,6 +193,43 @@ export default function SettingsScreen() {
       );
     } finally {
       setSavingName(false);
+    }
+  }
+
+  async function handleSaveBillingDetails(gstin: string, billingState: string) {
+    try {
+      setSavingBillingDetails(true);
+      await usersService.updateProfile({
+        gstin: gstin || undefined,
+        billingState: billingState || undefined,
+      });
+      setBillingDetailsModalVisible(false);
+      await loadProfile();
+      Alert.alert('Updated', 'Your billing details have been saved.');
+    } catch (error: any) {
+      Alert.alert(
+        'Update Failed',
+        error?.response?.data?.message ?? 'Unable to update billing details.',
+      );
+    } finally {
+      setSavingBillingDetails(false);
+    }
+  }
+
+  async function handleApproveDevice(userCode: string) {
+    if (!userCode.trim()) return;
+    try {
+      setApprovingDevice(true);
+      await authService.approveDevice(userCode.trim().toUpperCase());
+      setDeviceModalVisible(false);
+      Alert.alert('Success', 'Desktop application approved successfully!');
+    } catch (error: any) {
+      Alert.alert(
+        'Approval Failed',
+        error?.response?.data?.message ?? 'Invalid or expired code.',
+      );
+    } finally {
+      setApprovingDevice(false);
     }
   }
 
@@ -307,7 +356,42 @@ export default function SettingsScreen() {
               showChevron={false}
             />
           )}
+          <SettingsRow
+            icon="receipt-text-outline"
+            label="Payment History"
+            onPress={() => setPaymentsModalVisible(true)}
+          />
+          <SettingsRow
+            icon="card-account-details-outline"
+            label="Tax & Billing Details"
+            value={profile.gstin ? 'Configured' : 'Not set'}
+            onPress={() => setBillingDetailsModalVisible(true)}
+          />
         </View>
+
+        {referralInfo && (
+          <>
+            <Text style={styles.sectionLabel}>Referrals & Rewards</Text>
+            <View style={styles.card}>
+              <SettingsRow
+                icon="gift-outline"
+                label="Referral Code"
+                value={referralInfo.referralCode}
+                onPress={() => {
+                  Share.share({
+                    message: `Join ZDrive with my referral link and get 2 GB bonus cloud storage! ${referralInfo.referralUrl}`,
+                  });
+                }}
+              />
+              <SettingsRow
+                icon="account-multiple-plus-outline"
+                label="Friends Referred"
+                value={`${referralInfo.referredCount} (Bonus: ${formatBytes(referralInfo.bonusStorageBytes)})`}
+                showChevron={false}
+              />
+            </View>
+          </>
+        )}
 
         <Text style={styles.sectionLabel}>Photo Backup & Permissions</Text>
         <View style={styles.card}>
@@ -352,6 +436,11 @@ export default function SettingsScreen() {
             icon="devices"
             label="Active Sessions"
             onPress={() => router.push('/sessions')}
+          />
+          <SettingsRow
+            icon="monitor-cellphone"
+            label="Link Desktop App"
+            onPress={() => setDeviceModalVisible(true)}
           />
         </View>
 
@@ -437,6 +526,30 @@ export default function SettingsScreen() {
         onChanged={loadProfile}
         onDisabledLoggedOut={handleTwoFactorDisabledLoggedOut}
         onClose={() => setTwoFactorModalVisible(false)}
+      />
+
+      <PaymentsHistoryModal
+        visible={paymentsModalVisible}
+        onClose={() => setPaymentsModalVisible(false)}
+      />
+
+      <BillingDetailsModal
+        visible={billingDetailsModalVisible}
+        loading={savingBillingDetails}
+        initialGstin={profile.gstin}
+        initialBillingState={profile.billingState}
+        onCancel={() => setBillingDetailsModalVisible(false)}
+        onSubmit={handleSaveBillingDetails}
+      />
+
+      <TextPromptModal
+        visible={deviceModalVisible}
+        title="Link Desktop App"
+        placeholder="Enter 8-character code (e.g. ABCD-1234)"
+        confirmLabel="Approve"
+        loading={approvingDevice}
+        onCancel={() => setDeviceModalVisible(false)}
+        onConfirm={handleApproveDevice}
       />
     </Screen>
   );
