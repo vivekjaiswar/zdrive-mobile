@@ -155,7 +155,7 @@ export default function FileCard({
             <View style={[styles.formatPill, { backgroundColor: badge.color + '18' }]}>
               <Text style={[styles.formatText, { color: badge.color }]}>{badge.label}</Text>
             </View>
-            <Text style={styles.meta}>{formatSize(file.size)}</Text>
+            <Text style={styles.meta}>{badge.label} • {formatSize(file.size)}</Text>
             {Boolean(file.createdAt) && (
               <>
                 <Text style={styles.metaDot}>•</Text>

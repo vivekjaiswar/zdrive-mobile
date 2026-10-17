@@ -8,10 +8,11 @@ import UploadFAB from '@/components/files/UploadFAB';
 import FileActionSheet from '@/components/files/FileActionSheet';
 import TextPromptModal from '@/components/common/TextPromptModal';
 import FolderPickerModal from '@/components/files/FolderPickerModal';
-import FolderContents from '@/components/folders/FolderContents';
+import FolderContents, { FolderStat } from '@/components/folders/FolderContents';
 import FolderActionSheet from '@/components/folders/FolderActionSheet';
 import SelectionBar from '@/components/files/SelectionBar';
 import CollaboratorsModal from '@/components/common/CollaboratorsModal';
+import filesService from '@/services/files.service';
 import foldersService from '@/services/folders.service';
 import { useFileUpload } from '@/hooks/useFileUpload';
 import { useFileActions } from '@/hooks/useFileActions';
@@ -31,6 +32,7 @@ export default function FolderExplorerScreen() {
 
   const [folder, setFolder] = useState<ZDriveFolder | null>(null);
   const [childFolders, setChildFolders] = useState<ZDriveFolder[]>([]);
+  const [folderStats, setFolderStats] = useState<Record<string, FolderStat>>({});
   const [files, setFiles] = useState<ZDriveFile[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -103,7 +105,22 @@ export default function FolderExplorerScreen() {
     if (!id) return;
 
     try {
-      const data = await foldersService.explorer(id);
+      const [data, allFiles] = await Promise.all([
+        foldersService.explorer(id),
+        filesService.list().catch(() => []),
+      ]);
+
+      const stats: Record<string, FolderStat> = {};
+      for (const file of allFiles) {
+        if (file.folderId) {
+          if (!stats[file.folderId]) {
+            stats[file.folderId] = { count: 0, totalBytes: 0 };
+          }
+          stats[file.folderId].count += 1;
+          stats[file.folderId].totalBytes += Number(file.size) || 0;
+        }
+      }
+      setFolderStats(stats);
       setFolder(data.folder);
       setChildFolders(data.folders);
       setFiles(data.files);
@@ -299,10 +316,12 @@ export default function FolderExplorerScreen() {
       <FolderContents
         folders={childFolders}
         files={files}
+        folderStats={folderStats}
         refreshing={refreshing}
         onRefresh={onRefresh}
         onFolderPress={(child) => router.push(`/folders/${child.id}`)}
         onFolderLongPress={(child) => setActionChildFolder(child)}
+        onFolderMenuPress={(child) => setActionChildFolder(child)}
         onFilePress={(file) => {
           setPreviewFileIds(files.map((f) => f.id));
           router.push(`/files/${file.id}`);
@@ -312,7 +331,7 @@ export default function FolderExplorerScreen() {
         onFileMenuPress={(file) => setActionFile(file)}
         selectionMode={selectionMode}
         selectedIds={selectedIds}
-        bottomSpacing={112}
+        bottomSpacing={120}
       />
 
       <UploadFAB onPress={handleUpload} loading={uploading} progress={progress} />

@@ -41,9 +41,15 @@ function sortItems<T extends { name: string; createdAt: string; size?: string }>
   });
 }
 
+export interface FolderStat {
+  count: number;
+  totalBytes: number;
+}
+
 interface Props {
   folders: ZDriveFolder[];
   files: ZDriveFile[];
+  folderStats?: Record<string, FolderStat>;
   refreshing: boolean;
   onRefresh: () => void;
   onFolderPress: (folder: ZDriveFolder) => void;
@@ -65,6 +71,7 @@ interface Props {
 export default function FolderContents({
   folders,
   files,
+  folderStats,
   refreshing,
   onRefresh,
   onFolderPress,
@@ -94,7 +101,7 @@ export default function FolderContents({
   const cellWidth = isTile
     ? (width - 48 - 16) / 3
     : isGrid
-      ? (width - 48 - 14) / 2
+      ? (width - 48 - 12) / 2
       : width - 48;
 
   const folderCardWidth = (width - 48 - 12) / 2;
@@ -138,30 +145,15 @@ export default function FolderContents({
             <Text style={styles.sectionLabel}>Folders ({sortedFolders.length})</Text>
 
             {viewMode === 'list' ? (
-              sortedFolders.map((folder) => (
-                <FolderCard
-                  key={folder.id}
-                  folder={folder}
-                  variant="list"
-                  onPress={() => {
-                    if (!selectionMode) onFolderPress(folder);
-                  }}
-                  onLongPress={() => {
-                    if (!selectionMode) onFolderLongPress(folder);
-                  }}
-                  onMenuPress={() => {
-                    if (!selectionMode) onFolderMenuPress ? onFolderMenuPress(folder) : onFolderLongPress(folder);
-                  }}
-                />
-              ))
-            ) : (
-              <View style={styles.folderGridWrapper}>
-                {sortedFolders.map((folder) => (
+              sortedFolders.map((folder) => {
+                const stat = folderStats?.[folder.id];
+                return (
                   <FolderCard
                     key={folder.id}
                     folder={folder}
-                    variant="grid"
-                    width={folderCardWidth}
+                    itemCount={stat?.count}
+                    totalBytes={stat?.totalBytes}
+                    variant="list"
                     onPress={() => {
                       if (!selectionMode) onFolderPress(folder);
                     }}
@@ -172,7 +164,32 @@ export default function FolderContents({
                       if (!selectionMode) onFolderMenuPress ? onFolderMenuPress(folder) : onFolderLongPress(folder);
                     }}
                   />
-                ))}
+                );
+              })
+            ) : (
+              <View style={styles.folderGridWrapper}>
+                {sortedFolders.map((folder) => {
+                  const stat = folderStats?.[folder.id];
+                  return (
+                    <FolderCard
+                      key={folder.id}
+                      folder={folder}
+                      itemCount={stat?.count}
+                      totalBytes={stat?.totalBytes}
+                      variant="grid"
+                      width={folderCardWidth}
+                      onPress={() => {
+                        if (!selectionMode) onFolderPress(folder);
+                      }}
+                      onLongPress={() => {
+                        if (!selectionMode) onFolderLongPress(folder);
+                      }}
+                      onMenuPress={() => {
+                        if (!selectionMode) onFolderMenuPress ? onFolderMenuPress(folder) : onFolderLongPress(folder);
+                      }}
+                    />
+                  );
+                })}
               </View>
             )}
 

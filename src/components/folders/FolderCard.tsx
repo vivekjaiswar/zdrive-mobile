@@ -8,6 +8,8 @@ import { ZDriveFolder } from '@/types/folder';
 
 interface Props {
   folder: ZDriveFolder;
+  itemCount?: number;
+  totalBytes?: number;
   onPress: () => void;
   onLongPress?: () => void;
   onMenuPress?: () => void;
@@ -15,8 +17,19 @@ interface Props {
   width?: number;
 }
 
+function formatSize(bytes?: number | string): string {
+  const n = Number(bytes) || 0;
+  if (n === 0) return '0 B';
+  if (n < 1024) return `${n} B`;
+  if (n < 1024 * 1024) return `${(n / 1024).toFixed(1)} KB`;
+  if (n < 1024 * 1024 * 1024) return `${(n / 1024 / 1024).toFixed(1)} MB`;
+  return `${(n / 1024 / 1024 / 1024).toFixed(1)} GB`;
+}
+
 export default function FolderCard({
   folder,
+  itemCount,
+  totalBytes,
   onPress,
   onLongPress,
   onMenuPress,
@@ -25,6 +38,13 @@ export default function FolderCard({
 }: Props) {
   const colors = useColors();
   const styles = getStyles(colors);
+
+  const itemsText =
+    itemCount !== undefined
+      ? itemCount === 0
+        ? 'Empty • 0 B'
+        : `${itemCount} ${itemCount === 1 ? 'item' : 'items'} • ${formatSize(totalBytes)}`
+      : 'Folder';
 
   if (variant === 'list') {
     return (
@@ -35,19 +55,24 @@ export default function FolderCard({
         delayLongPress={350}
       >
         <View style={styles.listIconWrap}>
-          <MaterialCommunityIcons name="folder" size={24} color="#FF6A00" />
+          <MaterialCommunityIcons name="folder" size={26} color="#FF6A00" />
         </View>
 
         <View style={styles.listTextWrap}>
           <Text numberOfLines={1} style={styles.listName}>
             {folder.name}
           </Text>
-          <Text style={styles.listMeta}>Folder</Text>
+          <View style={styles.listMetaRow}>
+            <View style={styles.folderBadge}>
+              <Text style={styles.folderBadgeText}>DIR</Text>
+            </View>
+            <Text style={styles.listMeta}>{itemsText}</Text>
+          </View>
         </View>
 
         <Pressable
           style={styles.menuBtn}
-          hitSlop={10}
+          hitSlop={12}
           onPress={(e) => {
             e.stopPropagation();
             onMenuPress ? onMenuPress() : onLongPress?.();
@@ -55,7 +80,7 @@ export default function FolderCard({
         >
           <MaterialCommunityIcons
             name="dots-vertical"
-            size={18}
+            size={20}
             color={colors.textSecondary}
           />
         </Pressable>
@@ -100,7 +125,18 @@ export default function FolderCard({
         {folder.name}
       </Text>
 
-      <Text style={styles.gridMeta}>Folder</Text>
+      <View style={styles.gridMetaRow}>
+        <View style={styles.folderBadge}>
+          <Text style={styles.folderBadgeText}>DIR</Text>
+        </View>
+        <Text numberOfLines={1} style={styles.gridMeta}>
+          {itemCount !== undefined
+            ? itemCount === 0
+              ? '0 items • 0 B'
+              : `${itemCount} items • ${formatSize(totalBytes)}`
+            : 'Folder'}
+        </Text>
+      </View>
     </Pressable>
   );
 }
@@ -117,23 +153,18 @@ function getStyles(colors: ColorPalette) {
       marginBottom: 10,
       borderWidth: 1,
       borderColor: colors.border,
-      shadowColor: '#FF6A00',
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.05,
-      shadowRadius: 8,
-      elevation: 2,
     },
     gridTopRow: {
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'space-between',
-      marginBottom: 10,
+      marginBottom: 8,
     },
     gridIconWrap: {
       width: 36,
       height: 36,
       borderRadius: 11,
-      backgroundColor: 'rgba(255, 106, 0, 0.12)',
+      backgroundColor: colors.primarySoft,
       alignItems: 'center',
       justifyContent: 'center',
     },
@@ -151,50 +182,68 @@ function getStyles(colors: ColorPalette) {
       letterSpacing: -0.2,
       marginBottom: 2,
     },
+    gridMetaRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 5,
+      marginTop: 2,
+    },
     gridMeta: {
-      fontSize: 11.5,
+      fontSize: 11,
       fontFamily: fonts.medium,
       color: colors.textSecondary,
+      flex: 1,
     },
 
     // List Row Styles
     listCard: {
       backgroundColor: colors.surface,
-      borderRadius: 16,
-      paddingVertical: 12,
-      paddingHorizontal: 14,
-      marginBottom: 8,
+      borderRadius: 18,
+      padding: 14,
+      marginBottom: 10,
       flexDirection: 'row',
       alignItems: 'center',
       borderWidth: 1,
       borderColor: colors.border,
-      shadowColor: '#000000',
-      shadowOffset: { width: 0, height: 1 },
-      shadowOpacity: 0.04,
-      shadowRadius: 6,
-      elevation: 1,
     },
     listIconWrap: {
-      width: 38,
-      height: 38,
-      borderRadius: 12,
-      backgroundColor: 'rgba(255, 106, 0, 0.12)',
+      width: 48,
+      height: 48,
+      borderRadius: 14,
+      backgroundColor: colors.primarySoft,
       justifyContent: 'center',
       alignItems: 'center',
     },
     listTextWrap: {
       flex: 1,
-      marginLeft: 12,
+      marginLeft: 14,
     },
     listName: {
-      fontSize: 14.5,
+      fontSize: 15,
       fontFamily: fonts.semiBold,
       color: colors.text,
       letterSpacing: -0.2,
     },
+    listMetaRow: {
+      marginTop: 4,
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 6,
+    },
+    folderBadge: {
+      paddingHorizontal: 5,
+      paddingVertical: 1.5,
+      borderRadius: 5,
+      backgroundColor: 'rgba(255, 106, 0, 0.14)',
+    },
+    folderBadgeText: {
+      fontSize: 9.5,
+      fontFamily: fonts.bold,
+      color: '#FF6A00',
+      letterSpacing: 0.5,
+    },
     listMeta: {
-      marginTop: 2,
-      fontSize: 11.5,
+      fontSize: 12,
       fontFamily: fonts.medium,
       color: colors.textSecondary,
     },

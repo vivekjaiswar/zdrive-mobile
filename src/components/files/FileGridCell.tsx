@@ -4,7 +4,8 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
 
 import filesService from '@/services/files.service';
-import { GlassTheme, useGlass } from '@/theme/glass';
+import { ColorPalette } from '@/theme/palette';
+import { useColors } from '@/theme/useColors';
 import { fonts } from '@/theme/typography';
 import { ZDriveFile } from '@/types/file';
 
@@ -29,19 +30,19 @@ function formatSize(size: string) {
 function getFormatBadge(name: string, mime?: string): { label: string; color: string } {
   const ext = name.split('.').pop()?.toUpperCase() || '';
   if (mime?.includes('pdf') || ext === 'PDF') return { label: 'PDF', color: '#EF4444' };
-  if (mime?.includes('image') || ['PNG', 'JPG', 'JPEG', 'WEBP', 'GIF'].includes(ext)) {
+  if (mime?.includes('image') || ['PNG', 'JPG', 'JPEG', 'WEBP', 'GIF', 'HEIC'].includes(ext)) {
     return { label: ext && ext.length <= 4 ? ext : 'IMG', color: '#FF6A00' };
   }
-  if (mime?.includes('video') || ['MP4', 'MOV', 'MKV'].includes(ext)) {
+  if (mime?.includes('video') || ['MP4', 'MOV', 'MKV', 'WEBM', 'AVI'].includes(ext)) {
     return { label: ext && ext.length <= 4 ? ext : 'VID', color: '#8B5CF6' };
   }
-  if (mime?.includes('audio') || ['MP3', 'WAV', 'AAC', 'M4A'].includes(ext)) {
+  if (mime?.includes('audio') || ['MP3', 'WAV', 'AAC', 'M4A', 'OGG'].includes(ext)) {
     return { label: ext && ext.length <= 4 ? ext : 'AUD', color: '#EC4899' };
   }
   if (mime?.includes('zip') || ['ZIP', 'TAR', 'GZ', '7Z', 'RAR'].includes(ext)) {
     return { label: ext && ext.length <= 4 ? ext : 'ZIP', color: '#F59E0B' };
   }
-  if (mime?.includes('text') || ['TXT', 'MD', 'JSON', 'JS', 'TS', 'PY'].includes(ext)) {
+  if (mime?.includes('text') || ['TXT', 'MD', 'JSON', 'JS', 'TS', 'PY', 'CSV'].includes(ext)) {
     return { label: ext && ext.length <= 4 ? ext : 'TXT', color: '#0EA5E9' };
   }
   return { label: ext && ext.length <= 4 ? ext : 'DOC', color: '#64748B' };
@@ -66,8 +67,8 @@ export default function FileGridCell({
   selectionMode = false,
   selected = false,
 }: Props) {
-  const g = useGlass();
-  const styles = getStyles(g);
+  const colors = useColors();
+  const styles = getStyles(colors);
   const isImage = file.mimeType?.startsWith('image/') ?? false;
   const isVideo =
     file.mimeType?.startsWith('video/') ||
@@ -76,6 +77,7 @@ export default function FileGridCell({
   const isFlagged = file.moderationStatus === 'FLAGGED';
   const [thumb, setThumb] = useState<string | null>(null);
   const badge = getFormatBadge(file.name, file.mimeType);
+  const isCompactTile = width < 140;
 
   useEffect(() => {
     if (!isVisualMedia) return;
@@ -93,15 +95,25 @@ export default function FileGridCell({
 
   return (
     <Pressable
-      style={[styles.cell, { width }, selected && styles.selected]}
+      style={({ pressed }) => [
+        styles.card,
+        { width },
+        pressed && styles.pressed,
+        selected && styles.cardSelected,
+      ]}
       onPress={onPress}
       onLongPress={onLongPress}
       delayLongPress={350}
     >
-      <View style={styles.thumbBox}>
+      <View style={[styles.previewBox, isCompactTile && styles.previewBoxCompact]}>
         {thumb ? (
           <>
-            <Image source={{ uri: thumb }} style={styles.thumb} contentFit="cover" transition={150} />
+            <Image
+              source={{ uri: thumb }}
+              style={styles.thumbImage}
+              contentFit="cover"
+              transition={150}
+            />
             {isVideo && (
               <View style={styles.videoPlayOverlay}>
                 <View style={styles.videoPlayPill}>
@@ -111,22 +123,26 @@ export default function FileGridCell({
             )}
           </>
         ) : (
-          <MaterialCommunityIcons name={icon(file.mimeType)} size={36} color={badge.color} />
-        )}
-
-        <View style={[styles.badgeTag, { backgroundColor: badge.color + 'E6' }]}>
-          <Text style={styles.badgeText}>{badge.label}</Text>
-        </View>
-
-        {selectionMode && (
-          <View style={[styles.checkbox, selected && styles.checkboxOn]}>
-            {selected && <MaterialCommunityIcons name="check" size={12} color="#FFFFFF" />}
+          <View style={styles.iconPlaceholder}>
+            <MaterialCommunityIcons
+              name={icon(file.mimeType)}
+              size={isCompactTile ? 28 : 36}
+              color={badge.color}
+            />
           </View>
         )}
 
-        {!selectionMode && (
+        <View style={[styles.badgeTag, { backgroundColor: badge.color }]}>
+          <Text style={styles.badgeText}>{badge.label}</Text>
+        </View>
+
+        {selectionMode ? (
+          <View style={[styles.checkbox, selected && styles.checkboxOn]}>
+            {selected && <MaterialCommunityIcons name="check" size={12} color="#FFFFFF" />}
+          </View>
+        ) : (
           <Pressable
-            style={styles.menu}
+            style={styles.menuBtn}
             hitSlop={8}
             onPress={(e) => {
               e.stopPropagation();
@@ -138,35 +154,68 @@ export default function FileGridCell({
         )}
       </View>
 
-      <Text style={styles.name} numberOfLines={1}>{file.name}</Text>
-      <Text style={[styles.meta, isFlagged && { color: g.danger }]} numberOfLines={1}>
-        {isFlagged ? 'Flagged' : formatSize(file.size)}
-      </Text>
+      <View style={styles.infoBox}>
+        <Text style={[styles.name, isCompactTile && styles.nameCompact]} numberOfLines={1}>
+          {file.name}
+        </Text>
+        <View style={styles.metaRow}>
+          <Text
+            style={[
+              styles.meta,
+              isCompactTile && styles.metaCompact,
+              isFlagged && { color: colors.danger },
+            ]}
+            numberOfLines={1}
+          >
+            {isFlagged ? 'Flagged' : `${badge.label} • ${formatSize(file.size)}`}
+          </Text>
+        </View>
+      </View>
     </Pressable>
   );
 }
 
-function getStyles(g: GlassTheme) {
+function getStyles(colors: ColorPalette) {
   return StyleSheet.create({
-    cell: { marginBottom: 14 },
-    selected: { opacity: 0.9 },
-    thumbBox: {
-      width: '100%',
-      aspectRatio: 1,
+    card: {
+      backgroundColor: colors.surface,
       borderRadius: 18,
-      backgroundColor: g.accentSoft,
+      padding: 8,
+      marginBottom: 10,
       borderWidth: 1,
-      borderColor: g.glassBorder,
+      borderColor: colors.border,
+    },
+    pressed: { opacity: 0.88, transform: [{ scale: 0.985 }] },
+    cardSelected: {
+      borderColor: colors.primary,
+      backgroundColor: colors.primarySoft,
+    },
+    previewBox: {
+      width: '100%',
+      height: 106,
+      borderRadius: 12,
+      backgroundColor: colors.primarySoft,
       alignItems: 'center',
       justifyContent: 'center',
       overflow: 'hidden',
+      position: 'relative',
     },
-    thumb: { width: '100%', height: '100%' },
+    previewBoxCompact: {
+      height: 74,
+    },
+    thumbImage: {
+      width: '100%',
+      height: '100%',
+    },
+    iconPlaceholder: {
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
     videoPlayOverlay: {
       ...StyleSheet.absoluteFill,
       alignItems: 'center',
       justifyContent: 'center',
-      backgroundColor: 'rgba(0,0,0,0.22)',
+      backgroundColor: 'rgba(0, 0, 0, 0.22)',
     },
     videoPlayPill: {
       width: 32,
@@ -181,8 +230,8 @@ function getStyles(g: GlassTheme) {
     },
     badgeTag: {
       position: 'absolute',
-      bottom: 6,
-      left: 6,
+      bottom: 5,
+      left: 5,
       paddingHorizontal: 5,
       paddingVertical: 1.5,
       borderRadius: 5,
@@ -195,41 +244,56 @@ function getStyles(g: GlassTheme) {
     },
     checkbox: {
       position: 'absolute',
-      top: 6,
-      left: 6,
+      top: 5,
+      left: 5,
       width: 20,
       height: 20,
       borderRadius: 10,
       borderWidth: 2,
       borderColor: '#FFFFFF',
-      backgroundColor: 'rgba(0,0,0,0.25)',
+      backgroundColor: 'rgba(0, 0, 0, 0.25)',
       alignItems: 'center',
       justifyContent: 'center',
     },
-    checkboxOn: { backgroundColor: g.accent, borderColor: g.accent },
-    menu: {
+    checkboxOn: {
+      backgroundColor: colors.primary,
+      borderColor: colors.primary,
+    },
+    menuBtn: {
       position: 'absolute',
-      top: 4,
-      right: 4,
-      width: 26,
-      height: 26,
-      borderRadius: 13,
-      backgroundColor: 'rgba(0,0,0,0.3)',
+      top: 5,
+      right: 5,
+      width: 24,
+      height: 24,
+      borderRadius: 12,
+      backgroundColor: 'rgba(0, 0, 0, 0.38)',
       alignItems: 'center',
       justifyContent: 'center',
+    },
+    infoBox: {
+      paddingHorizontal: 4,
+      paddingTop: 8,
+      paddingBottom: 2,
     },
     name: {
-      marginTop: 8,
       fontSize: 13.5,
       fontFamily: fonts.semiBold,
-      color: g.text,
+      color: colors.text,
       letterSpacing: -0.2,
     },
-    meta: {
+    nameCompact: {
+      fontSize: 12,
+    },
+    metaRow: {
       marginTop: 2,
-      fontSize: 11.5,
+    },
+    meta: {
+      fontSize: 11,
       fontFamily: fonts.medium,
-      color: g.textSecondary,
+      color: colors.textSecondary,
+    },
+    metaCompact: {
+      fontSize: 10,
     },
   });
 }

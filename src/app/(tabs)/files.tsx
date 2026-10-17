@@ -101,6 +101,7 @@ export default function FilesScreen() {
 
   const [folders, setFolders] = useState<ZDriveFolder[]>([]);
   const [files, setFiles] = useState<ZDriveFile[]>([]);
+  const [folderStats, setFolderStats] = useState<Record<string, { count: number; totalBytes: number }>>({});
   const [searchResults, setSearchResults] = useState<ZDriveFile[] | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -259,6 +260,17 @@ export default function FilesScreen() {
         filesService.list(),
       ]);
 
+      const stats: Record<string, { count: number; totalBytes: number }> = {};
+      for (const file of fileList) {
+        if (file.folderId) {
+          if (!stats[file.folderId]) {
+            stats[file.folderId] = { count: 0, totalBytes: 0 };
+          }
+          stats[file.folderId].count += 1;
+          stats[file.folderId].totalBytes += Number(file.size) || 0;
+        }
+      }
+      setFolderStats(stats);
       setFolders(folderList);
       // GET /files returns every file regardless of folder - there's
       // no backend endpoint for "root files only," so filter for
@@ -603,12 +615,13 @@ export default function FilesScreen() {
               return (
                 <Pressable
                   key={mode}
-                  hitSlop={4}
+                  hitSlop={8}
                   onPress={() => setViewMode(mode)}
                   style={[
                     styles.viewSegmentBtn,
                     active && styles.viewSegmentBtnActive,
                   ]}
+                  accessibilityLabel={`${mode} view`}
                 >
                   <MaterialCommunityIcons
                     name={iconName}
@@ -625,6 +638,7 @@ export default function FilesScreen() {
       <FolderContents
         folders={isSearching ? [] : visibleFolders}
         files={isSearching ? filteredSearchResults : visibleFiles}
+        folderStats={folderStats}
         sortBy={sortBy}
         sortDir={sortDir}
         viewMode={viewMode}
@@ -646,7 +660,7 @@ export default function FilesScreen() {
         onFileMenuPress={(file) => setActionFile(file)}
         selectionMode={selectionMode}
         selectedIds={selectedIds}
-        bottomSpacing={tabBarHeight + 88}
+        bottomSpacing={tabBarHeight + 96}
         onScroll={onScroll}
       />
 
@@ -916,16 +930,16 @@ function getStyles(colors: ColorPalette) {
       flexDirection: 'row',
       alignItems: 'center',
       backgroundColor: colors.surface,
-      borderRadius: 18,
-      padding: 2,
+      borderRadius: 22,
+      padding: 3,
       borderWidth: 1,
       borderColor: colors.border,
-      gap: 2,
+      gap: 3,
     },
     viewSegmentBtn: {
-      width: 32,
-      height: 32,
-      borderRadius: 16,
+      width: 36,
+      height: 36,
+      borderRadius: 18,
       alignItems: 'center',
       justifyContent: 'center',
     },
