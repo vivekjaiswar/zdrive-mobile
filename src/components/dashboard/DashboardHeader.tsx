@@ -5,13 +5,12 @@ import { useRouter } from 'expo-router';
 
 import Logo from '@/components/glass/Logo';
 import { GlassTheme, useGlass } from '@/theme/glass';
+import { fonts } from '@/theme/typography';
 
 interface Props {
   userName: string;
   avatarUrl?: string | null;
 }
-
-const NAME_COLORS = ['#3B82F6', '#A855F7', '#EC4899', '#10B981', '#F59E0B'];
 
 function getInitials(name: string): string {
   if (!name) return 'U';
@@ -27,43 +26,15 @@ export default function DashboardHeader({ userName, avatarUrl }: Props) {
 
   const initials = getInitials(userName);
 
-  function renderMultiColorName(name: string) {
-    const words = name.trim().split(/\s+/);
-
-    if (words.length === 1) {
-      const w = words[0];
-      const mid = Math.ceil(w.length / 2);
-      const p1 = w.slice(0, mid);
-      const p2 = w.slice(mid);
-      return (
-        <Text style={styles.nameText}>
-          <Text style={{ color: NAME_COLORS[0] }}>{p1}</Text>
-          <Text style={{ color: NAME_COLORS[1] }}>{p2}</Text>
-        </Text>
-      );
-    }
-
-    return (
-      <Text style={styles.nameText}>
-        {words.map((word, i) => (
-          <Text key={i} style={{ color: NAME_COLORS[i % NAME_COLORS.length] }}>
-            {word}{i < words.length - 1 ? ' ' : ''}
-          </Text>
-        ))}
-      </Text>
-    );
-  }
-
   return (
     <View style={styles.container}>
       <View style={styles.left}>
         <View style={styles.brandRow}>
-          <Logo size={42} markOnly />
-          <Text style={styles.brandTitle}>ZDrive</Text>
+          <Logo size={36} showTagline={false} />
         </View>
 
         <Text style={styles.greetingText} numberOfLines={1}>
-          Welcome, {renderMultiColorName(userName)}
+          Welcome, <Text style={styles.nameText}>{userName || 'User'}</Text>
         </Text>
       </View>
 
@@ -73,7 +44,7 @@ export default function DashboardHeader({ userName, avatarUrl }: Props) {
           onPress={() => router.push('/(tabs)/files')}
           hitSlop={8}
         >
-          <MaterialCommunityIcons name="magnify" size={22} color={g.text} />
+          <MaterialCommunityIcons name="magnify" size={22} color={g.accent} />
         </Pressable>
 
         <Pressable
@@ -118,23 +89,17 @@ function getStyles(g: GlassTheme) {
       gap: 10,
       marginBottom: 4,
     },
-    brandTitle: {
-      fontSize: 18,
-      fontWeight: '800',
-      color: g.accent,
-      letterSpacing: 0.8,
-      textTransform: 'uppercase',
-    },
     greetingText: {
-      fontSize: 20,
-      fontWeight: '700',
+      fontSize: 22,
+      fontFamily: fonts.heading,
       color: g.text,
-      letterSpacing: -0.3,
+      letterSpacing: -0.2,
     },
     nameText: {
-      fontSize: 20,
-      fontWeight: '800',
-      letterSpacing: -0.3,
+      fontSize: 23,
+      fontFamily: fonts.heading,
+      color: g.accent,
+      letterSpacing: -0.2,
     },
     rightActions: {
       flexDirection: 'row',
@@ -175,7 +140,7 @@ function getStyles(g: GlassTheme) {
     },
     initialsText: {
       fontSize: 16,
-      fontWeight: '800',
+      fontFamily: fonts.bold,
       color: g.accent,
     },
   });

@@ -81,6 +81,8 @@ export default function AudioPlayer({ uri, name }: Props) {
   );
 }
 
+import { fonts } from '@/theme/typography';
+
 function getStyles(colors: ColorPalette) {
   return StyleSheet.create({
     container: {
@@ -101,11 +103,13 @@ function getStyles(colors: ColorPalette) {
     },
 
     name: {
+      fontFamily: fonts.bold,
       fontSize: 16,
       fontWeight: '700',
       color: colors.text,
       textAlign: 'center',
       marginBottom: 32,
+      letterSpacing: -0.2,
     },
 
     progressTrack: {
@@ -130,6 +134,7 @@ function getStyles(colors: ColorPalette) {
     },
 
     time: {
+      fontFamily: fonts.medium,
       fontSize: 12.5,
       color: colors.textSecondary,
     },

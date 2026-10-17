@@ -150,6 +150,8 @@ export default function PaymentsHistoryModal({ visible, onClose }: Props) {
   );
 }
 
+import { fonts } from '@/theme/typography';
+
 function getStyles(g: GlassTheme) {
   const isDark = g.blurTint === 'dark';
   const cardBg = isDark ? 'rgba(255, 255, 255, 0.04)' : 'rgba(255, 255, 255, 0.65)';
@@ -192,12 +194,14 @@ function getStyles(g: GlassTheme) {
       marginBottom: 18,
     },
     title: {
+      fontFamily: fonts.bold,
       fontSize: 20,
       fontWeight: '800',
       letterSpacing: -0.4,
       color: g.text,
     },
     subtitle: {
+      fontFamily: fonts.regular,
       marginTop: 2,
       fontSize: 13,
       color: g.textSecondary,
@@ -222,12 +226,14 @@ function getStyles(g: GlassTheme) {
       justifyContent: 'center',
     },
     emptyTitle: {
+      fontFamily: fonts.bold,
       fontSize: 16,
       fontWeight: '700',
       color: g.text,
       marginTop: 12,
     },
     emptySubtitle: {
+      fontFamily: fonts.regular,
       fontSize: 13,
       color: g.textSecondary,
       marginTop: 4,
@@ -250,11 +256,13 @@ function getStyles(g: GlassTheme) {
       justifyContent: 'space-between',
     },
     planTitle: {
+      fontFamily: fonts.bold,
       fontSize: 15,
       fontWeight: '700',
       color: g.text,
     },
     dateText: {
+      fontFamily: fonts.regular,
       fontSize: 12,
       color: g.textSecondary,
       marginTop: 2,
@@ -265,6 +273,7 @@ function getStyles(g: GlassTheme) {
       borderRadius: 10,
     },
     statusText: {
+      fontFamily: fonts.bold,
       fontSize: 11,
       fontWeight: '800',
       letterSpacing: 0.5,
@@ -282,11 +291,13 @@ function getStyles(g: GlassTheme) {
       justifyContent: 'space-between',
     },
     gatewayLabel: {
+      fontFamily: fonts.regular,
       fontSize: 12.5,
       color: g.textSecondary,
       textTransform: 'capitalize',
     },
     amountText: {
+      fontFamily: fonts.bold,
       fontSize: 16,
       fontWeight: '800',
       color: g.text,

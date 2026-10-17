@@ -50,7 +50,7 @@ export default function LockScreen({ onUnlock }: Props) {
             <MaterialCommunityIcons name="fingerprint" size={44} color={g.accent} />
           </View>
 
-          <Text style={styles.title}>ZDrive is Locked</Text>
+          <Text style={styles.title}>OJI Drive is Locked</Text>
           <Text style={styles.subtitle}>
             Unlock with Face ID or fingerprint to continue.
           </Text>

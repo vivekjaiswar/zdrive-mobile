@@ -30,6 +30,14 @@ import { FileDetails } from '@/types/file';
 const SWIPE_X_THRESHOLD = 60;
 const SWIPE_VELOCITY_THRESHOLD = 300;
 
+function formatSize(size: string) {
+  const bytes = Number(size) || 0;
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+  if (bytes < 1024 * 1024 * 1024) return `${(bytes / 1024 / 1024).toFixed(1)} MB`;
+  return `${(bytes / 1024 / 1024 / 1024).toFixed(1)} GB`;
+}
+
 function isTextLike(mimeType?: string): boolean {
   if (!mimeType) return false;
   if (mimeType.startsWith('text/')) return true;
@@ -168,11 +176,12 @@ export default function FileDetailScreen() {
     );
   }
 
-  const isImage = file.mimeType?.startsWith('image/');
-  const isVideo = file.mimeType?.startsWith('video/');
-  const isAudio = file.mimeType?.startsWith('audio/');
-  const isPdf = file.mimeType === 'application/pdf';
-  const isText = isTextLike(file.mimeType);
+  const ext = file.name.split('.').pop()?.toLowerCase() || '';
+  const isImage = file.mimeType?.startsWith('image/') || ['png', 'jpg', 'jpeg', 'webp', 'gif', 'svg', 'bmp', 'heic'].includes(ext);
+  const isVideo = file.mimeType?.startsWith('video/') || ['mp4', 'mov', 'mkv', 'webm', 'avi', '3gp', 'm4v'].includes(ext);
+  const isAudio = file.mimeType?.startsWith('audio/') || ['mp3', 'wav', 'aac', 'm4a', 'flac', 'ogg', 'opus'].includes(ext);
+  const isPdf = file.mimeType === 'application/pdf' || ext === 'pdf';
+  const isText = isTextLike(file.mimeType) || ['txt', 'md', 'json', 'js', 'ts', 'tsx', 'jsx', 'py', 'sh', 'csv', 'xml', 'html', 'css', 'yaml', 'yml', 'sql', 'log'].includes(ext);
 
   return (
     <Screen>
@@ -271,6 +280,39 @@ export default function FileDetailScreen() {
         )}
       </GestureDetector>
 
+      {/* File Metadata & Version Control Panel */}
+      <View style={styles.metadataCard}>
+        <View style={styles.metaRow}>
+          <View style={styles.metaCol}>
+            <Text style={styles.metaLabel}>SIZE</Text>
+            <Text style={styles.metaValue}>{formatSize(file.size)}</Text>
+          </View>
+          <View style={styles.metaDivider} />
+          <View style={styles.metaCol}>
+            <Text style={styles.metaLabel}>TYPE</Text>
+            <Text style={styles.metaValue} numberOfLines={1}>
+              {file.mimeType?.split('/')[1]?.toUpperCase() ?? 'FILE'}
+            </Text>
+          </View>
+          <View style={styles.metaDivider} />
+          <View style={styles.metaCol}>
+            <Text style={styles.metaLabel}>CREATED</Text>
+            <Text style={styles.metaValue}>
+              {new Date(file.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+            </Text>
+          </View>
+          <View style={styles.metaDivider} />
+          <Pressable
+            style={styles.versionPill}
+            onPress={() => setVersionModalVisible(true)}
+            hitSlop={8}
+          >
+            <MaterialCommunityIcons name="history" size={15} color={colors.primary} />
+            <Text style={styles.versionPillText}>Versions</Text>
+          </Pressable>
+        </View>
+      </View>
+
       <FileVersionModal
         visible={versionModalVisible}
         fileId={file.id}
@@ -282,6 +324,8 @@ export default function FileDetailScreen() {
   );
 }
 
+import { fonts } from '@/theme/typography';
+
 function getStyles(colors: ColorPalette) {
   return StyleSheet.create({
     topBar: {
@@ -292,9 +336,11 @@ function getStyles(colors: ColorPalette) {
       gap: 12,
     },
     topBarTitle: {
+      fontFamily: fonts.bold,
       flex: 1,
       fontSize: 17,
       fontWeight: '700',
+      letterSpacing: -0.3,
       color: colors.text,
     },
     quickActions: {
@@ -334,6 +380,7 @@ function getStyles(colors: ColorPalette) {
       color: colors.text,
     },
     textError: {
+      fontFamily: fonts.medium,
       fontSize: 14,
       color: colors.danger,
       textAlign: 'center',
@@ -347,12 +394,15 @@ function getStyles(colors: ColorPalette) {
       paddingHorizontal: 32,
     },
     unsupportedTitle: {
+      fontFamily: fonts.bold,
       fontSize: 18,
       fontWeight: '700',
       color: colors.text,
       marginTop: 8,
+      letterSpacing: -0.3,
     },
     unsupportedSub: {
+      fontFamily: fonts.regular,
       fontSize: 13,
       color: colors.textSecondary,
     },
@@ -364,9 +414,60 @@ function getStyles(colors: ColorPalette) {
       backgroundColor: colors.primary,
     },
     openButtonText: {
+      fontFamily: fonts.semiBold,
       fontSize: 14,
       fontWeight: '600',
       color: '#FFFFFF',
+    },
+    metadataCard: {
+      marginHorizontal: 16,
+      marginBottom: 16,
+      padding: 12,
+      backgroundColor: colors.surface,
+      borderRadius: 16,
+      borderWidth: 1,
+      borderColor: colors.border,
+    },
+    metaRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+    },
+    metaCol: {
+      flex: 1,
+      alignItems: 'center',
+    },
+    metaLabel: {
+      fontSize: 10,
+      fontFamily: fonts.bold,
+      color: colors.textSecondary,
+      letterSpacing: 0.5,
+      marginBottom: 2,
+    },
+    metaValue: {
+      fontSize: 13,
+      fontFamily: fonts.semiBold,
+      color: colors.text,
+    },
+    metaDivider: {
+      width: 1,
+      height: 24,
+      backgroundColor: colors.border,
+      marginHorizontal: 4,
+    },
+    versionPill: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 5,
+      paddingHorizontal: 10,
+      paddingVertical: 6,
+      borderRadius: 10,
+      backgroundColor: colors.primarySoft,
+    },
+    versionPillText: {
+      fontSize: 12,
+      fontFamily: fonts.bold,
+      color: colors.primary,
     },
   });
 }

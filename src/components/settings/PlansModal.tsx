@@ -229,6 +229,8 @@ export default function PlansModal({
   );
 }
 
+import { fonts } from '@/theme/typography';
+
 function getStyles(g: GlassTheme) {
   const cardBg = g.scheme === 'dark' ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.025)';
 
@@ -267,12 +269,14 @@ function getStyles(g: GlassTheme) {
       marginBottom: 14,
     },
     title: {
+      fontFamily: fonts.bold,
       fontSize: 20,
       fontWeight: '800',
       color: g.text,
       letterSpacing: -0.4,
     },
     subtitle: {
+      fontFamily: fonts.regular,
       marginTop: 4,
       fontSize: 13,
       color: g.textSecondary,
@@ -300,6 +304,7 @@ function getStyles(g: GlassTheme) {
       borderColor: g.glassBorder,
     },
     expiryText: {
+      fontFamily: fonts.medium,
       fontSize: 13,
       color: g.text,
       flex: 1,
@@ -337,9 +342,11 @@ function getStyles(g: GlassTheme) {
       gap: 8,
     },
     planName: {
+      fontFamily: fonts.bold,
       fontSize: 16,
       fontWeight: '800',
       color: g.text,
+      letterSpacing: -0.2,
     },
     featuredTag: {
       backgroundColor: 'rgba(245, 158, 11, 0.18)',
@@ -348,6 +355,7 @@ function getStyles(g: GlassTheme) {
       borderRadius: 8,
     },
     featuredTagText: {
+      fontFamily: fonts.bold,
       fontSize: 10,
       fontWeight: '800',
       color: '#F59E0B',
@@ -360,20 +368,24 @@ function getStyles(g: GlassTheme) {
       borderRadius: 8,
     },
     activeTagText: {
+      fontFamily: fonts.bold,
       fontSize: 10,
       fontWeight: '800',
       color: g.accent,
       letterSpacing: 0.5,
     },
     planStorage: {
+      fontFamily: fonts.regular,
       marginTop: 4,
       fontSize: 13,
       color: g.textSecondary,
     },
     planPrice: {
+      fontFamily: fonts.bold,
       fontSize: 16,
       fontWeight: '800',
       color: g.text,
+      letterSpacing: -0.2,
     },
     upgradeBtn: {
       marginTop: 14,
@@ -384,6 +396,7 @@ function getStyles(g: GlassTheme) {
       justifyContent: 'center',
     },
     upgradeBtnText: {
+      fontFamily: fonts.bold,
       color: '#FFFFFF',
       fontSize: 13.5,
       fontWeight: '700',

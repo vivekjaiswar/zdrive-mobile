@@ -271,6 +271,8 @@ export default function TwoFactorModal({
   );
 }
 
+import { fonts } from '@/theme/typography';
+
 function getStyles(colors: ColorPalette) {
   return StyleSheet.create({
     backdrop: {
@@ -303,13 +305,16 @@ function getStyles(colors: ColorPalette) {
     },
 
     title: {
+      fontFamily: fonts.bold,
       fontSize: 18,
       fontWeight: '700',
       color: colors.text,
       marginBottom: 10,
+      letterSpacing: -0.3,
     },
 
     subtitle: {
+      fontFamily: fonts.regular,
       fontSize: 13.5,
       lineHeight: 20,
       color: colors.textSecondary,
@@ -330,6 +335,7 @@ function getStyles(colors: ColorPalette) {
     },
 
     secret: {
+      fontFamily: fonts.bold,
       textAlign: 'center',
       fontSize: 15,
       fontWeight: '700',
@@ -338,6 +344,7 @@ function getStyles(colors: ColorPalette) {
     },
 
     secretHint: {
+      fontFamily: fonts.regular,
       textAlign: 'center',
       fontSize: 12,
       color: colors.textSecondary,
@@ -353,6 +360,7 @@ function getStyles(colors: ColorPalette) {
     },
 
     recoveryCode: {
+      fontFamily: 'monospace',
       fontSize: 14.5,
       fontWeight: '600',
       color: colors.text,
@@ -366,6 +374,7 @@ function getStyles(colors: ColorPalette) {
     },
 
     copyText: {
+      fontFamily: fonts.bold,
       color: colors.primary,
       fontWeight: '700',
       fontSize: 14.5,

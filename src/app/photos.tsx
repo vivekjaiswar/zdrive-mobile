@@ -157,6 +157,8 @@ export default function PhotosScreen() {
   );
 }
 
+import { fonts } from '@/theme/typography';
+
 function getStyles(g: GlassTheme) {
   return StyleSheet.create({
     center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
@@ -166,9 +168,9 @@ function getStyles(g: GlassTheme) {
       justifyContent: 'space-between',
       paddingVertical: 12,
     },
-    title: { fontSize: 18, fontWeight: '700', color: g.text },
+    title: { fontFamily: fonts.bold, fontSize: 18, fontWeight: '700', color: g.text, letterSpacing: -0.3 },
     empty: { alignItems: 'center', gap: 6 },
-    emptyText: { marginTop: 12, fontSize: 16, fontWeight: '700', color: g.text },
-    emptySub: { fontSize: 13.5, color: g.textSecondary },
+    emptyText: { fontFamily: fonts.bold, marginTop: 12, fontSize: 16, fontWeight: '700', color: g.text, letterSpacing: -0.2 },
+    emptySub: { fontFamily: fonts.regular, fontSize: 13.5, color: g.textSecondary },
   });
 }

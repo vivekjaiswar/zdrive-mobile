@@ -91,7 +91,7 @@ export default function PermissionsModal({ visible, onClose }: Props) {
             <View style={styles.header}>
               <View style={{ flex: 1 }}>
                 <Text style={styles.title}>System Permissions</Text>
-                <Text style={styles.subtitle}>Manage OS permissions required for ZDrive features.</Text>
+                <Text style={styles.subtitle}>Manage OS permissions required for OJI Drive features.</Text>
               </View>
               <Pressable style={styles.closeBtn} onPress={onClose} hitSlop={10}>
                 <MaterialCommunityIcons name="close" size={20} color={g.text} />
@@ -141,7 +141,7 @@ export default function PermissionsModal({ visible, onClose }: Props) {
                   </View>
                   <View style={styles.rowText}>
                     <Text style={styles.rowTitle}>Camera</Text>
-                    <Text style={styles.rowDesc}>Capture photos directly to upload to ZDrive</Text>
+                    <Text style={styles.rowDesc}>Capture photos directly to upload to OJI Drive</Text>
                   </View>
                   <View style={styles.badge}>
                     <Text style={[styles.badgeText, cameraStatus === 'Granted' && { color: g.success }]}>
@@ -163,6 +163,8 @@ export default function PermissionsModal({ visible, onClose }: Props) {
     </Modal>
   );
 }
+
+import { fonts } from '@/theme/typography';
 
 function getStyles(g: GlassTheme) {
   return StyleSheet.create({
@@ -198,12 +200,14 @@ function getStyles(g: GlassTheme) {
       marginBottom: 18,
     },
     title: {
+      fontFamily: fonts.bold,
       fontSize: 20,
       fontWeight: '800',
       color: g.text,
       letterSpacing: -0.4,
     },
     subtitle: {
+      fontFamily: fonts.regular,
       marginTop: 4,
       fontSize: 13,
       color: g.textSecondary,
@@ -241,11 +245,14 @@ function getStyles(g: GlassTheme) {
       flex: 1,
     },
     rowTitle: {
+      fontFamily: fonts.bold,
       fontSize: 14.5,
       fontWeight: '700',
       color: g.text,
+      letterSpacing: -0.2,
     },
     rowDesc: {
+      fontFamily: fonts.regular,
       marginTop: 2,
       fontSize: 12,
       color: g.textSecondary,
@@ -257,6 +264,7 @@ function getStyles(g: GlassTheme) {
       backgroundColor: g.accentSoft,
     },
     badgeText: {
+      fontFamily: fonts.bold,
       fontSize: 11,
       fontWeight: '800',
       color: g.textSecondary,
@@ -274,6 +282,7 @@ function getStyles(g: GlassTheme) {
       borderColor: g.glassBorder,
     },
     openSettingsText: {
+      fontFamily: fonts.bold,
       fontSize: 13.5,
       fontWeight: '700',
       color: g.accent,

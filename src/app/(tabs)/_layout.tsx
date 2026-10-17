@@ -11,7 +11,15 @@ export default function TabsLayout() {
   return (
     <TabBarVisibility.Provider value={tabBarVisible}>
       <Tabs
-        screenOptions={{ headerShown: false }}
+        screenOptions={{
+          headerShown: false,
+          tabBarStyle: {
+            position: 'absolute',
+            borderTopWidth: 0,
+            elevation: 0,
+            backgroundColor: 'transparent',
+          },
+        }}
         tabBar={(props) => <AnimatedTabBar {...props} visible={tabBarVisible} />}
       >
         <Tabs.Screen

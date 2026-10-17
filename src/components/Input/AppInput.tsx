@@ -87,6 +87,8 @@ export default function AppInput({
   );
 }
 
+import { fonts } from '@/theme/typography';
+
 function getStyles(colors: ColorPalette) {
   return StyleSheet.create({
     container: {
@@ -105,6 +107,7 @@ function getStyles(colors: ColorPalette) {
     },
 
     input: {
+      fontFamily: fonts.regular,
       flex: 1,
       fontSize: 15.5,
       color: colors.text,

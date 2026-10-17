@@ -13,7 +13,7 @@ interface Props {
 export default function EmptyFiles({
   icon = 'folder-open-outline',
   title = 'No files yet',
-  subtitle = 'Upload your first document to start using ZDrive.',
+  subtitle = 'Upload your first document to start using OJI Drive.',
 }: Props) {
   const colors = useColors();
   const styles = getStyles(colors);
@@ -31,6 +31,8 @@ export default function EmptyFiles({
   );
 }
 
+import { fonts } from '@/theme/typography';
+
 function getStyles(colors: ColorPalette) {
   return StyleSheet.create({
     container: {
@@ -45,16 +47,21 @@ function getStyles(colors: ColorPalette) {
       backgroundColor: colors.surfaceAlt,
       justifyContent: 'center',
       alignItems: 'center',
+      borderWidth: 1,
+      borderColor: colors.border,
     },
 
     title: {
+      fontFamily: fonts.bold,
       marginTop: 20,
       fontSize: 18,
       fontWeight: '700',
       color: colors.text,
+      letterSpacing: -0.3,
     },
 
     subtitle: {
+      fontFamily: fonts.regular,
       marginTop: 8,
       fontSize: 14.5,
       color: colors.textSecondary,

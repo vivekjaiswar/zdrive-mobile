@@ -150,10 +150,13 @@ export default function RegisterScreen() {
   );
 }
 
+import { fonts } from '@/theme/typography';
+
 function getStyles(g: GlassTheme) {
   return StyleSheet.create({
     hint: {
       fontSize: 12,
+      fontFamily: fonts.medium,
       color: g.textSecondary,
       marginTop: -4,
       marginBottom: 2,
@@ -172,28 +175,30 @@ function getStyles(g: GlassTheme) {
     or: {
       color: g.textFaint,
       fontSize: 13,
-      fontWeight: '600',
+      fontFamily: fonts.semiBold,
     },
     bottomText: {
       color: g.textSecondary,
-      fontSize: 15,
+      fontSize: 14.5,
+      fontFamily: fonts.regular,
     },
     link: {
       color: g.accent,
-      fontWeight: '700',
-      fontSize: 15,
+      fontFamily: fonts.bold,
+      fontSize: 14.5,
       marginLeft: 4,
     },
     legalText: {
       marginTop: 8,
       fontSize: 12,
+      fontFamily: fonts.regular,
       lineHeight: 17,
       color: g.textSecondary,
       textAlign: 'center',
     },
     legalLink: {
       color: g.accent,
-      fontWeight: '600',
+      fontFamily: fonts.semiBold,
     },
   });
 }

@@ -1,6 +1,6 @@
 import { createContext, useCallback, useContext, useRef } from 'react';
 import { NativeScrollEvent, NativeSyntheticEvent } from 'react-native';
-import { SharedValue, withTiming } from 'react-native-reanimated';
+import { SharedValue, withTiming, Easing } from 'react-native-reanimated';
 
 // Shared "is the tab bar visible" value (1 = shown, 0 = hidden), created once
 // at the tabs layout and consumed by both the AnimatedTabBar (to slide it in/
@@ -23,12 +23,17 @@ export function useTabBarScrollHandler() {
       const y = e.nativeEvent.contentOffset.y;
       const dy = y - lastY.current;
 
-      if (y <= 4) {
-        visible.value = withTiming(1, { duration: 200 });
-      } else if (dy > 8) {
-        visible.value = withTiming(0, { duration: 200 });
-      } else if (dy < -8) {
-        visible.value = withTiming(1, { duration: 200 });
+      const timingConfig = {
+        duration: 250,
+        easing: Easing.bezier(0.25, 0.1, 0.25, 1),
+      };
+
+      if (y <= 12) {
+        visible.value = withTiming(1, timingConfig);
+      } else if (dy > 6) {
+        visible.value = withTiming(0, timingConfig);
+      } else if (dy < -6) {
+        visible.value = withTiming(1, timingConfig);
       }
 
       lastY.current = y;

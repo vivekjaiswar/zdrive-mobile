@@ -379,7 +379,7 @@ export default function SettingsScreen() {
                 value={referralInfo.referralCode}
                 onPress={() => {
                   Share.share({
-                    message: `Join ZDrive with my referral link and get 2 GB bonus cloud storage! ${referralInfo.referralUrl}`,
+                    message: `Join OJI Drive with my referral link and get 2 GB bonus cloud storage! ${referralInfo.referralUrl}`,
                   });
                 }}
               />
@@ -555,20 +555,22 @@ export default function SettingsScreen() {
   );
 }
 
+import { fonts } from '@/theme/typography';
+
 function getStyles(colors: ColorPalette) {
   return StyleSheet.create({
     sectionLabel: {
       marginTop: 8,
       marginBottom: 8,
-      fontSize: 12.5,
-      fontWeight: '700',
+      fontSize: 12,
+      fontFamily: fonts.bold,
       color: colors.textSecondary,
       textTransform: 'uppercase',
-      letterSpacing: 0.5,
+      letterSpacing: 0.8,
     },
     card: {
       backgroundColor: colors.surface,
-      borderRadius: 18,
+      borderRadius: 22,
       paddingHorizontal: 16,
       marginBottom: 20,
       borderWidth: 1,

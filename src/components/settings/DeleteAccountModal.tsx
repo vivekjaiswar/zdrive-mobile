@@ -103,6 +103,8 @@ export default function DeleteAccountModal({
   );
 }
 
+import { fonts } from '@/theme/typography';
+
 function getStyles(colors: ColorPalette) {
   return StyleSheet.create({
     backdrop: {
@@ -134,13 +136,16 @@ function getStyles(colors: ColorPalette) {
     },
 
     title: {
+      fontFamily: fonts.bold,
       fontSize: 18,
       fontWeight: '700',
       color: colors.text,
       marginBottom: 12,
+      letterSpacing: -0.3,
     },
 
     warning: {
+      fontFamily: fonts.regular,
       fontSize: 13.5,
       lineHeight: 20,
       color: colors.textSecondary,
@@ -148,12 +153,14 @@ function getStyles(colors: ColorPalette) {
     },
 
     label: {
+      fontFamily: fonts.medium,
       fontSize: 13.5,
       color: colors.text,
       marginBottom: 8,
     },
 
     labelStrong: {
+      fontFamily: fonts.bold,
       fontWeight: '700',
       color: colors.danger,
     },
@@ -178,6 +185,7 @@ function getStyles(colors: ColorPalette) {
     },
 
     cancelText: {
+      fontFamily: fonts.bold,
       fontWeight: '700',
       color: colors.textSecondary,
       fontSize: 15,

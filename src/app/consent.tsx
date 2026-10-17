@@ -39,8 +39,8 @@ export default function ConsentScreen() {
 
   return (
     <AuthScreenLayout
-      title="Welcome to ZDrive"
-      subtitle="Secure cloud storage for your files, from ZennialHub."
+      title="Welcome to OJI Drive"
+      subtitle="Community convenience & secure cloud storage."
     >
       <Pressable
         style={styles.checkboxRow}
@@ -88,6 +88,8 @@ export default function ConsentScreen() {
   );
 }
 
+import { fonts } from '@/theme/typography';
+
 function getStyles(colors: ColorPalette) {
   return StyleSheet.create({
     checkboxRow: {
@@ -97,6 +99,7 @@ function getStyles(colors: ColorPalette) {
     },
 
     checkboxText: {
+      fontFamily: fonts.regular,
       flex: 1,
       fontSize: 14.5,
       lineHeight: 21,

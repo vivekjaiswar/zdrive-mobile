@@ -11,7 +11,7 @@ import { GlassTheme, useGlass } from '@/theme/glass';
 const TERMS_SECTIONS = [
   {
     title: '1. Acceptance of Terms',
-    body: 'By accessing or using ZDrive (provided by ZennialHub), you agree to be bound by these Terms of Service and our Privacy Policy. If you do not agree to all terms, you may not access or use our services.',
+    body: 'By accessing or using OJI Drive (provided by ZennialHub), you agree to be bound by these Terms of Service and our Privacy Policy. If you do not agree to all terms, you may not access or use our services.',
   },
   {
     title: '2. Account Security & Responsibilities',
@@ -19,7 +19,7 @@ const TERMS_SECTIONS = [
   },
   {
     title: '3. Acceptable Use & Storage Rules',
-    body: 'ZDrive provides cloud file storage, file sharing, and synchronization. You agree not to store, upload, or share content that is unlawful, malicious, contains malware, or infringes on third-party intellectual property rights.',
+    body: 'OJI Drive provides cloud file storage, file sharing, and synchronization. You agree not to store, upload, or share content that is unlawful, malicious, contains malware, or infringes on third-party intellectual property rights.',
   },
   {
     title: '4. Subscriptions & Payment Terms',
@@ -38,11 +38,11 @@ const PRIVACY_SECTIONS = [
   },
   {
     title: '2. How We Use Your Data',
-    body: 'Your data is used solely to operate ZDrive services: storing and streaming your files, verifying 2FA security, processing subscription billing, and providing AI search over your own files.',
+    body: 'Your data is used solely to operate OJI Drive services: storing and streaming your files, verifying 2FA security, processing subscription billing, and providing AI search over your own files.',
   },
   {
     title: '3. Data Security & Encryption',
-    body: 'ZDrive employs bank-grade security protocols. All files are encrypted in transit (TLS 1.3) and at rest (AES-256) on cloud infrastructure. Access tickets for file streaming expire automatically after short windows.',
+    body: 'OJI Drive employs bank-grade security protocols. All files are encrypted in transit (TLS 1.3) and at rest (AES-256) on cloud infrastructure. Access tickets for file streaming expire automatically after short windows.',
   },
   {
     title: '4. Third-Party Sharing',
@@ -50,7 +50,7 @@ const PRIVACY_SECTIONS = [
   },
   {
     title: '5. Your Rights & Data Portability',
-    body: 'You retain full ownership of all content stored on ZDrive. You may download, export, share, or permanently erase your files and account at any time.',
+    body: 'You retain full ownership of all content stored on OJI Drive. You may download, export, share, or permanently erase your files and account at any time.',
   },
 ];
 
@@ -110,6 +110,8 @@ export default function LegalDocScreen() {
   );
 }
 
+import { fonts } from '@/theme/typography';
+
 function getStyles(g: GlassTheme) {
   return StyleSheet.create({
     topBar: {
@@ -130,6 +132,7 @@ function getStyles(g: GlassTheme) {
       justifyContent: 'center',
     },
     topBarTitle: {
+      fontFamily: fonts.bold,
       flex: 1,
       textAlign: 'center',
       fontSize: 18,
@@ -155,12 +158,14 @@ function getStyles(g: GlassTheme) {
       paddingBottom: 24,
     },
     docHeaderTitle: {
+      fontFamily: fonts.extraBold,
       fontSize: 22,
       fontWeight: '800',
       color: g.text,
       letterSpacing: -0.4,
     },
     docSub: {
+      fontFamily: fonts.semiBold,
       marginTop: 4,
       fontSize: 12.5,
       fontWeight: '600',
@@ -171,12 +176,14 @@ function getStyles(g: GlassTheme) {
       marginBottom: 18,
     },
     secTitle: {
+      fontFamily: fonts.bold,
       fontSize: 15,
       fontWeight: '700',
       color: g.text,
       marginBottom: 6,
     },
     secBody: {
+      fontFamily: fonts.regular,
       fontSize: 13.5,
       lineHeight: 21,
       color: g.textSecondary,
@@ -194,6 +201,7 @@ function getStyles(g: GlassTheme) {
       borderColor: g.glassBorder,
     },
     webLinkText: {
+      fontFamily: fonts.bold,
       fontSize: 13.5,
       fontWeight: '700',
       color: g.accent,

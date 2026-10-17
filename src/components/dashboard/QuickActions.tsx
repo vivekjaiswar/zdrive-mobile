@@ -4,6 +4,7 @@ import { useRouter } from 'expo-router';
 
 import GlassCard from '@/components/glass/GlassCard';
 import { GlassTheme, useGlass } from '@/theme/glass';
+import { fonts } from '@/theme/typography';
 
 interface Props {
   uploading: boolean;
@@ -22,38 +23,38 @@ export default function QuickActions({
   const g = useGlass();
   const styles = getStyles(g);
 
-  // Dribbox Folder Cards
+  // OJI Brand Folder Cards
   const folderCards = [
     {
       title: 'All Files',
       subtitle: `${fileCount} items`,
       icon: 'folder' as const,
-      color: '#38BDF8',
-      bgColor: 'rgba(56, 189, 248, 0.14)',
+      color: '#FF6A00',
+      bgColor: 'rgba(255, 106, 0, 0.15)',
       onPress: () => router.push('/(tabs)/files'),
     },
     {
       title: 'Photos',
       subtitle: 'Media gallery',
       icon: 'image-multiple' as const,
-      color: '#A855F7',
-      bgColor: 'rgba(168, 85, 247, 0.14)',
+      color: '#D85604',
+      bgColor: 'rgba(216, 86, 4, 0.15)',
       onPress: () => router.push('/photos'),
     },
     {
       title: 'Shared Links',
       subtitle: `${sharedCount} links`,
       icon: 'share-variant' as const,
-      color: '#10B981',
-      bgColor: 'rgba(16, 185, 129, 0.14)',
+      color: '#EA580C',
+      bgColor: 'rgba(234, 88, 12, 0.15)',
       onPress: () => router.push('/(tabs)/shared'),
     },
     {
       title: 'Trash',
       subtitle: 'Deleted items',
       icon: 'trash-can' as const,
-      color: '#EC4899',
-      bgColor: 'rgba(236, 72, 153, 0.14)',
+      color: '#9A3412',
+      bgColor: 'rgba(154, 52, 18, 0.15)',
       onPress: () => router.push('/trash'),
     },
   ];
@@ -80,7 +81,7 @@ export default function QuickActions({
         </Pressable>
       </View>
 
-      {/* Dribbox-style 2x2 Folder Cards Grid */}
+      {/* 2x2 Folder Cards Grid */}
       <View style={styles.grid}>
         {folderCards.map((card) => (
           <Pressable
@@ -121,9 +122,9 @@ function getStyles(g: GlassTheme) {
     },
     sectionTitle: {
       fontSize: 11.5,
-      fontWeight: '700',
+      fontFamily: fonts.bold,
       color: g.textSecondary,
-      letterSpacing: 0.6,
+      letterSpacing: 0.8,
     },
     uploadBtn: {
       flexDirection: 'row',
@@ -143,7 +144,7 @@ function getStyles(g: GlassTheme) {
     uploadBtnText: {
       color: '#FFFFFF',
       fontSize: 13,
-      fontWeight: '700',
+      fontFamily: fonts.bold,
     },
     grid: {
       flexDirection: 'row',
@@ -169,13 +170,14 @@ function getStyles(g: GlassTheme) {
     },
     cardTitle: {
       fontSize: 15,
-      fontWeight: '700',
+      fontFamily: fonts.bold,
       color: g.text,
       letterSpacing: -0.2,
     },
     cardSubtitle: {
       marginTop: 3,
       fontSize: 12,
+      fontFamily: fonts.medium,
       color: g.textSecondary,
     },
   });

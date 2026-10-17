@@ -59,7 +59,7 @@ export default function FolderExplorerScreen() {
   // child, so there's no need for a separate modal/state pair.
   const [showCurrentFolderMenu, setShowCurrentFolderMenu] = useState(false);
 
-  const { uploading, progress, pickAndUpload } = useFileUpload();
+  const { uploading, progress, pickAndUpload, pickPhotosAndUpload } = useFileUpload();
   const setPreviewFileIds = useFilePreviewStore((state) => state.setFileIds);
 
   const {
@@ -124,14 +124,26 @@ export default function FolderExplorerScreen() {
     loadExplorer();
   }, [id]);
 
-  async function handleUpload() {
+  function handleUpload() {
     if (!id) return;
 
-    const result = await pickAndUpload(id);
-
-    if (result && result.uploaded.length > 0) {
-      await loadExplorer();
-    }
+    Alert.alert('Upload to Folder', 'Choose a source', [
+      {
+        text: 'Photos & Videos',
+        onPress: async () => {
+          const result = await pickPhotosAndUpload(id);
+          if (result && result.uploaded.length > 0) await loadExplorer();
+        },
+      },
+      {
+        text: 'Browse Files & File Manager',
+        onPress: async () => {
+          const result = await pickAndUpload(id);
+          if (result && result.uploaded.length > 0) await loadExplorer();
+        },
+      },
+      { text: 'Cancel', style: 'cancel' },
+    ]);
   }
 
   async function handleConfirmRename(name: string) {
@@ -430,6 +442,8 @@ export default function FolderExplorerScreen() {
   );
 }
 
+import { fonts } from '@/theme/typography';
+
 function getStyles(colors: ColorPalette) {
   return StyleSheet.create({
     center: {
@@ -446,6 +460,7 @@ function getStyles(colors: ColorPalette) {
     },
 
     topBarTitle: {
+      fontFamily: fonts.bold,
       flex: 1,
       fontSize: 18,
       fontWeight: '700',

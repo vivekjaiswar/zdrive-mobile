@@ -142,20 +142,23 @@ export default function LoginScreen() {
   );
 }
 
+import { fonts } from '@/theme/typography';
+
 function getStyles(g: GlassTheme) {
   return StyleSheet.create({
     scroll: { flexGrow: 1, justifyContent: 'center', paddingVertical: 40 },
     logoWrap: { alignItems: 'center', marginBottom: 28 },
     title: {
-      fontSize: 26,
-      fontWeight: '800',
+      fontSize: 30,
+      fontFamily: fonts.heading,
       color: g.text,
       textAlign: 'center',
-      letterSpacing: -0.5,
+      letterSpacing: -0.3,
     },
     subtitle: {
       marginTop: 8,
       fontSize: 14.5,
+      fontFamily: fonts.medium,
       color: g.textSecondary,
       textAlign: 'center',
     },
@@ -163,20 +166,21 @@ function getStyles(g: GlassTheme) {
     forgot: {
       textAlign: 'right',
       color: g.accent,
-      fontWeight: '600',
+      fontFamily: fonts.semiBold,
+      fontSize: 13.5,
       marginTop: -2,
       marginBottom: 4,
     },
     dividerRow: { flexDirection: 'row', alignItems: 'center', gap: 12, marginVertical: 2 },
     line: { flex: 1, height: 1, backgroundColor: g.glassBorder },
-    or: { color: g.textFaint, fontSize: 13, fontWeight: '600' },
+    or: { color: g.textFaint, fontSize: 13, fontFamily: fonts.semiBold },
     bottom: {
       marginTop: 26,
       flexDirection: 'row',
       justifyContent: 'center',
-      gap: 5,
+      gap: 6,
     },
-    bottomText: { color: g.textSecondary, fontSize: 15 },
-    register: { color: g.accent, fontWeight: '700', fontSize: 15 },
+    bottomText: { color: g.textSecondary, fontSize: 14.5, fontFamily: fonts.regular },
+    register: { color: g.accent, fontFamily: fonts.bold, fontSize: 14.5 },
   });
 }

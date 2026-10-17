@@ -1,6 +1,7 @@
 import { StyleSheet } from 'react-native';
 
 import { ColorPalette } from '@/theme/palette';
+import { fonts } from '@/theme/typography';
 
 // Shared footer-text styles for the (auth) screens (login, register,
 // forgot/reset password, verify email). Lives outside src/app/ on
@@ -12,11 +13,13 @@ import { ColorPalette } from '@/theme/palette';
 export function getAuthStyles(colors: ColorPalette) {
   return StyleSheet.create({
     bottomText: {
+      fontFamily: fonts.regular,
       color: colors.textSecondary,
       fontSize: 15,
     },
 
     link: {
+      fontFamily: fonts.bold,
       marginLeft: 5,
       color: colors.primary,
       fontWeight: '700',
@@ -24,12 +27,14 @@ export function getAuthStyles(colors: ColorPalette) {
     },
 
     linkStandalone: {
+      fontFamily: fonts.semiBold,
       color: colors.primary,
       fontWeight: '600',
       textAlign: 'center',
     },
 
     hint: {
+      fontFamily: fonts.regular,
       marginTop: -6,
       marginBottom: 4,
       fontSize: 12,
@@ -37,6 +42,7 @@ export function getAuthStyles(colors: ColorPalette) {
     },
 
     legalText: {
+      fontFamily: fonts.regular,
       marginTop: 4,
       fontSize: 12.5,
       color: colors.textSecondary,
@@ -45,6 +51,7 @@ export function getAuthStyles(colors: ColorPalette) {
     },
 
     legalLink: {
+      fontFamily: fonts.semiBold,
       color: colors.primary,
       fontWeight: '600',
     },

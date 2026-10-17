@@ -109,6 +109,8 @@ export default function BillingDetailsModal({
   );
 }
 
+import { fonts } from '@/theme/typography';
+
 function getStyles(colors: ColorPalette) {
   return StyleSheet.create({
     backdrop: {
@@ -129,12 +131,14 @@ function getStyles(colors: ColorPalette) {
       gap: 14,
     },
     title: {
+      fontFamily: fonts.bold,
       fontSize: 18,
       fontWeight: '700',
       color: colors.text,
       letterSpacing: -0.3,
     },
     description: {
+      fontFamily: fonts.regular,
       fontSize: 13,
       color: colors.textSecondary,
       lineHeight: 18,
@@ -144,6 +148,7 @@ function getStyles(colors: ColorPalette) {
       gap: 6,
     },
     fieldLabel: {
+      fontFamily: fonts.semiBold,
       fontSize: 12.5,
       fontWeight: '600',
       color: colors.textSecondary,
@@ -165,8 +170,9 @@ function getStyles(colors: ColorPalette) {
       borderColor: colors.border,
     },
     cancelText: {
+      fontFamily: fonts.bold,
       fontSize: 15,
-      fontWeight: '600',
+      fontWeight: '700',
       color: colors.textSecondary,
     },
     confirmButton: {

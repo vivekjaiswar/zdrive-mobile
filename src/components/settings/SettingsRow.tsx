@@ -72,6 +72,8 @@ export default function SettingsRow({
   );
 }
 
+import { fonts } from '@/theme/typography';
+
 function getStyles(colors: ColorPalette) {
   return StyleSheet.create({
     row: {
@@ -88,9 +90,9 @@ function getStyles(colors: ColorPalette) {
     },
 
     iconCircle: {
-      width: 34,
-      height: 34,
-      borderRadius: 17,
+      width: 36,
+      height: 36,
+      borderRadius: 18,
       backgroundColor: colors.primarySoft,
       justifyContent: 'center',
       alignItems: 'center',
@@ -99,12 +101,14 @@ function getStyles(colors: ColorPalette) {
     label: {
       flex: 1,
       fontSize: 14.5,
-      fontWeight: '600',
+      fontFamily: fonts.semiBold,
       color: colors.text,
+      letterSpacing: -0.1,
     },
 
     value: {
       fontSize: 13.5,
+      fontFamily: fonts.medium,
       color: colors.textSecondary,
       maxWidth: 140,
     },

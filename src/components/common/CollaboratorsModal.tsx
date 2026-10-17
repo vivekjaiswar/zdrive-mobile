@@ -233,6 +233,8 @@ export default function CollaboratorsModal({
   );
 }
 
+import { fonts } from '@/theme/typography';
+
 function getStyles(colors: ColorPalette) {
   return StyleSheet.create({
     backdrop: {
@@ -261,11 +263,14 @@ function getStyles(colors: ColorPalette) {
       marginBottom: 16,
     },
     title: {
+      fontFamily: fonts.bold,
       fontSize: 20,
       fontWeight: '800',
       color: colors.text,
+      letterSpacing: -0.4,
     },
     subtitle: {
+      fontFamily: fonts.regular,
       fontSize: 13,
       color: colors.textSecondary,
       marginTop: 2,
@@ -277,8 +282,9 @@ function getStyles(colors: ColorPalette) {
       marginBottom: 18,
     },
     formLabel: {
+      fontFamily: fonts.semiBold,
       fontSize: 12,
-      fontWeight: '700',
+      fontWeight: '600',
       color: colors.textSecondary,
       textTransform: 'uppercase',
       letterSpacing: 0.5,
@@ -291,6 +297,7 @@ function getStyles(colors: ColorPalette) {
       marginBottom: 10,
     },
     input: {
+      fontFamily: fonts.regular,
       flex: 1,
       height: 44,
       backgroundColor: colors.surface,
@@ -316,6 +323,7 @@ function getStyles(colors: ColorPalette) {
       backgroundColor: colors.primarySoft,
     },
     roleChipText: {
+      fontFamily: fonts.bold,
       fontSize: 12,
       fontWeight: '700',
       color: colors.textSecondary,
@@ -334,13 +342,15 @@ function getStyles(colors: ColorPalette) {
       opacity: 0.5,
     },
     inviteBtnText: {
+      fontFamily: fonts.bold,
       color: '#fff',
       fontSize: 14,
       fontWeight: '700',
     },
     listLabel: {
+      fontFamily: fonts.semiBold,
       fontSize: 13,
-      fontWeight: '700',
+      fontWeight: '600',
       color: colors.textSecondary,
       marginBottom: 10,
     },
@@ -365,6 +375,7 @@ function getStyles(colors: ColorPalette) {
       justifyContent: 'center',
     },
     avatarInitial: {
+      fontFamily: fonts.bold,
       fontSize: 15,
       fontWeight: '700',
       color: colors.primary,
@@ -373,11 +384,13 @@ function getStyles(colors: ColorPalette) {
       flex: 1,
     },
     collabEmail: {
+      fontFamily: fonts.semiBold,
       fontSize: 14,
       fontWeight: '600',
       color: colors.text,
     },
     collabRoleToggle: {
+      fontFamily: fonts.medium,
       fontSize: 11,
       color: colors.primary,
       marginTop: 2,
@@ -386,6 +399,7 @@ function getStyles(colors: ColorPalette) {
       padding: 6,
     },
     emptyText: {
+      fontFamily: fonts.regular,
       color: colors.textSecondary,
       textAlign: 'center',
       paddingVertical: 16,
@@ -400,6 +414,7 @@ function getStyles(colors: ColorPalette) {
       backgroundColor: colors.surfaceAlt,
     },
     closeBtnText: {
+      fontFamily: fonts.bold,
       fontSize: 15,
       fontWeight: '700',
       color: colors.text,

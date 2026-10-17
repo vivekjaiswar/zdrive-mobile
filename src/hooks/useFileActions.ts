@@ -311,7 +311,7 @@ export function useFileActions(onChanged?: () => void) {
       const filename =
         folders.length === 1 && files.length === 0
           ? `${folders[0].name}.zip`
-          : `ZDrive Archive (${ticket.fileCount} files).zip`;
+          : `OJI Drive Archive (${ticket.fileCount} files).zip`;
 
       const downloaded = await filesService.downloadBulkZip(
         ticket.downloadUrl,

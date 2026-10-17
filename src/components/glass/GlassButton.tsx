@@ -12,6 +12,7 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 import GoogleLogo from '@/components/common/GoogleLogo';
 import { useGlass } from '@/theme/glass';
+import { fonts } from '@/theme/typography';
 
 type Variant = 'primary' | 'glass' | 'google' | 'danger';
 
@@ -41,15 +42,15 @@ export default function GlassButton({
     variant === 'primary'
       ? g.onAccent
       : variant === 'danger'
-        ? g.danger
-        : g.text;
+      ? g.danger
+      : g.text;
 
   const bgFill =
     variant === 'primary'
       ? undefined
       : g.scheme === 'dark'
-        ? 'rgba(255, 255, 255, 0.06)'
-        : 'rgba(0, 0, 0, 0.03)';
+      ? 'rgba(255, 255, 255, 0.07)'
+      : 'rgba(255, 255, 255, 0.7)';
 
   const body = loading ? (
     <ActivityIndicator color={variant === 'primary' ? g.onAccent : g.accent} />
@@ -72,7 +73,12 @@ export default function GlassButton({
         styles.wrap,
         {
           backgroundColor: bgFill,
-          borderColor: g.glassBorder,
+          borderColor: variant === 'primary' ? 'transparent' : g.glassBorder,
+          shadowColor: variant === 'primary' ? g.accent : g.shadow,
+          shadowOpacity: variant === 'primary' ? 0.35 : 0.08,
+          shadowRadius: variant === 'primary' ? 14 : 8,
+          shadowOffset: { width: 0, height: 4 },
+          elevation: variant === 'primary' ? 6 : 2,
         },
         pressed && styles.pressed,
         busy && styles.busy,
@@ -101,8 +107,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  pressed: { opacity: 0.88 },
+  pressed: { opacity: 0.88, transform: [{ scale: 0.985 }] },
   busy: { opacity: 0.6 },
   row: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  label: { fontSize: 15.5, fontWeight: '700' },
+  label: {
+    fontSize: 15,
+    fontFamily: fonts.bold,
+    letterSpacing: -0.2,
+  },
 });

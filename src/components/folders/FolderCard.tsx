@@ -35,6 +35,8 @@ export default function FolderCard({ folder, onPress, onLongPress }: Props) {
   );
 }
 
+import { fonts } from '@/theme/typography';
+
 function getStyles(colors: ColorPalette) {
   return StyleSheet.create({
     card: {
@@ -60,8 +62,9 @@ function getStyles(colors: ColorPalette) {
       flex: 1,
       marginLeft: 14,
       fontSize: 15,
-      fontWeight: '600',
+      fontFamily: fonts.semiBold,
       color: colors.text,
+      letterSpacing: -0.2,
     },
   });
 }

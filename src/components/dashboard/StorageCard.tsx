@@ -4,6 +4,7 @@ import { useRouter } from 'expo-router';
 
 import GlassCard from '@/components/glass/GlassCard';
 import { GlassTheme, useGlass } from '@/theme/glass';
+import { fonts } from '@/theme/typography';
 import { FileTypeBreakdown } from '@/services/dashboard.service';
 
 interface Props {
@@ -47,33 +48,33 @@ export default function StorageCard({
       fileTypeBreakdown.Other
     : 0;
 
-  // Real breakdown if available from backend, otherwise fallback to files/folders/shared
+  // OJI Brand palette breakdown
   const segments =
     fileTypeBreakdown && totalBreakdownFiles > 0
       ? [
           {
             label: 'Images',
             count: fileTypeBreakdown.Images,
-            color: '#38BDF8',
+            color: '#FF6A00',
             widthPct: Math.max((fileTypeBreakdown.Images / totalBreakdownFiles) * pct, 2),
           },
           {
             label: 'Videos',
             count: fileTypeBreakdown.Videos,
-            color: '#A855F7',
+            color: '#D85604',
             widthPct: Math.max((fileTypeBreakdown.Videos / totalBreakdownFiles) * pct, 2),
           },
           {
             label: 'Documents',
             count: fileTypeBreakdown.Documents,
-            color: '#F59E0B',
+            color: '#9A3412',
             widthPct: Math.max((fileTypeBreakdown.Documents / totalBreakdownFiles) * pct, 2),
           },
         ].filter((s) => s.count > 0)
       : [
-          { label: 'Files', count: fileCount, color: '#38BDF8', widthPct: Math.max(pct * 0.55, 4) },
-          { label: 'Folders', count: folderCount, color: '#F59E0B', widthPct: Math.max(pct * 0.30, 3) },
-          { label: 'Shared', count: sharedCount, color: '#A855F7', widthPct: Math.max(pct * 0.15, 2) },
+          { label: 'Files', count: fileCount, color: '#FF6A00', widthPct: Math.max(pct * 0.55, 4) },
+          { label: 'Folders', count: folderCount, color: '#D85604', widthPct: Math.max(pct * 0.30, 3) },
+          { label: 'Shared', count: sharedCount, color: '#9A3412', widthPct: Math.max(pct * 0.15, 2) },
         ];
 
   return (
@@ -94,7 +95,7 @@ export default function StorageCard({
           </View>
         </View>
 
-        {/* Dribbox-style Segmented Progress Bar */}
+        {/* Segmented Progress Bar */}
         <View style={styles.segmentTrack}>
           {segments.map((seg, idx) => (
             <View
@@ -138,20 +139,20 @@ function getStyles(g: GlassTheme) {
     },
     label: {
       fontSize: 11.5,
-      fontWeight: '700',
+      fontFamily: fonts.bold,
       color: g.textSecondary,
-      letterSpacing: 0.6,
+      letterSpacing: 0.8,
     },
     usedText: {
       marginTop: 6,
       fontSize: 24,
-      fontWeight: '800',
+      fontFamily: fonts.heading,
       color: g.text,
-      letterSpacing: -0.5,
+      letterSpacing: -0.3,
     },
     limitText: {
       fontSize: 14,
-      fontWeight: '600',
+      fontFamily: fonts.semiBold,
       color: g.textSecondary,
     },
     badge: {
@@ -164,7 +165,7 @@ function getStyles(g: GlassTheme) {
     },
     badgeText: {
       fontSize: 13,
-      fontWeight: '800',
+      fontFamily: fonts.bold,
       color: g.accent,
     },
     segmentTrack: {
@@ -197,12 +198,12 @@ function getStyles(g: GlassTheme) {
     },
     legendLabel: {
       fontSize: 12.5,
-      fontWeight: '600',
+      fontFamily: fonts.semiBold,
       color: g.text,
     },
     legendCount: {
       fontSize: 12,
-      fontWeight: '500',
+      fontFamily: fonts.medium,
       color: g.textSecondary,
     },
   });

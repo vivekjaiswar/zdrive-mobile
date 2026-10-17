@@ -116,6 +116,8 @@ export default function RecentActivity({
   );
 }
 
+import { fonts } from '@/theme/typography';
+
 function getStyles(g: GlassTheme) {
   return StyleSheet.create({
     container: {
@@ -128,15 +130,15 @@ function getStyles(g: GlassTheme) {
       marginBottom: 12,
     },
     title: {
-      fontSize: 13,
-      fontWeight: '600',
+      fontSize: 12,
+      fontFamily: fonts.bold,
       color: g.textSecondary,
       textTransform: 'uppercase',
-      letterSpacing: 0.5,
+      letterSpacing: 0.6,
     },
     seeAllText: {
       fontSize: 13,
-      fontWeight: '600',
+      fontFamily: fonts.bold,
       color: g.accent,
     },
     empty: {
@@ -147,6 +149,7 @@ function getStyles(g: GlassTheme) {
     },
     emptyText: {
       fontSize: 13,
+      fontFamily: fonts.medium,
       color: g.textSecondary,
     },
     list: {
@@ -172,13 +175,14 @@ function getStyles(g: GlassTheme) {
     },
     rowName: {
       fontSize: 14.5,
-      fontWeight: '600',
+      fontFamily: fonts.semiBold,
       color: g.text,
       letterSpacing: -0.2,
     },
     rowMeta: {
       marginTop: 2,
       fontSize: 12,
+      fontFamily: fonts.medium,
       color: g.textSecondary,
     },
   });

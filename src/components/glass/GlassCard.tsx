@@ -7,9 +7,6 @@ import { useGlass } from '@/theme/glass';
 interface Props {
   children: ReactNode;
   style?: StyleProp<ViewStyle>;
-  // `strong` uses the more opaque fill - use it behind dense/legibility-
-  // critical content (file rows, forms). Default (translucent) is for
-  // accent cards, headers, and chrome where the frosted look matters more.
   strong?: boolean;
   padding?: number;
   radius?: number;
@@ -19,8 +16,8 @@ export default function GlassCard({
   children,
   style,
   strong = false,
-  padding = 18,
-  radius = 22,
+  padding = 20,
+  radius = 24,
 }: Props) {
   const g = useGlass();
 
@@ -31,6 +28,7 @@ export default function GlassCard({
         {
           borderRadius: radius,
           borderColor: g.glassBorder,
+          borderTopColor: g.glassHighlight,
           shadowColor: g.shadow,
         },
         style,
@@ -39,14 +37,19 @@ export default function GlassCard({
       <BlurView
         intensity={g.blurIntensity}
         tint={g.blurTint}
-        // Android needs this to blur real content behind the view rather
-        // than falling back to a flat translucent rectangle.
         style={StyleSheet.absoluteFill}
       />
       <View
         style={[
           StyleSheet.absoluteFill,
           { backgroundColor: strong ? g.glassFillStrong : g.glassFill },
+        ]}
+      />
+      {/* Specular hairline top reflection */}
+      <View
+        style={[
+          styles.topHighlight,
+          { backgroundColor: g.glassHighlight, opacity: 0.6 },
         ]}
       />
       <View style={{ padding }}>{children}</View>
@@ -58,12 +61,16 @@ const styles = StyleSheet.create({
   wrap: {
     overflow: 'hidden',
     borderWidth: 1,
-    // Soft elevation - kept subtle so it reads as "floating glass" not a
-    // heavy Material card. Low opacity + wide radius = a diffuse lift with
-    // no hard halo ring around the card.
-    shadowOpacity: 0.18,
-    shadowRadius: 20,
+    shadowOpacity: 0.2,
+    shadowRadius: 24,
     shadowOffset: { width: 0, height: 10 },
-    elevation: 6,
+    elevation: 8,
+  },
+  topHighlight: {
+    position: 'absolute',
+    top: 0,
+    left: 16,
+    right: 16,
+    height: 1,
   },
 });

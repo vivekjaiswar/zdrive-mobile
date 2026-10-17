@@ -42,6 +42,8 @@ export default function FileActionRow({
   );
 }
 
+import { fonts } from '@/theme/typography';
+
 function getStyles(colors: ColorPalette) {
   return StyleSheet.create({
     row: {
@@ -55,10 +57,12 @@ function getStyles(colors: ColorPalette) {
     pressed: { opacity: 0.6 },
 
     label: {
+      fontFamily: fonts.semiBold,
       marginLeft: 16,
       fontSize: 15,
       fontWeight: '600',
       color: colors.text,
+      letterSpacing: -0.2,
     },
 
     spinner: { marginLeft: 'auto' },

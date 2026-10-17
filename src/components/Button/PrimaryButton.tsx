@@ -46,6 +46,8 @@ export default function PrimaryButton({
   );
 }
 
+import { fonts } from '@/theme/typography';
+
 function getStyles(colors: ColorPalette) {
   return StyleSheet.create({
     button: {
@@ -75,9 +77,11 @@ function getStyles(colors: ColorPalette) {
     },
 
     text: {
+      fontFamily: fonts.bold,
       color: '#FFFFFF',
       fontWeight: '700',
       fontSize: 16,
+      letterSpacing: -0.2,
     },
   });
 }

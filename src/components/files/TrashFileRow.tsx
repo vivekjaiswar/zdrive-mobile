@@ -75,6 +75,8 @@ export default function TrashFileRow({
   );
 }
 
+import { fonts } from '@/theme/typography';
+
 function getStyles(colors: ColorPalette) {
   return StyleSheet.create({
     card: {
@@ -100,11 +102,14 @@ function getStyles(colors: ColorPalette) {
       marginLeft: 14,
     },
     name: {
+      fontFamily: fonts.semiBold,
       fontSize: 15,
       fontWeight: '600',
       color: colors.text,
+      letterSpacing: -0.2,
     },
     meta: {
+      fontFamily: fonts.regular,
       marginTop: 3,
       fontSize: 12.5,
       color: colors.textSecondary,

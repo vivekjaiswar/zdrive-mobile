@@ -11,6 +11,7 @@ import {
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 import { useGlass } from '@/theme/glass';
+import { fonts } from '@/theme/typography';
 
 interface Props extends TextInputProps {
   icon?: keyof typeof MaterialCommunityIcons.glyphMap;
@@ -32,8 +33,12 @@ export default function GlassInput({
 
   const bgFill =
     g.scheme === 'dark'
-      ? 'rgba(255, 255, 255, 0.05)'
-      : 'rgba(0, 0, 0, 0.025)';
+      ? focused
+        ? 'rgba(99, 91, 255, 0.08)'
+        : 'rgba(255, 255, 255, 0.05)'
+      : focused
+      ? 'rgba(255, 255, 255, 0.9)'
+      : 'rgba(255, 255, 255, 0.65)';
 
   return (
     <View
@@ -42,12 +47,19 @@ export default function GlassInput({
         {
           backgroundColor: bgFill,
           borderColor: focused ? g.accent : g.glassBorder,
+          shadowColor: focused ? g.accent : 'transparent',
+          shadowOpacity: focused ? 0.25 : 0,
+          shadowRadius: 10,
         },
         containerStyle,
       ]}
     >
       {icon && (
-        <MaterialCommunityIcons name={icon} size={19} color={g.textSecondary} />
+        <MaterialCommunityIcons
+          name={icon}
+          size={20}
+          color={focused ? g.accent : g.textSecondary}
+        />
       )}
 
       <TextInput
@@ -83,17 +95,18 @@ export default function GlassInput({
 
 const styles = StyleSheet.create({
   wrap: {
-    height: 52,
+    height: 54,
     borderRadius: 16,
-    borderWidth: 1,
+    borderWidth: 1.2,
     overflow: 'hidden',
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 16,
-    gap: 10,
+    gap: 12,
   },
   input: {
     flex: 1,
     fontSize: 15,
+    fontFamily: fonts.medium,
   },
 });

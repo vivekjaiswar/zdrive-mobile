@@ -162,6 +162,8 @@ export default function FolderPickerModal({
   );
 }
 
+import { fonts } from '@/theme/typography';
+
 function getStyles(colors: ColorPalette) {
   return StyleSheet.create({
     backdrop: {
@@ -197,9 +199,11 @@ function getStyles(colors: ColorPalette) {
     },
 
     title: {
+      fontFamily: fonts.bold,
       fontSize: 18,
       fontWeight: '700',
       color: colors.text,
+      letterSpacing: -0.3,
     },
 
     rowDisabled: {
@@ -231,13 +235,16 @@ function getStyles(colors: ColorPalette) {
     },
 
     rowText: {
+      fontFamily: fonts.semiBold,
       flex: 1,
       fontSize: 15,
       fontWeight: '600',
       color: colors.text,
+      letterSpacing: -0.2,
     },
 
     empty: {
+      fontFamily: fonts.regular,
       color: colors.textSecondary,
       textAlign: 'center',
       paddingVertical: 24,
@@ -253,6 +260,7 @@ function getStyles(colors: ColorPalette) {
     },
 
     cancelText: {
+      fontFamily: fonts.bold,
       fontWeight: '700',
       color: colors.textSecondary,
       fontSize: 15,

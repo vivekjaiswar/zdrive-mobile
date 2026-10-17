@@ -113,6 +113,8 @@ export default function TrashScreen() {
   );
 }
 
+import { fonts } from '@/theme/typography';
+
 function getStyles(colors: ColorPalette) {
   return StyleSheet.create({
     center: {
@@ -129,12 +131,15 @@ function getStyles(colors: ColorPalette) {
     },
 
     topBarTitle: {
+      fontFamily: fonts.bold,
       fontSize: 18,
       fontWeight: '700',
       color: colors.text,
+      letterSpacing: -0.3,
     },
 
     notice: {
+      fontFamily: fonts.regular,
       marginTop: 8,
       marginBottom: 12,
       fontSize: 13,

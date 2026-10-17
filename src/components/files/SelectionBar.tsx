@@ -60,6 +60,8 @@ export default function SelectionBar({
   );
 }
 
+import { fonts } from '@/theme/typography';
+
 function getStyles(colors: ColorPalette) {
   return StyleSheet.create({
     bar: {
@@ -76,11 +78,13 @@ function getStyles(colors: ColorPalette) {
     },
 
     count: {
+      fontFamily: fonts.bold,
       flex: 1,
       marginLeft: 16,
       fontSize: 15,
       fontWeight: '700',
       color: colors.text,
+      letterSpacing: -0.2,
     },
 
     actions: {

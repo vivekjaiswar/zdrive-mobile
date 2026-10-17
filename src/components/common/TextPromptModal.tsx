@@ -95,6 +95,8 @@ export default function TextPromptModal({
   );
 }
 
+import { fonts } from '@/theme/typography';
+
 function getStyles(colors: ColorPalette) {
   return StyleSheet.create({
     backdrop: {
@@ -126,10 +128,12 @@ function getStyles(colors: ColorPalette) {
     },
 
     title: {
+      fontFamily: fonts.bold,
       fontSize: 18,
       fontWeight: '700',
       color: colors.text,
       marginBottom: 16,
+      letterSpacing: -0.3,
     },
 
     input: {
@@ -152,6 +156,7 @@ function getStyles(colors: ColorPalette) {
     },
 
     cancelText: {
+      fontFamily: fonts.bold,
       fontWeight: '700',
       color: colors.textSecondary,
       fontSize: 15,

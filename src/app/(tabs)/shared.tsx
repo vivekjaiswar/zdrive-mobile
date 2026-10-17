@@ -168,7 +168,7 @@ export default function SharedScreen() {
           contentContainerStyle={
             entries.length === 0
               ? { flexGrow: 1, justifyContent: 'center', paddingBottom: tabBarHeight + 40 }
-              : { paddingBottom: tabBarHeight + 24 }
+              : { paddingBottom: tabBarHeight + 56 }
           }
           refreshControl={
             <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />
@@ -200,7 +200,7 @@ export default function SharedScreen() {
           contentContainerStyle={
             withMeItems.length === 0
               ? { flexGrow: 1, justifyContent: 'center', paddingBottom: tabBarHeight + 40 }
-              : { paddingBottom: tabBarHeight + 24 }
+              : { paddingBottom: tabBarHeight + 56 }
           }
           refreshControl={
             <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />
@@ -230,45 +230,50 @@ export default function SharedScreen() {
   );
 }
 
+import { fonts } from '@/theme/typography';
+
 function getStyles(colors: ColorPalette) {
   return StyleSheet.create({
     title: {
-      fontSize: 32,
-      fontWeight: '800',
+      fontFamily: fonts.heading,
+      fontSize: 34,
       color: colors.text,
       marginTop: 12,
       marginBottom: 16,
+      letterSpacing: 0.5,
     },
     segmentContainer: {
       flexDirection: 'row',
       backgroundColor: colors.surfaceAlt,
-      borderRadius: 14,
+      borderRadius: 999,
       padding: 4,
       marginBottom: 16,
+      borderWidth: 1,
+      borderColor: colors.border,
     },
     segmentButton: {
       flex: 1,
       paddingVertical: 10,
       alignItems: 'center',
       justifyContent: 'center',
-      borderRadius: 10,
+      borderRadius: 999,
     },
     segmentActive: {
-      backgroundColor: colors.surface,
-      shadowColor: '#000',
-      shadowOffset: { width: 0, height: 1 },
-      shadowOpacity: 0.1,
-      shadowRadius: 2,
+      backgroundColor: colors.primary,
+      shadowColor: colors.primary,
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.25,
+      shadowRadius: 6,
       elevation: 2,
     },
     segmentText: {
+      fontFamily: fonts.medium,
       fontSize: 14,
-      fontWeight: '600',
       color: colors.textSecondary,
     },
     segmentTextActive: {
-      color: colors.text,
-      fontWeight: '700',
+      fontFamily: fonts.bold,
+      color: '#FFFFFF',
     },
   });
 }

@@ -223,14 +223,14 @@ export default function FilesScreen() {
   function handleUpload() {
     Alert.alert('Upload', 'Choose a source', [
       {
-        text: 'Photos',
+        text: 'Photos & Videos',
         onPress: async () => {
           const result = await pickPhotosAndUpload();
           if (result && result.uploaded.length > 0) await loadContents();
         },
       },
       {
-        text: 'Files',
+        text: 'Browse Files & File Manager',
         onPress: async () => {
           const result = await pickAndUpload();
           if (result && result.uploaded.length > 0) await loadContents();
@@ -628,6 +628,8 @@ export default function FilesScreen() {
   );
 }
 
+import { fonts } from '@/theme/typography';
+
 function getStyles(colors: ColorPalette) {
   return StyleSheet.create({
     header: {
@@ -639,8 +641,8 @@ function getStyles(colors: ColorPalette) {
     },
     title: {
       fontSize: 28,
-      fontWeight: '700',
-      letterSpacing: -0.5,
+      fontFamily: fonts.extraBold,
+      letterSpacing: -0.6,
       color: colors.text,
     },
     headerActions: {
@@ -648,12 +650,14 @@ function getStyles(colors: ColorPalette) {
       gap: 10,
     },
     newFolderButton: {
-      width: 40,
-      height: 40,
-      borderRadius: 20,
+      width: 42,
+      height: 42,
+      borderRadius: 21,
       backgroundColor: colors.primarySoft,
       justifyContent: 'center',
       alignItems: 'center',
+      borderWidth: 1,
+      borderColor: colors.border,
     },
     searchModeRow: {
       flexDirection: 'row',
@@ -678,7 +682,7 @@ function getStyles(colors: ColorPalette) {
     },
     searchModeText: {
       fontSize: 12.5,
-      fontWeight: '600',
+      fontFamily: fonts.semiBold,
       color: colors.textSecondary,
     },
     searchModeTextActive: {
@@ -688,16 +692,19 @@ function getStyles(colors: ColorPalette) {
       marginLeft: 'auto',
     },
     viewToggle: {
-      width: 34,
-      height: 34,
-      borderRadius: 17,
+      width: 36,
+      height: 36,
+      borderRadius: 18,
       backgroundColor: colors.primarySoft,
       alignItems: 'center',
       justifyContent: 'center',
+      borderWidth: 1,
+      borderColor: colors.border,
     },
     smartHint: {
       marginTop: 8,
       fontSize: 12,
+      fontFamily: fonts.medium,
       lineHeight: 17,
       color: colors.textSecondary,
     },
@@ -707,6 +714,7 @@ function getStyles(colors: ColorPalette) {
     loading: {
       marginTop: 16,
       textAlign: 'center',
+      fontFamily: fonts.medium,
       color: colors.textSecondary,
     },
   });

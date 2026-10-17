@@ -8,6 +8,7 @@ import GlassCard from '@/components/glass/GlassCard';
 import filesService from '@/services/files.service';
 import { FileVersion } from '@/types/file';
 import { GlassTheme, useGlass } from '@/theme/glass';
+import { fonts } from '@/theme/typography';
 
 interface Props {
   visible: boolean;
@@ -203,13 +204,14 @@ function getStyles(g: GlassTheme) {
       marginBottom: 16,
     },
     title: {
-      fontSize: 20,
-      fontWeight: '800',
+      fontFamily: fonts.heading,
+      fontSize: 24,
       color: g.text,
-      letterSpacing: -0.4,
+      letterSpacing: -0.3,
     },
     subtitle: {
       marginTop: 4,
+      fontFamily: fonts.regular,
       fontSize: 13,
       color: g.textSecondary,
     },
@@ -235,8 +237,8 @@ function getStyles(g: GlassTheme) {
     },
     uploadBtnText: {
       color: '#fff',
+      fontFamily: fonts.bold,
       fontSize: 14,
-      fontWeight: '700',
     },
     scroll: {
       paddingBottom: 20,
@@ -251,11 +253,12 @@ function getStyles(g: GlassTheme) {
       gap: 8,
     },
     emptyTitle: {
+      fontFamily: fonts.bold,
       fontSize: 15,
-      fontWeight: '700',
       color: g.text,
     },
     emptySub: {
+      fontFamily: fonts.regular,
       fontSize: 12.5,
       lineHeight: 18,
       color: g.textSecondary,
@@ -287,8 +290,8 @@ function getStyles(g: GlassTheme) {
       gap: 8,
     },
     verTitle: {
+      fontFamily: fonts.semiBold,
       fontSize: 14.5,
-      fontWeight: '700',
       color: g.text,
     },
     currentBadge: {
@@ -298,12 +301,13 @@ function getStyles(g: GlassTheme) {
       borderRadius: 6,
     },
     currentBadgeText: {
+      fontFamily: fonts.bold,
       fontSize: 10,
-      fontWeight: '800',
       color: g.accent,
     },
     verMeta: {
       marginTop: 2,
+      fontFamily: fonts.medium,
       fontSize: 12,
       color: g.textSecondary,
     },

@@ -3,9 +3,29 @@ import { AppState, AppStateStatus } from 'react-native';
 import { router, Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import * as SplashScreen from 'expo-splash-screen';
 import * as Sentry from '@sentry/react-native';
 
+// Keep the native splash screen visible while fonts and initial state load
+SplashScreen.preventAutoHideAsync().catch(() => {});
+
+import {
+  useFonts,
+  PlusJakartaSans_400Regular,
+  PlusJakartaSans_500Medium,
+  PlusJakartaSans_600SemiBold,
+  PlusJakartaSans_700Bold,
+  PlusJakartaSans_800ExtraBold,
+} from '@expo-google-fonts/plus-jakarta-sans';
+import { Forum_400Regular } from '@expo-google-fonts/forum';
+import {
+  DMSans_400Regular,
+  DMSans_500Medium,
+  DMSans_700Bold,
+} from '@expo-google-fonts/dm-sans';
+
 import LockScreen from '@/components/security/LockScreen';
+import StartupAnimation from '@/components/common/StartupAnimation';
 import { setUnauthorizedHandler } from '@/services/api';
 import { configureGoogleSignin } from '@/constants/google';
 import { SENTRY_DSN } from '@/constants/sentry';
@@ -56,6 +76,18 @@ if (SENTRY_DSN) {
 }
 
 function RootLayout() {
+  const [fontsLoaded] = useFonts({
+    Forum_400Regular,
+    DMSans_400Regular,
+    DMSans_500Medium,
+    DMSans_700Bold,
+    PlusJakartaSans_400Regular,
+    PlusJakartaSans_500Medium,
+    PlusJakartaSans_600SemiBold,
+    PlusJakartaSans_700Bold,
+    PlusJakartaSans_800ExtraBold,
+  });
+
   const logout = useAuthStore((state) => state.logout);
   const user = useAuthStore((state) => state.user);
   const authHydrated = useAuthStore((state) => state.isHydrated);
@@ -141,6 +173,16 @@ function RootLayout() {
     return () => subscription.remove();
   }, []);
 
+  useEffect(() => {
+    if (fontsLoaded) {
+      SplashScreen.hideAsync().catch(() => {});
+    }
+  }, [fontsLoaded]);
+
+  if (!fontsLoaded) {
+    return null;
+  }
+
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       {/* Single source of truth for status bar style now - Screen.tsx
@@ -164,6 +206,8 @@ function RootLayout() {
       {isLocked && shouldLock && (
         <LockScreen onUnlock={() => setIsLocked(false)} />
       )}
+
+      <StartupAnimation />
     </GestureHandlerRootView>
   );
 }

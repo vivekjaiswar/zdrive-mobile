@@ -142,6 +142,8 @@ export default function ChangePasswordModal({
   );
 }
 
+import { fonts } from '@/theme/typography';
+
 function getStyles(colors: ColorPalette) {
   return StyleSheet.create({
     backdrop: {
@@ -173,10 +175,12 @@ function getStyles(colors: ColorPalette) {
     },
 
     title: {
+      fontFamily: fonts.bold,
       fontSize: 18,
       fontWeight: '700',
       color: colors.text,
       marginBottom: 16,
+      letterSpacing: -0.3,
     },
 
     form: {
@@ -184,11 +188,13 @@ function getStyles(colors: ColorPalette) {
     },
 
     error: {
+      fontFamily: fonts.medium,
       color: colors.danger,
       fontSize: 13,
     },
 
     hint: {
+      fontFamily: fonts.regular,
       marginTop: -8,
       fontSize: 12,
       color: colors.textSecondary,
@@ -211,6 +217,7 @@ function getStyles(colors: ColorPalette) {
     },
 
     cancelText: {
+      fontFamily: fonts.bold,
       fontWeight: '700',
       color: colors.textSecondary,
       fontSize: 15,

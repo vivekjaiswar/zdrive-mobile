@@ -15,7 +15,7 @@ class BiometricService {
 
   async authenticate(): Promise<boolean> {
     const result = await LocalAuthentication.authenticateAsync({
-      promptMessage: 'Unlock ZDrive',
+      promptMessage: 'Unlock OJI Drive',
       cancelLabel: 'Cancel',
       // Let the OS fall back to the device passcode (e.g. Face ID
       // temporarily unreadable) rather than dead-ending the user with

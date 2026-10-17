@@ -56,6 +56,8 @@ export default function SharedWithMeRow({ item, onPress }: Props) {
   );
 }
 
+import { fonts } from '@/theme/typography';
+
 function getStyles(colors: ColorPalette) {
   return StyleSheet.create({
     card: {
@@ -89,12 +91,14 @@ function getStyles(colors: ColorPalette) {
     },
     name: {
       fontSize: 15,
-      fontWeight: '600',
+      fontFamily: fonts.semiBold,
       color: colors.text,
+      letterSpacing: -0.2,
     },
     meta: {
       marginTop: 3,
       fontSize: 12,
+      fontFamily: fonts.medium,
       color: colors.textSecondary,
     },
     badge: {
@@ -110,7 +114,7 @@ function getStyles(colors: ColorPalette) {
     },
     badgeText: {
       fontSize: 11,
-      fontWeight: '700',
+      fontFamily: fonts.bold,
       letterSpacing: 0.3,
     },
     editorBadgeText: {

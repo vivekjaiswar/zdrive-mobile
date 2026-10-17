@@ -187,6 +187,8 @@ export default function FolderContents({
   );
 }
 
+import { fonts } from '@/theme/typography';
+
 function getStyles(colors: ColorPalette) {
   return StyleSheet.create({
     list: {
@@ -196,11 +198,12 @@ function getStyles(colors: ColorPalette) {
       marginBottom: 4,
     },
     sectionLabel: {
-      fontSize: 12.5,
-      fontWeight: '700',
+      fontFamily: fonts.semiBold,
+      fontSize: 12,
+      fontWeight: '600',
       color: colors.textSecondary,
       textTransform: 'uppercase',
-      letterSpacing: 0.5,
+      letterSpacing: 0.8,
       marginBottom: 10,
       marginTop: 6,
     },

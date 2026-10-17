@@ -63,6 +63,8 @@ export default function ProfileHeader({
   );
 }
 
+import { fonts } from '@/theme/typography';
+
 function getStyles(colors: ColorPalette) {
   return StyleSheet.create({
     container: {
@@ -92,8 +94,8 @@ function getStyles(colors: ColorPalette) {
     },
 
     initials: {
-      fontSize: 30,
-      fontWeight: '700',
+      fontSize: 28,
+      fontFamily: fonts.bold,
       color: '#FFFFFF',
     },
 
@@ -101,14 +103,14 @@ function getStyles(colors: ColorPalette) {
       position: 'absolute',
       right: 0,
       bottom: 0,
-      width: 26,
-      height: 26,
-      borderRadius: 13,
+      width: 28,
+      height: 28,
+      borderRadius: 14,
       backgroundColor: colors.primary,
       justifyContent: 'center',
       alignItems: 'center',
       borderWidth: 2,
-      borderColor: colors.background,
+      borderColor: '#FFFFFF',
     },
 
     nameRow: {
@@ -119,15 +121,17 @@ function getStyles(colors: ColorPalette) {
     },
 
     name: {
-      fontSize: 19,
-      fontWeight: '700',
+      fontSize: 20,
+      fontFamily: fonts.bold,
       color: colors.text,
+      letterSpacing: -0.3,
       maxWidth: 220,
     },
 
     email: {
       marginTop: 4,
       fontSize: 13.5,
+      fontFamily: fonts.medium,
       color: colors.textSecondary,
     },
   });

@@ -42,6 +42,8 @@ export default function SearchBar({
   );
 }
 
+import { fonts } from '@/theme/typography';
+
 function getStyles(colors: ColorPalette) {
   return StyleSheet.create({
     container: {
@@ -62,6 +64,7 @@ function getStyles(colors: ColorPalette) {
       marginLeft: 10,
       color: colors.text,
       fontSize: 15,
+      fontFamily: fonts.regular,
     },
   });
 }

@@ -12,6 +12,7 @@ import GlassScreen from '@/components/glass/GlassScreen';
 import GlassCard from '@/components/glass/GlassCard';
 import Logo from '@/components/glass/Logo';
 import { GlassTheme, useGlass } from '@/theme/glass';
+import { fonts } from '@/theme/typography';
 
 interface Props {
   title: string;
@@ -20,10 +21,6 @@ interface Props {
   footer?: ReactNode;
 }
 
-// GLASS REDESIGN: shared shell for register / forgot-password /
-// reset-password / verify-email. Rewriting this one component flips all of
-// them to the glass look - gradient backdrop, dynamic logo (no white box),
-// frosted card - matching the redesigned Login screen.
 export default function AuthScreenLayout({ title, subtitle, children, footer }: Props) {
   const g = useGlass();
   const styles = getStyles(g);
@@ -62,15 +59,16 @@ function getStyles(g: GlassTheme) {
     scroll: { flexGrow: 1, justifyContent: 'center', paddingVertical: 40 },
     logoWrap: { alignItems: 'center', marginBottom: 26 },
     title: {
-      fontSize: 25,
-      fontWeight: '800',
+      fontSize: 28,
+      fontFamily: fonts.heading,
       color: g.text,
       textAlign: 'center',
-      letterSpacing: -0.5,
+      letterSpacing: -0.3,
     },
     subtitle: {
       marginTop: 8,
       fontSize: 14.5,
+      fontFamily: fonts.medium,
       color: g.textSecondary,
       textAlign: 'center',
       lineHeight: 21,
@@ -80,8 +78,9 @@ function getStyles(g: GlassTheme) {
       marginTop: 24,
       flexDirection: 'row',
       justifyContent: 'center',
+      alignItems: 'center',
       flexWrap: 'wrap',
-      gap: 5,
+      gap: 6,
     },
   });
 }

@@ -184,6 +184,8 @@ export default function SessionsScreen() {
   );
 }
 
+import { fonts } from '@/theme/typography';
+
 function getStyles(colors: ColorPalette) {
   return StyleSheet.create({
     center: {
@@ -200,9 +202,11 @@ function getStyles(colors: ColorPalette) {
     },
 
     topBarTitle: {
+      fontFamily: fonts.bold,
       fontSize: 18,
       fontWeight: '700',
       color: colors.text,
+      letterSpacing: -0.3,
     },
 
     list: {
@@ -233,18 +237,22 @@ function getStyles(colors: ColorPalette) {
     },
 
     device: {
+      fontFamily: fonts.semiBold,
       fontSize: 14.5,
       fontWeight: '600',
       color: colors.text,
+      letterSpacing: -0.2,
     },
 
     meta: {
+      fontFamily: fonts.regular,
       marginTop: 2,
       fontSize: 12.5,
       color: colors.textSecondary,
     },
 
     revoke: {
+      fontFamily: fonts.bold,
       color: colors.danger,
       fontWeight: '700',
       fontSize: 13.5,

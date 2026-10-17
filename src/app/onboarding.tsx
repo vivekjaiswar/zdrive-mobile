@@ -86,7 +86,7 @@ export default function OnboardingScreen() {
             <Logo size={40} showTagline={false} />
             <Text style={styles.title}>A quick heads-up</Text>
             <Text style={styles.subtitle}>
-              Here's what ZDrive uses. You can allow photo access now, or later
+              Here's what OJI Drive uses. You can allow photo access now, or later
               when you first upload - it's up to you.
             </Text>
           </View>
@@ -145,7 +145,7 @@ export default function OnboardingScreen() {
                 <View style={styles.cardText}>
                   <Text style={styles.cardTitle}>Biometric unlock</Text>
                   <Text style={styles.cardBody}>
-                    Optional. Lock ZDrive behind Face ID or your fingerprint -
+                    Optional. Lock OJI Drive behind Face ID or your fingerprint -
                     turn it on anytime in Settings.
                   </Text>
                 </View>
@@ -164,7 +164,7 @@ export default function OnboardingScreen() {
                 <View style={styles.cardText}>
                   <Text style={styles.cardTitle}>Your files stay yours</Text>
                   <Text style={styles.cardBody}>
-                    ZDrive only ever accesses what you pick. Nothing is read or
+                    OJI Drive only ever accesses what you pick. Nothing is read or
                     uploaded in the background.
                   </Text>
                 </View>
@@ -189,12 +189,15 @@ export default function OnboardingScreen() {
   );
 }
 
+import { fonts } from '@/theme/typography';
+
 function getStyles(g: GlassTheme) {
   return StyleSheet.create({
     safe: { flex: 1 },
     content: { paddingHorizontal: 22, paddingTop: 24, paddingBottom: 16 },
     header: { alignItems: 'center', marginBottom: 26 },
     title: {
+      fontFamily: fonts.extraBold,
       marginTop: 22,
       fontSize: 26,
       fontWeight: '800',
@@ -202,6 +205,7 @@ function getStyles(g: GlassTheme) {
       letterSpacing: -0.5,
     },
     subtitle: {
+      fontFamily: fonts.regular,
       marginTop: 10,
       fontSize: 14.5,
       lineHeight: 21,
@@ -220,8 +224,8 @@ function getStyles(g: GlassTheme) {
       justifyContent: 'center',
     },
     cardText: { flex: 1 },
-    cardTitle: { fontSize: 15.5, fontWeight: '700', color: g.text },
-    cardBody: { marginTop: 4, fontSize: 13.5, lineHeight: 19, color: g.textSecondary },
+    cardTitle: { fontFamily: fonts.bold, fontSize: 15.5, fontWeight: '700', color: g.text, letterSpacing: -0.2 },
+    cardBody: { fontFamily: fonts.regular, marginTop: 4, fontSize: 13.5, lineHeight: 19, color: g.textSecondary },
     allowBtn: {
       flexDirection: 'row',
       alignItems: 'center',
@@ -235,9 +239,10 @@ function getStyles(g: GlassTheme) {
     // No successSoft token in the theme; a subtle translucent green tint
     // that reads on both light and dark glass.
     allowBtnGranted: { backgroundColor: 'rgba(16,185,129,0.14)' },
-    allowBtnText: { fontSize: 14, fontWeight: '700' },
+    allowBtnText: { fontFamily: fonts.bold, fontSize: 14, fontWeight: '700' },
     footer: { paddingHorizontal: 22, paddingTop: 6, paddingBottom: 8 },
     footerNote: {
+      fontFamily: fonts.regular,
       marginTop: 12,
       fontSize: 12.5,
       color: g.textFaint,

@@ -58,14 +58,14 @@ export default function DashboardScreen() {
   function handleUpload() {
     Alert.alert('Upload', 'Choose a source', [
       {
-        text: 'Photos',
+        text: 'Photos & Videos',
         onPress: async () => {
           const result = await pickPhotosAndUpload();
           if (result && result.uploaded.length > 0) loadDashboard();
         },
       },
       {
-        text: 'Files',
+        text: 'Browse Files & File Manager',
         onPress: async () => {
           const result = await pickAndUpload();
           if (result && result.uploaded.length > 0) loadDashboard();
@@ -91,7 +91,7 @@ export default function DashboardScreen() {
             tintColor="#4C8DFF"
           />
         }
-        contentContainerStyle={{ paddingBottom: tabBarHeight + 24, paddingTop: 8 }}
+        contentContainerStyle={{ paddingBottom: tabBarHeight + 56, paddingTop: 8 }}
       >
         {loading && !stats ? (
           <DashboardSkeleton />

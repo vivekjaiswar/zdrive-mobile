@@ -100,6 +100,8 @@ export default function FileActionSheet({
   );
 }
 
+import { fonts } from '@/theme/typography';
+
 function getStyles(colors: ColorPalette) {
   return StyleSheet.create({
     backdrop: {
@@ -127,8 +129,9 @@ function getStyles(colors: ColorPalette) {
     },
 
     title: {
+      fontFamily: fonts.semiBold,
       fontSize: 15,
-      fontWeight: '700',
+      fontWeight: '600',
       color: colors.textSecondary,
       textAlign: 'center',
       marginBottom: 6,
@@ -146,6 +149,7 @@ function getStyles(colors: ColorPalette) {
     },
 
     cancelText: {
+      fontFamily: fonts.bold,
       fontWeight: '700',
       color: colors.textSecondary,
       fontSize: 15,
