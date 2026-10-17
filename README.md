@@ -57,4 +57,5 @@ Join our community of developers creating universal apps.
 
 ## License
 
-MIT, see [LICENSE](LICENSE). Copyright (c) 2026 ZennialHub Technologies - this open-source license covers only this client app; the ZDrive backend/API it talks to is separate and closed-source. "ZDrive" and its logo are ZennialHub Technologies trademarks, not covered by the MIT license.
+Copyright (c) 2026 ZDrive / ZennialHub Technologies. All rights reserved. Proprietary and confidential.
+
