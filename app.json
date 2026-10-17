@@ -2,14 +2,14 @@
   "expo": {
     "name": "OJI Drive",
     "slug": "zdrive_mobile",
-    "version": "1.9.3",
+    "version": "1.9.4",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "zdrive",
     "userInterfaceStyle": "automatic",
     "ios": {
       "bundleIdentifier": "in.zhdrive.app",
-      "buildNumber": "12",
+      "buildNumber": "13",
       "supportsTablet": true,
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false,
@@ -20,7 +20,7 @@
     },
     "android": {
       "package": "in.zhdrive.app",
-      "versionCode": 16,
+      "versionCode": 17,
       "adaptiveIcon": {
         "backgroundColor": "#140A05",
         "foregroundImage": "./assets/images/android-icon-foreground.png",

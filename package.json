@@ -1,7 +1,7 @@
 {
   "name": "zdrive_mobile",
   "main": "expo-router/entry",
-  "version": "1.9.3",
+  "version": "1.9.4",
   "dependencies": {
     "@expo-google-fonts/dm-sans": "^0.4.2",
     "@expo-google-fonts/forum": "^0.4.1",
