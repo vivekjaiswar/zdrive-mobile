@@ -118,9 +118,55 @@ export function useFileUpload() {
     );
   }
 
+function isUuidOrToken(name: string): boolean {
+  const base = name.replace(/\.[^/.]+$/, '');
+  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  const hexHashRegex = /^[0-9a-f]{20,}$/i;
+  return uuidRegex.test(base) || hexHashRegex.test(base);
+}
+
+async function resolveMediaFilename(
+  asset: ImagePicker.ImagePickerAsset,
+  index: number,
+  isVideo: boolean,
+): Promise<string> {
+  const ext = asset.mimeType?.split('/')[1] || (isVideo ? 'mp4' : 'jpg');
+  const cleanExt = ext === 'jpeg' ? 'jpg' : ext;
+
+  // 1. Try resolving original name from native MediaLibrary if assetId is present
+  if (asset.assetId) {
+    try {
+      const MediaLibrary = require('expo-media-library');
+      if (MediaLibrary?.Asset) {
+        const mlAsset = new MediaLibrary.Asset(asset.assetId);
+        const realName = await mlAsset.getFilename();
+        if (realName && !isUuidOrToken(realName)) {
+          return realName;
+        }
+      }
+    } catch {
+      // Fallback
+    }
+  }
+
+  // 2. Check asset.fileName if it's already a real human name (not a UUID/token)
+  if (asset.fileName && !isUuidOrToken(asset.fileName)) {
+    return asset.fileName;
+  }
+
+  // 3. Fallback: Generate a clean, natural name with date and time
+  const now = new Date();
+  const dateStr = now.toISOString().slice(0, 10);
+  const timeStr = `${String(now.getHours()).padStart(2, '0')}${String(now.getMinutes()).padStart(2, '0')}${String(now.getSeconds()).padStart(2, '0')}`;
+  const suffix = index > 0 ? `_${index + 1}` : '';
+  const prefix = isVideo ? 'Video' : 'Photo';
+
+  return `${prefix}_${dateStr}_${timeStr}${suffix}.${cleanExt}`;
+}
+
   // Pick from the photo gallery. Requests media-library permission first -
   // this is the permission prompt the user sees the first time - then
-  // uploads the chosen images/videos through the same endpoint.
+  // uploads the chosen images/videos with their real device filenames.
   async function pickPhotosAndUpload(
     folderId?: string,
   ): Promise<UploadBatchResult | null> {
@@ -141,18 +187,20 @@ export function useFileUpload() {
 
     if (result.canceled || !result.assets?.length) return null;
 
-    return uploadAssets(
-      result.assets.map((a, i) => {
-        const mimeType = a.mimeType ?? 'image/jpeg';
-        const ext = mimeType.split('/')[1] ?? 'jpg';
+    const mappedAssets = await Promise.all(
+      result.assets.map(async (a, i) => {
+        const isVideo = a.type === 'video' || a.mimeType?.startsWith('video/') || false;
+        const mimeType = a.mimeType ?? (isVideo ? 'video/mp4' : 'image/jpeg');
+        const name = await resolveMediaFilename(a, i, isVideo);
         return {
           uri: a.uri,
-          name: a.fileName ?? `upload-${Date.now()}-${i}.${ext}`,
+          name,
           mimeType,
         };
       }),
-      folderId,
     );
+
+    return uploadAssets(mappedAssets, folderId);
   }
 
   return { uploading, progress, pickAndUpload, pickPhotosAndUpload };

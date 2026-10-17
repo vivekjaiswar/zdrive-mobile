@@ -3,6 +3,7 @@ import { Alert, Share } from 'react-native';
 import * as Sharing from 'expo-sharing';
 
 import filesService, { MAX_BULK_DOWNLOAD_IDS } from '@/services/files.service';
+import unzipService from '@/services/unzip.service';
 import { ZDriveFile } from '@/types/file';
 import { ZDriveFolder } from '@/types/folder';
 
@@ -13,11 +14,31 @@ export function useFileActions(onChanged?: () => void) {
   const [downloadingId, setDownloadingId] = useState<string | null>(null);
   const [sharingId, setSharingId] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [extractingId, setExtractingId] = useState<string | null>(null);
   const [restoringId, setRestoringId] = useState<string | null>(null);
   const [permanentlyDeletingId, setPermanentlyDeletingId] = useState<
     string | null
   >(null);
   const [bulkBusy, setBulkBusy] = useState(false);
+
+  async function extractZip(file: ZDriveFile, targetFolderId?: string) {
+    try {
+      setExtractingId(file.id);
+      const res = await unzipService.extractZip(file, {
+        targetFolderId,
+        createSubfolder: true,
+      });
+      Alert.alert(
+        'Archive Extracted',
+        `Successfully unzipped ${res.extractedCount} files into a new folder.`,
+      );
+      onChanged?.();
+    } catch (err: any) {
+      Alert.alert('Extraction Failed', err?.message ?? 'Unable to extract archive.');
+    } finally {
+      setExtractingId(null);
+    }
+  }
 
   async function download(file: Pick<ZDriveFile, 'id' | 'name'>) {
     try {
@@ -354,10 +375,12 @@ export function useFileActions(onChanged?: () => void) {
     bulkShare,
     bulkDownload,
     downloadFolderZip,
+    extractZip,
     bulkBusy,
     downloadingId,
     sharingId,
     deletingId,
+    extractingId,
     restoringId,
     permanentlyDeletingId,
   };

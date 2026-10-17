@@ -48,6 +48,7 @@ interface Props {
   onRefresh: () => void;
   onFolderPress: (folder: ZDriveFolder) => void;
   onFolderLongPress: (folder: ZDriveFolder) => void;
+  onFolderMenuPress?: (folder: ZDriveFolder) => void;
   onFilePress: (file: ZDriveFile) => void;
   onFileLongPress: (file: ZDriveFile) => void;
   onFileToggleSelect?: (file: ZDriveFile) => void;
@@ -68,6 +69,7 @@ export default function FolderContents({
   onRefresh,
   onFolderPress,
   onFolderLongPress,
+  onFolderMenuPress,
   onFilePress,
   onFileLongPress,
   onFileToggleSelect,
@@ -94,6 +96,8 @@ export default function FolderContents({
     : isGrid
       ? (width - 48 - 14) / 2
       : width - 48;
+
+  const folderCardWidth = (width - 48 - 12) / 2;
 
   const sortedFolders = useMemo(
     () => sortItems(folders, sortBy, sortDir),
@@ -131,21 +135,51 @@ export default function FolderContents({
       ListHeaderComponent={
         folders.length > 0 ? (
           <View style={styles.foldersSection}>
-            {sortedFolders.map((folder) => (
-              <FolderCard
-                key={folder.id}
-                folder={folder}
-                onPress={() => {
-                  if (!selectionMode) onFolderPress(folder);
-                }}
-                onLongPress={() => {
-                  if (!selectionMode) onFolderLongPress(folder);
-                }}
-              />
-            ))}
+            <Text style={styles.sectionLabel}>Folders ({sortedFolders.length})</Text>
+
+            {viewMode === 'list' ? (
+              sortedFolders.map((folder) => (
+                <FolderCard
+                  key={folder.id}
+                  folder={folder}
+                  variant="list"
+                  onPress={() => {
+                    if (!selectionMode) onFolderPress(folder);
+                  }}
+                  onLongPress={() => {
+                    if (!selectionMode) onFolderLongPress(folder);
+                  }}
+                  onMenuPress={() => {
+                    if (!selectionMode) onFolderMenuPress ? onFolderMenuPress(folder) : onFolderLongPress(folder);
+                  }}
+                />
+              ))
+            ) : (
+              <View style={styles.folderGridWrapper}>
+                {sortedFolders.map((folder) => (
+                  <FolderCard
+                    key={folder.id}
+                    folder={folder}
+                    variant="grid"
+                    width={folderCardWidth}
+                    onPress={() => {
+                      if (!selectionMode) onFolderPress(folder);
+                    }}
+                    onLongPress={() => {
+                      if (!selectionMode) onFolderLongPress(folder);
+                    }}
+                    onMenuPress={() => {
+                      if (!selectionMode) onFolderMenuPress ? onFolderMenuPress(folder) : onFolderLongPress(folder);
+                    }}
+                  />
+                ))}
+              </View>
+            )}
 
             {files.length > 0 && (
-              <Text style={styles.sectionLabel}>Files</Text>
+              <Text style={[styles.sectionLabel, { marginTop: 14 }]}>
+                Files ({sortedFiles.length})
+              </Text>
             )}
           </View>
         ) : null
@@ -196,6 +230,11 @@ function getStyles(colors: ColorPalette) {
     },
     foldersSection: {
       marginBottom: 4,
+    },
+    folderGridWrapper: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      justifyContent: 'space-between',
     },
     sectionLabel: {
       fontFamily: fonts.semiBold,

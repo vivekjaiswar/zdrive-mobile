@@ -20,6 +20,7 @@ export interface FileDetails {
   size: string;
   previewUrl: string;
   createdAt: string;
+  folderId?: string | null;
 }
 
 export interface FileVersion {

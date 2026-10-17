@@ -101,13 +101,8 @@ export default function AnimatedTabBar({ state, descriptors, navigation, visible
                   onPress={onPress}
                   hitSlop={8}
                 >
-                  <View
-                    style={[
-                      styles.iconWrap,
-                      focused && { backgroundColor: g.accentSoft },
-                    ]}
-                  >
-                    {options.tabBarIcon?.({ focused, color, size: 21 })}
+                  <View style={styles.iconWrap}>
+                    {options.tabBarIcon?.({ focused, color, size: 22 })}
                   </View>
                   <Text
                     style={[

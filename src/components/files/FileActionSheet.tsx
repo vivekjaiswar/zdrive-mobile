@@ -10,9 +10,11 @@ interface Props {
   downloading?: boolean;
   sharing?: boolean;
   deleting?: boolean;
+  extracting?: boolean;
   onClose: () => void;
   onDownload: (file: ZDriveFile) => void;
   onShare: (file: ZDriveFile) => void;
+  onExtract?: (file: ZDriveFile) => void;
   onManageCollaborators?: (file: ZDriveFile) => void;
   onRename: (file: ZDriveFile) => void;
   onMove: (file: ZDriveFile) => void;
@@ -24,9 +26,11 @@ export default function FileActionSheet({
   downloading,
   sharing,
   deleting,
+  extracting,
   onClose,
   onDownload,
   onShare,
+  onExtract,
   onManageCollaborators,
   onRename,
   onMove,
@@ -34,6 +38,11 @@ export default function FileActionSheet({
 }: Props) {
   const colors = useColors();
   const styles = getStyles(colors);
+
+  const isZip =
+    file?.name.toLowerCase().endsWith('.zip') ||
+    file?.mimeType?.includes('zip') ||
+    false;
 
   return (
     <Modal
@@ -53,6 +62,14 @@ export default function FileActionSheet({
           )}
 
           <View style={styles.rows}>
+            {isZip && onExtract && (
+              <FileActionRow
+                icon="archive-arrow-down-outline"
+                label="Unzip / Extract Files"
+                loading={extracting}
+                onPress={() => file && onExtract(file)}
+              />
+            )}
             <FileActionRow
               icon="download-outline"
               label="Download"

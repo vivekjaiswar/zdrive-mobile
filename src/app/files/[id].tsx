@@ -19,6 +19,7 @@ import ZoomableImage from '@/components/files/ZoomableImage';
 import VideoPreview from '@/components/files/VideoPreview';
 import AudioPlayer from '@/components/files/AudioPlayer';
 import PdfPreview from '@/components/files/PdfPreview';
+import ZipPreview from '@/components/files/ZipPreview';
 import FileVersionModal from '@/components/files/FileVersionModal';
 import filesService from '@/services/files.service';
 import { useFileActions } from '@/hooks/useFileActions';
@@ -181,6 +182,7 @@ export default function FileDetailScreen() {
   const isVideo = file.mimeType?.startsWith('video/') || ['mp4', 'mov', 'mkv', 'webm', 'avi', '3gp', 'm4v'].includes(ext);
   const isAudio = file.mimeType?.startsWith('audio/') || ['mp3', 'wav', 'aac', 'm4a', 'flac', 'ogg', 'opus'].includes(ext);
   const isPdf = file.mimeType === 'application/pdf' || ext === 'pdf';
+  const isZip = file.mimeType?.includes('zip') || ext === 'zip';
   const isText = isTextLike(file.mimeType) || ['txt', 'md', 'json', 'js', 'ts', 'tsx', 'jsx', 'py', 'sh', 'csv', 'xml', 'html', 'css', 'yaml', 'yml', 'sql', 'log'].includes(ext);
 
   return (
@@ -250,6 +252,17 @@ export default function FileDetailScreen() {
           <View style={styles.pdfWrap}>
             <PdfPreview uri={file.previewUrl} />
           </View>
+        ) : isZip ? (
+          <ZipPreview
+            file={file}
+            onExtracted={(folderId) => {
+              if (folderId) {
+                router.replace(`/folders/${folderId}`);
+              } else {
+                router.back();
+              }
+            }}
+          />
         ) : isText ? (
           <ScrollView style={styles.textScroll} contentContainerStyle={styles.textContent}>
             {textLoading ? (

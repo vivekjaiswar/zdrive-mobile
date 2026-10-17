@@ -1,5 +1,13 @@
-import { useCallback, useEffect, useState } from 'react';
-import { ActivityIndicator, Alert, Pressable, StyleSheet, Text, View } from 'react-native';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import {
+  ActivityIndicator,
+  Alert,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+} from 'react-native';
 import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 
@@ -28,6 +36,63 @@ import { useFilePreviewStore } from '@/store/filePreview.store';
 import { ZDriveFile } from '@/types/file';
 import { ZDriveFolder } from '@/types/folder';
 
+export type CategoryFilter =
+  | 'all'
+  | 'folders'
+  | 'images'
+  | 'videos'
+  | 'documents'
+  | 'archives';
+
+const CATEGORIES: {
+  id: CategoryFilter;
+  label: string;
+  icon: keyof typeof MaterialCommunityIcons.glyphMap;
+}[] = [
+  { id: 'all', label: 'All', icon: 'view-grid-outline' },
+  { id: 'folders', label: 'Folders', icon: 'folder-outline' },
+  { id: 'images', label: 'Images', icon: 'image-outline' },
+  { id: 'videos', label: 'Videos', icon: 'video-outline' },
+  { id: 'documents', label: 'Docs', icon: 'file-document-outline' },
+  { id: 'archives', label: 'Archives', icon: 'zip-box-outline' },
+];
+
+function isImageFile(f: ZDriveFile): boolean {
+  return (
+    f.mimeType?.startsWith('image/') ||
+    /\.(jpe?g|png|gif|webp|heic|bmp|svg)$/i.test(f.name)
+  );
+}
+
+function isVideoFile(f: ZDriveFile): boolean {
+  return (
+    f.mimeType?.startsWith('video/') ||
+    /\.(mp4|mov|mkv|webm|avi|m4v)$/i.test(f.name)
+  );
+}
+
+function isDocFile(f: ZDriveFile): boolean {
+  return (
+    f.mimeType?.startsWith('application/pdf') ||
+    f.mimeType?.includes('officedocument') ||
+    f.mimeType?.includes('msword') ||
+    f.mimeType?.includes('sheet') ||
+    f.mimeType?.includes('excel') ||
+    f.mimeType?.includes('presentation') ||
+    f.mimeType?.startsWith('text/') ||
+    /\.(pdf|docx?|xlsx?|pptx?|txt|csv|md|json)$/i.test(f.name)
+  );
+}
+
+function isArchiveFile(f: ZDriveFile): boolean {
+  return (
+    f.mimeType?.includes('zip') ||
+    f.mimeType?.includes('compressed') ||
+    f.mimeType?.includes('archive') ||
+    /\.(zip|tar|gz|rar|7z)$/i.test(f.name)
+  );
+}
+
 export default function FilesScreen() {
   const router = useRouter();
   const colors = useColors();
@@ -40,6 +105,7 @@ export default function FilesScreen() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [query, setQuery] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState<CategoryFilter>('all');
   // 'keyword' = substring filename match (GET /files/search); 'smart' =
   // AI semantic search across image content + PDF text (the two new
   // backend endpoints), results merged into one list.
@@ -48,6 +114,32 @@ export default function FilesScreen() {
   const [sortBy, setSortBy] = useState<SortKey>('name');
   const [sortDir, setSortDir] = useState<SortDir>('asc');
   const [viewMode, setViewMode] = useState<'grid' | 'list' | 'tile'>('grid');
+
+  const visibleFolders = useMemo(() => {
+    if (selectedCategory === 'all' || selectedCategory === 'folders') {
+      return folders;
+    }
+    return [];
+  }, [folders, selectedCategory]);
+
+  const visibleFiles = useMemo(() => {
+    if (selectedCategory === 'folders') return [];
+    if (selectedCategory === 'images') return files.filter(isImageFile);
+    if (selectedCategory === 'videos') return files.filter(isVideoFile);
+    if (selectedCategory === 'documents') return files.filter(isDocFile);
+    if (selectedCategory === 'archives') return files.filter(isArchiveFile);
+    return files;
+  }, [files, selectedCategory]);
+
+  const filteredSearchResults = useMemo(() => {
+    if (!searchResults) return [];
+    if (selectedCategory === 'folders') return [];
+    if (selectedCategory === 'images') return searchResults.filter(isImageFile);
+    if (selectedCategory === 'videos') return searchResults.filter(isVideoFile);
+    if (selectedCategory === 'documents') return searchResults.filter(isDocFile);
+    if (selectedCategory === 'archives') return searchResults.filter(isArchiveFile);
+    return searchResults;
+  }, [searchResults, selectedCategory]);
 
   // Tapping a sort chip: switch to that key (default ascending), or flip
   // direction if it's already the active key.
@@ -99,10 +191,12 @@ export default function FilesScreen() {
     bulkShare,
     bulkDownload,
     downloadFolderZip,
+    extractZip,
     bulkBusy,
     downloadingId,
     sharingId,
     deletingId,
+    extractingId,
   } = useFileActions(loadContents);
 
   const {
@@ -265,7 +359,7 @@ export default function FilesScreen() {
   // otherwise) - the ids alone don't carry enough info for the bulk
   // delete/move/share confirmations, which need name/mimeType.
   function getSelectedFiles(): ZDriveFile[] {
-    const source = isSearching ? searchResults ?? [] : files;
+    const source = isSearching ? filteredSearchResults : visibleFiles;
     return source.filter((file) => selectedIds.has(file.id));
   }
 
@@ -346,23 +440,31 @@ export default function FilesScreen() {
         />
       ) : (
         <View style={styles.header}>
-          <Text style={styles.title}>Files</Text>
+          <View style={styles.headerLeft}>
+            <Text style={styles.title}>All Files</Text>
+            <Text style={styles.subtitle}>
+              {folders.length} {folders.length === 1 ? 'folder' : 'folders'} • {files.length} {files.length === 1 ? 'file' : 'files'}
+            </Text>
+          </View>
 
           <View style={styles.headerActions}>
             <Pressable
-              hitSlop={12}
+              hitSlop={10}
               onPress={() => router.push('/trash')}
-              style={styles.newFolderButton}
+              style={styles.headerIconBtn}
+              accessibilityLabel="Trash"
             >
               <MaterialCommunityIcons name="trash-can-outline" size={20} color={colors.text} />
             </Pressable>
 
             <Pressable
-              hitSlop={12}
+              hitSlop={10}
               onPress={() => setCreateFolderVisible(true)}
-              style={styles.newFolderButton}
+              style={styles.newFolderBtn}
+              accessibilityLabel="New Folder"
             >
-              <MaterialCommunityIcons name="folder-plus-outline" size={22} color={colors.primary} />
+              <MaterialCommunityIcons name="folder-plus-outline" size={17} color="#FFFFFF" />
+              <Text style={styles.newFolderText}>New</Text>
             </Pressable>
           </View>
         </View>
@@ -377,6 +479,45 @@ export default function FilesScreen() {
             : 'Search files, or try Smart search'
         }
       />
+
+      {/* Category Filter Carousel */}
+      <View style={styles.categoryContainer}>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.categoryScroll}
+          style={styles.categoryScrollView}
+        >
+          {CATEGORIES.map((cat) => {
+            const active = selectedCategory === cat.id;
+            return (
+              <Pressable
+                key={cat.id}
+                onPress={() => setSelectedCategory(cat.id)}
+                style={[
+                  styles.categoryPill,
+                  active && styles.categoryPillActive,
+                ]}
+                hitSlop={4}
+              >
+                <MaterialCommunityIcons
+                  name={cat.icon}
+                  size={15}
+                  color={active ? '#FFFFFF' : colors.textSecondary}
+                />
+                <Text
+                  style={[
+                    styles.categoryText,
+                    active && styles.categoryTextActive,
+                  ]}
+                >
+                  {cat.label}
+                </Text>
+              </Pressable>
+            );
+          })}
+        </ScrollView>
+      </View>
 
       {isSearching && (
         <View style={styles.searchModeRow}>
@@ -423,34 +564,34 @@ export default function FilesScreen() {
       )}
 
       {!isSearching && (
-        <View style={styles.searchModeRow}>
-          {(['name', 'date', 'size'] as const).map((key) => {
-            const active = sortBy === key;
-            return (
-              <Pressable
-                key={key}
-                onPress={() => chooseSort(key)}
-                style={[styles.searchModePill, active && styles.searchModePillActive]}
-              >
-                <Text
-                  style={[styles.searchModeText, active && styles.searchModeTextActive]}
+        <View style={styles.controlsRow}>
+          <View style={styles.sortGroup}>
+            {(['name', 'date', 'size'] as const).map((key) => {
+              const active = sortBy === key;
+              return (
+                <Pressable
+                  key={key}
+                  onPress={() => chooseSort(key)}
+                  style={[styles.sortChip, active && styles.sortChipActive]}
                 >
-                  {key === 'name' ? 'Name' : key === 'date' ? 'Date' : 'Size'}
-                </Text>
-                {active && (
-                  <MaterialCommunityIcons
-                    name={sortDir === 'asc' ? 'arrow-up' : 'arrow-down'}
-                    size={13}
-                    color="#FFFFFF"
-                  />
-                )}
-              </Pressable>
-            );
-          })}
+                  <Text
+                    style={[styles.sortChipText, active && styles.sortChipTextActive]}
+                  >
+                    {key === 'name' ? 'Name' : key === 'date' ? 'Date' : 'Size'}
+                  </Text>
+                  {active && (
+                    <MaterialCommunityIcons
+                      name={sortDir === 'asc' ? 'arrow-up' : 'arrow-down'}
+                      size={12}
+                      color={colors.primary}
+                    />
+                  )}
+                </Pressable>
+              );
+            })}
+          </View>
 
-          <View style={{ flex: 1 }} />
-
-          <View style={{ flexDirection: 'row', gap: 6 }}>
+          <View style={styles.viewSegmentContainer}>
             {(['grid', 'list', 'tile'] as const).map((mode) => {
               const active = viewMode === mode;
               const iconName =
@@ -462,17 +603,17 @@ export default function FilesScreen() {
               return (
                 <Pressable
                   key={mode}
-                  hitSlop={6}
+                  hitSlop={4}
                   onPress={() => setViewMode(mode)}
                   style={[
-                    styles.viewToggle,
-                    active && { backgroundColor: colors.primary },
+                    styles.viewSegmentBtn,
+                    active && styles.viewSegmentBtnActive,
                   ]}
                 >
                   <MaterialCommunityIcons
                     name={iconName}
-                    size={18}
-                    color={active ? '#FFFFFF' : colors.primary}
+                    size={16}
+                    color={active ? '#FFFFFF' : colors.textSecondary}
                   />
                 </Pressable>
               );
@@ -482,8 +623,8 @@ export default function FilesScreen() {
       )}
 
       <FolderContents
-        folders={isSearching ? [] : folders}
-        files={isSearching ? searchResults! : files}
+        folders={isSearching ? [] : visibleFolders}
+        files={isSearching ? filteredSearchResults : visibleFiles}
         sortBy={sortBy}
         sortDir={sortDir}
         viewMode={viewMode}
@@ -491,11 +632,12 @@ export default function FilesScreen() {
         onRefresh={onRefresh}
         onFolderPress={(folder) => router.push(`/folders/${folder.id}`)}
         onFolderLongPress={(folder) => setActionFolder(folder)}
+        onFolderMenuPress={(folder) => setActionFolder(folder)}
         onFilePress={(file) => {
           // Whichever list is actually visible right now (search
           // results or the normal root list) becomes the swipe order
           // on the preview screen - see filePreview.store.ts.
-          const list = isSearching ? searchResults! : files;
+          const list = isSearching ? filteredSearchResults : visibleFiles;
           setPreviewFileIds(list.map((f) => f.id));
           router.push(`/files/${file.id}`);
         }}
@@ -515,9 +657,14 @@ export default function FilesScreen() {
         downloading={actionFile?.id === downloadingId}
         sharing={actionFile?.id === sharingId}
         deleting={actionFile?.id === deletingId}
+        extracting={actionFile?.id === extractingId}
         onClose={() => setActionFile(null)}
         onDownload={(file) => download(file)}
         onShare={(file) => share(file)}
+        onExtract={(file) => {
+          setActionFile(null);
+          extractZip(file);
+        }}
         onManageCollaborators={(file) => {
           setActionFile(null);
           setCollabTarget({ id: file.id, name: file.name, type: 'file' });
@@ -637,33 +784,159 @@ function getStyles(colors: ColorPalette) {
       alignItems: 'center',
       justifyContent: 'space-between',
       marginTop: 8,
-      marginBottom: 20,
+      marginBottom: 16,
+    },
+    headerLeft: {
+      flex: 1,
     },
     title: {
-      fontSize: 28,
-      fontFamily: fonts.extraBold,
-      letterSpacing: -0.6,
+      fontSize: 32,
+      fontFamily: fonts.heading,
+      letterSpacing: -0.5,
       color: colors.text,
+    },
+    subtitle: {
+      fontSize: 12.5,
+      fontFamily: fonts.medium,
+      color: colors.textSecondary,
+      marginTop: 2,
     },
     headerActions: {
       flexDirection: 'row',
+      alignItems: 'center',
       gap: 10,
     },
-    newFolderButton: {
-      width: 42,
-      height: 42,
-      borderRadius: 21,
-      backgroundColor: colors.primarySoft,
+    headerIconBtn: {
+      width: 40,
+      height: 40,
+      borderRadius: 20,
+      backgroundColor: colors.surface,
       justifyContent: 'center',
       alignItems: 'center',
       borderWidth: 1,
       borderColor: colors.border,
     },
+    newFolderBtn: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 6,
+      paddingHorizontal: 14,
+      height: 40,
+      borderRadius: 20,
+      backgroundColor: colors.primary,
+      justifyContent: 'center',
+      shadowColor: colors.primary,
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.25,
+      shadowRadius: 4,
+      elevation: 3,
+    },
+    newFolderText: {
+      fontSize: 13,
+      fontFamily: fonts.semiBold,
+      color: '#FFFFFF',
+    },
+    categoryContainer: {
+      marginTop: 14,
+      marginBottom: 6,
+    },
+    categoryScrollView: {
+      marginHorizontal: -24,
+    },
+    categoryScroll: {
+      paddingHorizontal: 24,
+      gap: 8,
+    },
+    categoryPill: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 6,
+      paddingHorizontal: 14,
+      paddingVertical: 8,
+      borderRadius: 20,
+      backgroundColor: colors.surface,
+      borderWidth: 1,
+      borderColor: colors.border,
+    },
+    categoryPillActive: {
+      backgroundColor: colors.primary,
+      borderColor: colors.primary,
+      shadowColor: colors.primary,
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.22,
+      shadowRadius: 3,
+      elevation: 2,
+    },
+    categoryText: {
+      fontSize: 12.5,
+      fontFamily: fonts.medium,
+      color: colors.textSecondary,
+    },
+    categoryTextActive: {
+      fontFamily: fonts.semiBold,
+      color: '#FFFFFF',
+    },
+    controlsRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      marginTop: 10,
+      marginBottom: 10,
+    },
+    sortGroup: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 6,
+    },
+    sortChip: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 4,
+      paddingHorizontal: 10,
+      paddingVertical: 5,
+      borderRadius: 14,
+      backgroundColor: colors.surface,
+      borderWidth: 1,
+      borderColor: colors.border,
+    },
+    sortChipActive: {
+      backgroundColor: colors.primarySoft,
+      borderColor: colors.primary,
+    },
+    sortChipText: {
+      fontSize: 12,
+      fontFamily: fonts.medium,
+      color: colors.textSecondary,
+    },
+    sortChipTextActive: {
+      fontFamily: fonts.semiBold,
+      color: colors.primary,
+    },
+    viewSegmentContainer: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      backgroundColor: colors.surface,
+      borderRadius: 18,
+      padding: 2,
+      borderWidth: 1,
+      borderColor: colors.border,
+      gap: 2,
+    },
+    viewSegmentBtn: {
+      width: 32,
+      height: 32,
+      borderRadius: 16,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    viewSegmentBtnActive: {
+      backgroundColor: colors.primary,
+    },
     searchModeRow: {
       flexDirection: 'row',
       alignItems: 'center',
       gap: 8,
-      marginTop: 12,
+      marginTop: 10,
     },
     searchModePill: {
       flexDirection: 'row',
@@ -690,16 +963,6 @@ function getStyles(colors: ColorPalette) {
     },
     searchSpinner: {
       marginLeft: 'auto',
-    },
-    viewToggle: {
-      width: 36,
-      height: 36,
-      borderRadius: 18,
-      backgroundColor: colors.primarySoft,
-      alignItems: 'center',
-      justifyContent: 'center',
-      borderWidth: 1,
-      borderColor: colors.border,
     },
     smartHint: {
       marginTop: 8,
