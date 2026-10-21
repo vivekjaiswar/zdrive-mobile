@@ -33,6 +33,10 @@ import { useMultiSelect } from '@/hooks/useMultiSelect';
 import { useTabBarHeight } from '@/hooks/useTabBarHeight';
 import { useTabBarScrollHandler } from '@/hooks/useTabBarScroll';
 import { useFilePreviewStore } from '@/store/filePreview.store';
+import SubscriptionAlertBanner from '@/components/common/SubscriptionAlertBanner';
+import PlansModal from '@/components/settings/PlansModal';
+import { useAuthStore } from '@/store/auth.store';
+import { useReleaseAdminStore } from '@/store/releaseAdmin.store';
 import { ZDriveFile } from '@/types/file';
 import { ZDriveFolder } from '@/types/folder';
 
@@ -111,10 +115,14 @@ export default function FilesScreen() {
   // AI semantic search across image content + PDF text (the two new
   // backend endpoints), results merged into one list.
   const [searchMode, setSearchMode] = useState<'keyword' | 'smart'>('keyword');
+  const smartSearchEnabled = useReleaseAdminStore((s) => s.featureFlags.smartSearch);
+  const activeSearchMode = smartSearchEnabled ? searchMode : 'keyword';
   const [searching, setSearching] = useState(false);
   const [sortBy, setSortBy] = useState<SortKey>('name');
   const [sortDir, setSortDir] = useState<SortDir>('asc');
   const [viewMode, setViewMode] = useState<'grid' | 'list' | 'tile'>('grid');
+  const [plansVisible, setPlansVisible] = useState(false);
+  const user = useAuthStore((s) => s.user);
 
   const visibleFolders = useMemo(() => {
     if (selectedCategory === 'all' || selectedCategory === 'folders') {
@@ -251,7 +259,7 @@ export default function FilesScreen() {
     }, 300);
 
     return () => clearTimeout(timer);
-  }, [query, searchMode]);
+  }, [query, activeSearchMode]);
 
   async function loadContents() {
     try {
@@ -288,7 +296,7 @@ export default function FilesScreen() {
     try {
       setSearching(true);
 
-      if (searchMode === 'keyword') {
+      if (activeSearchMode === 'keyword') {
         setSearchResults(await filesService.search(text));
         return;
       }
@@ -482,6 +490,8 @@ export default function FilesScreen() {
         </View>
       )}
 
+      <SubscriptionAlertBanner onRenew={() => setPlansVisible(true)} />
+
       <SearchBar
         value={query}
         onChangeText={setQuery}
@@ -531,7 +541,7 @@ export default function FilesScreen() {
         </ScrollView>
       </View>
 
-      {isSearching && (
+      {isSearching && smartSearchEnabled && (
         <View style={styles.searchModeRow}>
           {(['keyword', 'smart'] as const).map((mode) => (
             <Pressable
@@ -539,18 +549,18 @@ export default function FilesScreen() {
               onPress={() => setSearchMode(mode)}
               style={[
                 styles.searchModePill,
-                searchMode === mode && styles.searchModePillActive,
+                activeSearchMode === mode && styles.searchModePillActive,
               ]}
             >
               <MaterialCommunityIcons
                 name={mode === 'smart' ? 'star-four-points-outline' : 'magnify'}
                 size={14}
-                color={searchMode === mode ? '#FFFFFF' : colors.textSecondary}
+                color={activeSearchMode === mode ? '#FFFFFF' : colors.textSecondary}
               />
               <Text
                 style={[
                   styles.searchModeText,
-                  searchMode === mode && styles.searchModeTextActive,
+                  activeSearchMode === mode && styles.searchModeTextActive,
                 ]}
               >
                 {mode === 'smart' ? 'Smart' : 'Keyword'}
@@ -568,7 +578,7 @@ export default function FilesScreen() {
         </View>
       )}
 
-      {isSearching && searchMode === 'smart' && (
+      {isSearching && smartSearchEnabled && activeSearchMode === 'smart' && (
         <Text style={styles.smartHint}>
           AI search finds photos and document contents by meaning — not just
           file names.
@@ -784,6 +794,17 @@ export default function FilesScreen() {
         resourceName={collabTarget?.name}
         resourceType={collabTarget?.type ?? 'file'}
         onClose={() => setCollabTarget(null)}
+      />
+
+      <PlansModal
+        visible={plansVisible}
+        currentPlan={user?.plan ?? 'FREE'}
+        userEmail={user?.email}
+        onClose={() => setPlansVisible(false)}
+        onUpgraded={() => {
+          setPlansVisible(false);
+          loadContents();
+        }}
       />
     </Screen>
   );

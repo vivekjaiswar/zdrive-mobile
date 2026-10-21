@@ -13,6 +13,7 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { BlurView } from 'expo-blur';
 
 import unzipService, { ZipEntryInfo } from '@/services/unzip.service';
+import { useReleaseAdminStore } from '@/store/releaseAdmin.store';
 import { GlassTheme, useGlass } from '@/theme/glass';
 import { fonts } from '@/theme/typography';
 import { FileDetails } from '@/types/file';
@@ -92,8 +93,16 @@ export default function ZipPreview({ file, onExtracted }: Props) {
 
   const fileEntries = entries.filter((e) => !e.isDirectory);
   const totalUncompressedSize = fileEntries.reduce((sum, e) => sum + e.size, 0);
+  const zipExtractionEnabled = useReleaseAdminStore((s) => s.featureFlags.zipExtraction);
 
   async function handleExtract() {
+    if (!zipExtractionEnabled) {
+      Alert.alert(
+        'Feature Unavailable',
+        'ZIP extraction has been temporarily paused by administrator.',
+      );
+      return;
+    }
     Alert.alert(
       'Extract Archive',
       `Unzip ${fileEntries.length} files from "${file.name}"?`,

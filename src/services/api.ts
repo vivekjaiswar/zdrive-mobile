@@ -11,6 +11,7 @@ export const WEB_BASE_URL = 'https://zhdrive.in';
 // update these paths if the hosted location changes.
 export const PRIVACY_POLICY_URL = `${WEB_BASE_URL}/privacy`;
 export const TERMS_OF_SERVICE_URL = `${WEB_BASE_URL}/terms`;
+export const SECURITY_POLICY_URL = `${WEB_BASE_URL}/security-policy`;
 
 export const api = axios.create({
   baseURL: API_BASE_URL,
@@ -83,6 +84,21 @@ api.interceptors.response.use(
 
     if (status === 401 && !isExcluded && unauthorizedHandler) {
       unauthorizedHandler();
+    }
+
+    // Capture telemetry in Admin Portal Error Reports (exclude routine 401s on login/me)
+    if (!isExcluded) {
+      try {
+        const { useReleaseAdminStore } = require('@/store/releaseAdmin.store');
+        const isCritical = !status || status >= 500 || error.code === 'ECONNABORTED';
+        const msg = error?.response?.data?.message || error?.message || 'Network request failed';
+        useReleaseAdminStore.getState().addErrorReport({
+          message: String(msg),
+          code: String(status || error.code || 'ERR_NETWORK'),
+          endpoint: url.replace(API_BASE_URL, ''),
+          severity: isCritical ? 'CRITICAL' : 'WARNING',
+        });
+      } catch {}
     }
 
     return Promise.reject(error);

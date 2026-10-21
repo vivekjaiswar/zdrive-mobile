@@ -4,6 +4,7 @@ import * as Sharing from 'expo-sharing';
 
 import filesService, { MAX_BULK_DOWNLOAD_IDS } from '@/services/files.service';
 import unzipService from '@/services/unzip.service';
+import { useReleaseAdminStore } from '@/store/releaseAdmin.store';
 import { ZDriveFile } from '@/types/file';
 import { ZDriveFolder } from '@/types/folder';
 
@@ -22,6 +23,13 @@ export function useFileActions(onChanged?: () => void) {
   const [bulkBusy, setBulkBusy] = useState(false);
 
   async function extractZip(file: ZDriveFile, targetFolderId?: string) {
+    if (!useReleaseAdminStore.getState().featureFlags.zipExtraction) {
+      Alert.alert(
+        'Feature Unavailable',
+        'ZIP archive extraction has been temporarily paused by administrator.',
+      );
+      return;
+    }
     try {
       setExtractingId(file.id);
       const res = await unzipService.extractZip(file, {

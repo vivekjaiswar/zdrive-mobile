@@ -8,6 +8,8 @@ import StorageCard from '@/components/dashboard/StorageCard';
 import QuickActions from '@/components/dashboard/QuickActions';
 import RecentActivity from '@/components/dashboard/RecentActivity';
 import DashboardSkeleton from '@/components/dashboard/DashboardSkeleton';
+import SubscriptionAlertBanner from '@/components/common/SubscriptionAlertBanner';
+import PlansModal from '@/components/settings/PlansModal';
 import dashboardService, { DashboardStats } from '@/services/dashboard.service';
 import usersService from '@/services/users.service';
 import { useAuthStore } from '@/store/auth.store';
@@ -27,6 +29,7 @@ export default function DashboardScreen() {
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [plansVisible, setPlansVisible] = useState(false);
 
   useFocusEffect(
     useCallback(() => {
@@ -99,6 +102,8 @@ export default function DashboardScreen() {
           <>
             <DashboardHeader userName={name} avatarUrl={avatarUrl} />
 
+            <SubscriptionAlertBanner onRenew={() => setPlansVisible(true)} />
+
             <StorageCard
               storageUsed={stats?.storageUsed ?? 0}
               storageLimit={stats?.storageLimit ?? 0}
@@ -125,6 +130,17 @@ export default function DashboardScreen() {
           </>
         )}
       </ScrollView>
+
+      <PlansModal
+        visible={plansVisible}
+        currentPlan={profile?.plan ?? user?.plan ?? 'FREE'}
+        userEmail={user?.email}
+        onClose={() => setPlansVisible(false)}
+        onUpgraded={() => {
+          setPlansVisible(false);
+          loadDashboard();
+        }}
+      />
     </GlassScreen>
   );
 }

@@ -1,116 +1,224 @@
-import { useMemo } from 'react';
-import { Linking, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useState, useRef } from 'react';
+import {
+  ActivityIndicator,
+  Pressable,
+  StyleSheet,
+  Text,
+  View,
+} from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { WebView } from 'react-native-webview';
 
 import GlassScreen from '@/components/glass/GlassScreen';
 import GlassCard from '@/components/glass/GlassCard';
-import { PRIVACY_POLICY_URL, TERMS_OF_SERVICE_URL } from '@/services/api';
 import { GlassTheme, useGlass } from '@/theme/glass';
+import { fonts } from '@/theme/typography';
+import {
+  TERMS_OF_SERVICE_URL,
+  PRIVACY_POLICY_URL,
+  SECURITY_POLICY_URL,
+} from '@/services/api';
 
-const TERMS_SECTIONS = [
+type LegalTab = 'terms' | 'privacy' | 'security';
+
+const TAB_CONFIG: {
+  id: LegalTab;
+  title: string;
+  icon: keyof typeof MaterialCommunityIcons.glyphMap;
+  url: string;
+}[] = [
   {
-    title: '1. Acceptance of Terms',
-    body: 'By accessing or using OJI Drive (provided by ZennialHub), you agree to be bound by these Terms of Service and our Privacy Policy. If you do not agree to all terms, you may not access or use our services.',
+    id: 'terms',
+    title: 'Terms of Service',
+    icon: 'file-document-outline',
+    url: TERMS_OF_SERVICE_URL,
   },
   {
-    title: '2. Account Security & Responsibilities',
-    body: 'You are responsible for safeguarding your account credentials, password, and two-factor authentication recovery codes. You agree to notify us immediately of any unauthorized access to your account.',
+    id: 'privacy',
+    title: 'Privacy Policy',
+    icon: 'shield-lock-outline',
+    url: PRIVACY_POLICY_URL,
   },
   {
-    title: '3. Acceptable Use & Storage Rules',
-    body: 'OJI Drive provides cloud file storage, file sharing, and synchronization. You agree not to store, upload, or share content that is unlawful, malicious, contains malware, or infringes on third-party intellectual property rights.',
-  },
-  {
-    title: '4. Subscriptions & Payment Terms',
-    body: 'Paid storage plans are billed on a 30-day recurring basis. Upgrades take effect immediately upon successful payment verification. Storage limits are enforced per account plan tier.',
-  },
-  {
-    title: '5. Account Termination & Data Deletion',
-    body: 'You can terminate your account at any time from Settings. Deleting your account permanently removes all stored files, folders, and shared links from our systems and cannot be undone.',
+    id: 'security',
+    title: 'Security Policy',
+    icon: 'security',
+    url: SECURITY_POLICY_URL,
   },
 ];
 
-const PRIVACY_SECTIONS = [
-  {
-    title: '1. Information We Collect',
-    body: 'We collect information required to provide cloud storage: account details (email address, profile name), file metadata (file names, sizes, mime types), and basic security telemetry (active session logs and IP addresses).',
-  },
-  {
-    title: '2. How We Use Your Data',
-    body: 'Your data is used solely to operate OJI Drive services: storing and streaming your files, verifying 2FA security, processing subscription billing, and providing AI search over your own files.',
-  },
-  {
-    title: '3. Data Security & Encryption',
-    body: 'OJI Drive employs bank-grade security protocols. All files are encrypted in transit (TLS 1.3) and at rest (AES-256) on cloud infrastructure. Access tickets for file streaming expire automatically after short windows.',
-  },
-  {
-    title: '4. Third-Party Sharing',
-    body: 'We do not sell, rent, or monetize your personal data. We only share data with infrastructure partners (such as AWS for storage and Razorpay for payment processing) strictly to deliver the service.',
-  },
-  {
-    title: '5. Your Rights & Data Portability',
-    body: 'You retain full ownership of all content stored on OJI Drive. You may download, export, share, or permanently erase your files and account at any time.',
-  },
-];
+// Injected CSS hides the website header/navigation and footer, leaving
+// only the pure policy document content rendered seamlessly in-app.
+const INJECTED_CSS = `
+  (function() {
+    function cleanLayout() {
+      var header = document.querySelector('header');
+      if (header) header.style.display = 'none';
+
+      var footer = document.querySelector('footer');
+      if (footer) footer.style.display = 'none';
+
+      var container = document.querySelector('.min-h-screen');
+      if (container) {
+        container.style.minHeight = 'auto';
+        container.style.padding = '0px';
+      }
+
+      document.body.style.padding = '12px 4px';
+      document.body.style.margin = '0px';
+    }
+
+    cleanLayout();
+    document.addEventListener('DOMContentLoaded', cleanLayout);
+    window.addEventListener('load', cleanLayout);
+    setTimeout(cleanLayout, 500);
+    setTimeout(cleanLayout, 1500);
+  })();
+  true;
+`;
 
 export default function LegalDocScreen() {
-  const { doc } = useLocalSearchParams<{ doc: string }>();
+  const params = useLocalSearchParams<{ doc?: string }>();
   const router = useRouter();
   const g = useGlass();
   const styles = getStyles(g);
+  const webViewRef = useRef<WebView>(null);
 
-  const isTerms = doc === 'terms';
-  const title = isTerms ? 'Terms of Service' : 'Privacy Policy';
-  const webUrl = isTerms ? TERMS_OF_SERVICE_URL : PRIVACY_POLICY_URL;
-  const sections = isTerms ? TERMS_SECTIONS : PRIVACY_SECTIONS;
-  const browserBtnLabel = isTerms
-    ? 'View full ToS on browser'
-    : 'View full Privacy Policy on browser';
+  const initialTab: LegalTab =
+    params.doc === 'privacy'
+      ? 'privacy'
+      : params.doc === 'security' || params.doc === 'security-policy'
+        ? 'security'
+        : 'terms';
+
+  const [activeTab, setActiveTab] = useState<LegalTab>(initialTab);
+  const [loading, setLoading] = useState(true);
+  const [hasError, setHasError] = useState(false);
+
+  const currentTabConfig = TAB_CONFIG.find((t) => t.id === activeTab) || TAB_CONFIG[0];
+
+  function handleTabChange(tab: LegalTab) {
+    if (tab === activeTab) return;
+    setActiveTab(tab);
+    setLoading(true);
+    setHasError(false);
+  }
+
+  function handleReload() {
+    setLoading(true);
+    setHasError(false);
+    webViewRef.current?.reload();
+  }
 
   return (
     <GlassScreen edges={['top', 'left', 'right', 'bottom']}>
-      {/* Top Bar */}
+      {/* Top Header */}
       <View style={styles.topBar}>
         <Pressable style={styles.backBtn} onPress={() => router.back()} hitSlop={12}>
           <MaterialCommunityIcons name="arrow-left" size={22} color={g.text} />
         </Pressable>
-        <Text style={styles.topBarTitle} numberOfLines={1}>
-          {title}
-        </Text>
-        <Pressable
-          style={styles.openWebBtn}
-          onPress={() => Linking.openURL(webUrl)}
-          hitSlop={12}
-        >
-          <MaterialCommunityIcons name="open-in-new" size={20} color={g.accent} />
+
+        <View style={styles.titleWrap}>
+          <Text style={styles.topBarTitle} numberOfLines={1}>
+            Legal & Policies
+          </Text>
+          <Text style={styles.topBarSub}>Live from zhdrive.in • Auto-updating</Text>
+        </View>
+
+        <Pressable style={styles.reloadBtn} onPress={handleReload} hitSlop={10}>
+          <MaterialCommunityIcons name="refresh" size={20} color={g.accent} />
         </Pressable>
       </View>
 
-      {/* Native Document Viewer */}
-      <GlassCard strong padding={20} radius={26} style={styles.docCard}>
-        <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scroll}>
-          <Text style={styles.docHeaderTitle}>{title}</Text>
-          <Text style={styles.docSub}>ZennialHub</Text>
+      {/* Segmented Control: Terms, Privacy & Security on the SAME page */}
+      <View style={styles.tabContainer}>
+        {TAB_CONFIG.map((tab) => {
+          const active = activeTab === tab.id;
+          return (
+            <Pressable
+              key={tab.id}
+              style={[styles.tabBtn, active && styles.tabBtnActive]}
+              onPress={() => handleTabChange(tab.id)}
+            >
+              <MaterialCommunityIcons
+                name={tab.icon}
+                size={14}
+                color={active ? '#FFFFFF' : g.textSecondary}
+              />
+              <Text
+                style={[styles.tabText, active && styles.tabTextActive]}
+                numberOfLines={1}
+              >
+                {tab.id === 'terms' ? 'Terms' : tab.id === 'privacy' ? 'Privacy' : 'Security'}
+              </Text>
+            </Pressable>
+          );
+        })}
+      </View>
 
-          {sections.map((sec, idx) => (
-            <View key={idx} style={styles.sectionBlock}>
-              <Text style={styles.secTitle}>{sec.title}</Text>
-              <Text style={styles.secBody}>{sec.body}</Text>
-            </View>
-          ))}
+      {/* Native In-App Web Viewer (No External Redirects) */}
+      <GlassCard strong padding={0} radius={22} style={styles.docCard}>
+        {loading && (
+          <View style={styles.loadingOverlay}>
+            <ActivityIndicator size="small" color={g.accent} />
+            <Text style={styles.loadingText}>Loading latest {currentTabConfig.title}…</Text>
+          </View>
+        )}
 
-          <Pressable style={styles.webLinkBtn} onPress={() => Linking.openURL(webUrl)}>
-            <Text style={styles.webLinkText}>{browserBtnLabel}</Text>
-            <MaterialCommunityIcons name="chevron-right" size={16} color={g.accent} />
-          </Pressable>
-        </ScrollView>
+        {hasError ? (
+          <View style={styles.errorOverlay}>
+            <MaterialCommunityIcons name="cloud-off-outline" size={48} color={g.textSecondary} />
+            <Text style={styles.errorTitle}>Unable to Load Policy</Text>
+            <Text style={styles.errorDesc}>
+              Could not fetch live content from {currentTabConfig.url}. Please check your internet connection.
+            </Text>
+            <Pressable style={styles.retryBtn} onPress={handleReload}>
+              <MaterialCommunityIcons name="refresh" size={16} color="#FFFFFF" />
+              <Text style={styles.retryBtnText}>Retry Connection</Text>
+            </Pressable>
+          </View>
+        ) : (
+          <WebView
+            ref={webViewRef}
+            key={currentTabConfig.url}
+            source={{ uri: currentTabConfig.url }}
+            style={styles.webView}
+            injectedJavaScript={INJECTED_CSS}
+            onLoadStart={() => setLoading(true)}
+            onLoadEnd={() => setLoading(false)}
+            onError={() => {
+              setLoading(false);
+              setHasError(true);
+            }}
+            showsVerticalScrollIndicator={false}
+            javaScriptEnabled={true}
+            domStorageEnabled={true}
+            startInLoadingState={true}
+            renderLoading={() => (
+              <View style={styles.loadingOverlay}>
+                <ActivityIndicator size="small" color={g.accent} />
+                <Text style={styles.loadingText}>Fetching live policy…</Text>
+              </View>
+            )}
+            onShouldStartLoadWithRequest={(request) => {
+              // Stay on zhdrive.in policy paths without redirecting out
+              if (
+                request.url.includes('zhdrive.in/terms') ||
+                request.url.includes('zhdrive.in/privacy') ||
+                request.url.includes('zhdrive.in/security-policy')
+              ) {
+                return true;
+              }
+              // Prevent arbitrary third-party redirects
+              return false;
+            }}
+          />
+        )}
       </GlassCard>
     </GlassScreen>
   );
 }
-
-import { fonts } from '@/theme/typography';
 
 function getStyles(g: GlassTheme) {
   return StyleSheet.create({
@@ -118,93 +226,128 @@ function getStyles(g: GlassTheme) {
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'space-between',
-      paddingVertical: 12,
-      marginBottom: 12,
+      paddingVertical: 10,
+      marginBottom: 6,
     },
     backBtn: {
       width: 40,
       height: 40,
       borderRadius: 20,
-      backgroundColor: g.glassFill,
-      borderWidth: 1,
-      borderColor: g.glassBorder,
+      backgroundColor: g.glassFillStrong,
       alignItems: 'center',
       justifyContent: 'center',
+      borderWidth: 1,
+      borderColor: g.glassBorder,
+    },
+    titleWrap: {
+      flex: 1,
+      marginLeft: 12,
     },
     topBarTitle: {
-      fontFamily: fonts.bold,
-      flex: 1,
-      textAlign: 'center',
-      fontSize: 18,
-      fontWeight: '800',
-      letterSpacing: -0.3,
+      fontFamily: fonts.semiBold,
+      fontSize: 17,
       color: g.text,
+      letterSpacing: -0.2,
     },
-    openWebBtn: {
-      width: 40,
-      height: 40,
-      borderRadius: 20,
-      backgroundColor: g.glassFill,
-      borderWidth: 1,
-      borderColor: g.glassBorder,
+    topBarSub: {
+      fontFamily: fonts.medium,
+      fontSize: 11,
+      color: g.textSecondary,
+      marginTop: 1,
+    },
+    reloadBtn: {
+      width: 36,
+      height: 36,
+      borderRadius: 18,
+      backgroundColor: g.accentSoft,
       alignItems: 'center',
       justifyContent: 'center',
     },
-    docCard: {
+    tabContainer: {
+      flexDirection: 'row',
+      backgroundColor: g.glassFillStrong,
+      borderRadius: 14,
+      padding: 4,
+      marginBottom: 10,
+      borderWidth: 1,
+      borderColor: g.glassBorder,
+    },
+    tabBtn: {
       flex: 1,
-      marginBottom: 16,
-    },
-    scroll: {
-      paddingBottom: 24,
-    },
-    docHeaderTitle: {
-      fontFamily: fonts.extraBold,
-      fontSize: 22,
-      fontWeight: '800',
-      color: g.text,
-      letterSpacing: -0.4,
-    },
-    docSub: {
-      fontFamily: fonts.semiBold,
-      marginTop: 4,
-      fontSize: 12.5,
-      fontWeight: '600',
-      color: g.accent,
-      marginBottom: 20,
-    },
-    sectionBlock: {
-      marginBottom: 18,
-    },
-    secTitle: {
-      fontFamily: fonts.bold,
-      fontSize: 15,
-      fontWeight: '700',
-      color: g.text,
-      marginBottom: 6,
-    },
-    secBody: {
-      fontFamily: fonts.regular,
-      fontSize: 13.5,
-      lineHeight: 21,
-      color: g.textSecondary,
-    },
-    webLinkBtn: {
-      marginTop: 12,
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'center',
-      gap: 6,
-      paddingVertical: 12,
-      borderRadius: 14,
-      backgroundColor: g.accentSoft,
-      borderWidth: 1,
-      borderColor: g.glassBorder,
+      gap: 5,
+      paddingVertical: 8,
+      borderRadius: 10,
     },
-    webLinkText: {
-      fontFamily: fonts.bold,
-      fontSize: 13.5,
-      fontWeight: '700',
-      color: g.accent,
+    tabBtnActive: {
+      backgroundColor: g.accent,
+    },
+    tabText: {
+      fontSize: 12,
+      fontFamily: fonts.medium,
+      color: g.textSecondary,
+    },
+    tabTextActive: {
+      color: '#FFFFFF',
+      fontFamily: fonts.semiBold,
+    },
+    docCard: {
+      flex: 1,
+      overflow: 'hidden',
+      marginBottom: 8,
+    },
+    webView: {
+      flex: 1,
+      backgroundColor: 'transparent',
+    },
+    loadingOverlay: {
+      ...StyleSheet.absoluteFill,
+      backgroundColor: g.glassFillStrong,
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: 10,
+      zIndex: 10,
+    },
+    loadingText: {
+      fontSize: 12.5,
+      fontFamily: fonts.medium,
+      color: g.textSecondary,
+    },
+    errorOverlay: {
+      flex: 1,
+      alignItems: 'center',
+      justifyContent: 'center',
+      padding: 24,
+      gap: 12,
+    },
+    errorTitle: {
+      fontSize: 16,
+      fontFamily: fonts.semiBold,
+      color: g.text,
+    },
+    errorDesc: {
+      fontSize: 12,
+      fontFamily: fonts.regular,
+      color: g.textSecondary,
+      textAlign: 'center',
+      lineHeight: 18,
+    },
+    retryBtn: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 6,
+      backgroundColor: g.accent,
+      paddingHorizontal: 14,
+      paddingVertical: 8,
+      borderRadius: 10,
+      marginTop: 6,
+    },
+    retryBtnText: {
+      fontSize: 12.5,
+      fontFamily: fonts.semiBold,
+      color: '#FFFFFF',
     },
   });
 }

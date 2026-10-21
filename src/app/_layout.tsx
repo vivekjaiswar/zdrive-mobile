@@ -1,10 +1,11 @@
 import { useEffect, useRef, useState } from 'react';
-import { AppState, AppStateStatus } from 'react-native';
+import { AppState, AppStateStatus, StyleSheet, Text, View } from 'react-native';
 import { router, Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import * as SplashScreen from 'expo-splash-screen';
 import * as Sentry from '@sentry/react-native';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 // Keep the native splash screen visible while fonts and initial state load
 SplashScreen.preventAutoHideAsync().catch(() => {});
@@ -32,6 +33,7 @@ import { SENTRY_DSN } from '@/constants/sentry';
 import { useAuthStore } from '@/store/auth.store';
 import { useSecurityStore } from '@/store/security.store';
 import { useBackupStore } from '@/store/backup.store';
+import { useReleaseAdminStore } from '@/store/releaseAdmin.store';
 import { useColors } from '@/theme/useColors';
 
 // Must run once at module scope (not inside the component) so it's
@@ -92,6 +94,8 @@ function RootLayout() {
   const user = useAuthStore((state) => state.user);
   const authHydrated = useAuthStore((state) => state.isHydrated);
   const colors = useColors();
+  const maintenanceMode = useReleaseAdminStore((state) => state.maintenanceMode);
+  const maintenanceMessage = useReleaseAdminStore((state) => state.maintenanceMessage);
 
   const biometricEnabled = useSecurityStore((state) => state.biometricEnabled);
   const biometricAvailable = useSecurityStore((state) => state.biometricAvailable);
@@ -125,6 +129,7 @@ function RootLayout() {
     // user turned it on. getState() avoids adding a re-render subscription
     // here; the Settings screen reads the hydrated value via its selector.
     useBackupStore.getState().hydrate();
+    useReleaseAdminStore.getState().hydrate();
     // Idempotent; no-op if no web client ID was provided at build time.
     configureGoogleSignin();
   }, []);
@@ -193,6 +198,15 @@ function RootLayout() {
           screen uses. */}
       <StatusBar style={colors.statusBarStyle} />
 
+      {maintenanceMode && (
+        <View style={layoutStyles.maintenanceBanner}>
+          <MaterialCommunityIcons name="alert-circle" size={18} color="#FFFFFF" />
+          <Text style={layoutStyles.maintenanceText} numberOfLines={2}>
+            {maintenanceMessage}
+          </Text>
+        </View>
+      )}
+
       <Stack
         screenOptions={{
           headerShown: false,
@@ -218,3 +232,22 @@ function RootLayout() {
 // it unconditionally caused "Sentry.wrap was called before
 // Sentry.init" warnings on every launch while SENTRY_DSN is empty.
 export default SENTRY_DSN ? Sentry.wrap(RootLayout) : RootLayout;
+
+const layoutStyles = StyleSheet.create({
+  maintenanceBanner: {
+    backgroundColor: '#DC2626',
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingTop: 48,
+    paddingBottom: 10,
+    gap: 8,
+    zIndex: 9999,
+  },
+  maintenanceText: {
+    flex: 1,
+    color: '#FFFFFF',
+    fontSize: 12.5,
+    fontWeight: '600',
+  },
+});

@@ -134,10 +134,16 @@ class UnzipService {
       folderCache.set('', destFolderId);
     }
 
-    // Filter out directories and root noise (like __MACOSX)
-    const validEntries = Object.keys(unzipped).filter(
-      (path) => !path.endsWith('/') && !path.startsWith('__MACOSX/'),
-    );
+    // Filter out directories, macOS metadata, and dangerous Zip Slip traversal entries
+    const validEntries = Object.keys(unzipped).filter((rawPath) => {
+      if (rawPath.endsWith('/') || rawPath.startsWith('__MACOSX/')) return false;
+      // Prevent Zip Slip / path traversal attacks
+      const normalized = rawPath.replace(/\\/g, '/');
+      const parts = normalized.split('/');
+      if (parts.some((p) => p === '..' || p === '.')) return false;
+      if (normalized.startsWith('/') || /^[a-zA-Z]:/.test(normalized)) return false;
+      return true;
+    });
 
     let extractedCount = 0;
 

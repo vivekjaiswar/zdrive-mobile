@@ -467,17 +467,35 @@ export default function SettingsScreen() {
           />
         </View>
 
-        <Text style={styles.sectionLabel}>Legal</Text>
+        <Text style={styles.sectionLabel}>Developer & Admin</Text>
         <View style={styles.card}>
           <SettingsRow
-            icon="shield-check-outline"
-            label="Privacy Policy"
-            onPress={() => router.push('/legal/privacy')}
+            icon="shield-crown-outline"
+            label="Admin & Release Console"
+            value="v1.9.4"
+            onPress={() => router.push('/admin' as any)}
           />
+        </View>
+
+        <Text style={styles.sectionLabel}>Legal & Compliance</Text>
+        <View style={styles.card}>
           <SettingsRow
             icon="file-document-outline"
             label="Terms of Service"
+            value="zhdrive.in/terms"
             onPress={() => router.push('/legal/terms')}
+          />
+          <SettingsRow
+            icon="shield-lock-outline"
+            label="Privacy Policy"
+            value="zhdrive.in/privacy"
+            onPress={() => router.push('/legal/privacy')}
+          />
+          <SettingsRow
+            icon="security"
+            label="Security Policy"
+            value="zhdrive.in/security"
+            onPress={() => router.push('/legal/security')}
           />
         </View>
       </ScrollView>

@@ -3,11 +3,13 @@ import * as SecureStore from 'expo-secure-store';
 
 import authService from '@/services/auth.service';
 
-interface User {
+export interface User {
   id: string;
   email: string;
   plan: string;
   role: string;
+  subscriptionExpiresAt?: string | null;
+  subscriptionStatus?: string;
 }
 
 // v1.2.1: the backend switched from a Bearer token in the JSON response
