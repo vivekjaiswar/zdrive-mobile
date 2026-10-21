@@ -76,24 +76,16 @@ class UnzipService {
     const buffer = await res.arrayBuffer();
     const bytes = new Uint8Array(buffer);
 
-    return new Promise((resolve, reject) => {
-      unzip(bytes, (err, unzipped) => {
-        if (err) {
-          reject(new Error(`Failed to read zip archive: ${err.message}`));
-          return;
-        }
-
-        const entries: ZipEntryInfo[] = Object.keys(unzipped).map((path) => {
-          const isDirectory = path.endsWith('/');
-          const parts = path.replace(/\/$/, '').split('/');
-          const name = parts[parts.length - 1];
-          const size = unzipped[path].byteLength;
-          return { name, path, size, isDirectory };
-        });
-
-        resolve(entries);
-      });
+    const unzipped = unzipSync(bytes);
+    const entries: ZipEntryInfo[] = Object.keys(unzipped).map((path) => {
+      const isDirectory = path.endsWith('/');
+      const parts = path.replace(/\/$/, '').split('/');
+      const name = parts[parts.length - 1];
+      const size = unzipped[path].byteLength;
+      return { name, path, size, isDirectory };
     });
+
+    return entries;
   }
 
   /**
@@ -125,13 +117,8 @@ class UnzipService {
     const buffer = await res.arrayBuffer();
     const bytes = new Uint8Array(buffer);
 
-    // 2. Decompress
-    const unzipped = await new Promise<{ [path: string]: Uint8Array }>((resolve, reject) => {
-      unzip(bytes, (err, data) => {
-        if (err) reject(err);
-        else resolve(data);
-      });
-    });
+    // 2. Decompress synchronously (fflate's async unzip requires Web Workers not available in Hermes)
+    const unzipped = unzipSync(bytes);
 
     // 3. Determine base destination folder
     let destFolderId = targetFolderId;

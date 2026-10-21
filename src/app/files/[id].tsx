@@ -236,61 +236,63 @@ export default function FileDetailScreen() {
       </View>
 
       <GestureDetector gesture={swipeGesture}>
-        {isImage ? (
-          <View style={styles.imageWrap}>
-            <ZoomableImage uri={file.previewUrl} onZoomChange={setIsZoomed} />
-          </View>
-        ) : isVideo ? (
-          <View style={styles.imageWrap}>
-            <VideoPreview uri={file.previewUrl} />
-          </View>
-        ) : isAudio ? (
-          <View style={styles.audioWrap}>
-            <AudioPlayer uri={file.previewUrl} name={file.name} />
-          </View>
-        ) : isPdf ? (
-          <View style={styles.pdfWrap}>
-            <PdfPreview uri={file.previewUrl} />
-          </View>
-        ) : isZip ? (
-          <ZipPreview
-            file={file}
-            onExtracted={(folderId) => {
-              if (folderId) {
-                router.replace(`/folders/${folderId}`);
-              } else {
-                router.back();
-              }
-            }}
-          />
-        ) : isText ? (
-          <ScrollView style={styles.textScroll} contentContainerStyle={styles.textContent}>
-            {textLoading ? (
-              <ActivityIndicator size="small" color={colors.primary} />
-            ) : textError ? (
-              <Text style={styles.textError}>Failed to load file contents.</Text>
-            ) : (
-              <Text style={styles.textBody} selectable>
-                {textContent}
-              </Text>
-            )}
-          </ScrollView>
-        ) : (
-          <View style={styles.unsupportedWrap}>
-            <MaterialCommunityIcons
-              name="file-document-outline"
-              size={64}
-              color={colors.textSecondary}
+        <View collapsable={false} style={{ flex: 1 }}>
+          {isImage ? (
+            <View style={styles.imageWrap}>
+              <ZoomableImage uri={file.previewUrl} onZoomChange={setIsZoomed} />
+            </View>
+          ) : isVideo ? (
+            <View style={styles.imageWrap}>
+              <VideoPreview uri={file.previewUrl} />
+            </View>
+          ) : isAudio ? (
+            <View style={styles.audioWrap}>
+              <AudioPlayer uri={file.previewUrl} name={file.name} />
+            </View>
+          ) : isPdf ? (
+            <View style={styles.pdfWrap}>
+              <PdfPreview uri={file.previewUrl} />
+            </View>
+          ) : isZip ? (
+            <ZipPreview
+              file={file}
+              onExtracted={(folderId) => {
+                if (folderId) {
+                  router.replace(`/folders/${folderId}`);
+                } else {
+                  router.back();
+                }
+              }}
             />
-            <Text style={styles.unsupportedTitle}>No Preview Available</Text>
-            <Text style={styles.unsupportedSub}>
-              {file.mimeType || 'Unknown file type'}
-            </Text>
-            <Pressable style={styles.openButton} onPress={openExternally}>
-              <Text style={styles.openButtonText}>Open in External App</Text>
-            </Pressable>
-          </View>
-        )}
+          ) : isText ? (
+            <ScrollView style={styles.textScroll} contentContainerStyle={styles.textContent}>
+              {textLoading ? (
+                <ActivityIndicator size="small" color={colors.primary} />
+              ) : textError ? (
+                <Text style={styles.textError}>Failed to load file contents.</Text>
+              ) : (
+                <Text style={styles.textBody} selectable>
+                  {textContent}
+                </Text>
+              )}
+            </ScrollView>
+          ) : (
+            <View style={styles.unsupportedWrap}>
+              <MaterialCommunityIcons
+                name="file-document-outline"
+                size={64}
+                color={colors.textSecondary}
+              />
+              <Text style={styles.unsupportedTitle}>No Preview Available</Text>
+              <Text style={styles.unsupportedSub}>
+                {file.mimeType || 'Unknown file type'}
+              </Text>
+              <Pressable style={styles.openButton} onPress={openExternally}>
+                <Text style={styles.openButtonText}>Open in External App</Text>
+              </Pressable>
+            </View>
+          )}
+        </View>
       </GestureDetector>
 
       {/* File Metadata & Version Control Panel */}
