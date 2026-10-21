@@ -16,7 +16,9 @@ import PrimaryButton from '@/components/Button/PrimaryButton';
 import AppInput from '@/components/Input/AppInput';
 import Screen from '@/components/Layout/Screen';
 import authService from '@/services/auth.service';
+import biometricService from '@/services/biometric.service';
 import { useAuthStore } from '@/store/auth.store';
+import { useSecurityStore } from '@/store/security.store';
 import { ColorPalette } from '@/theme/palette';
 import { useColors } from '@/theme/useColors';
 
@@ -57,6 +59,20 @@ export default function TwoFactorScreen() {
         challengeToken,
         code.trim(),
       );
+
+      const security = useSecurityStore.getState();
+      if (security.biometricAvailable && security.biometricEnabled) {
+        const bioOk = await biometricService.authenticate(
+          'Confirm your identity with biometric to complete login',
+        );
+        if (!bioOk) {
+          Alert.alert(
+            'Biometric Authentication Required',
+            'Biometric verification is required to complete login.',
+          );
+          return;
+        }
+      }
 
       setUser(user);
       router.replace('/(tabs)/dashboard');

@@ -169,6 +169,11 @@ function RootLayout() {
       // way back in - so sensitive content is never visible in the
       // OS app-switcher's snapshot either.
       if (appState.current === 'active' && nextState !== 'active') {
+        // Do NOT lock if a system photo picker, document picker, or camera is active
+        if (useSecurityStore.getState().isPickerActive) {
+          appState.current = nextState;
+          return;
+        }
         if (shouldLockRef.current) setIsLocked(true);
       }
 

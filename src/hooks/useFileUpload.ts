@@ -5,6 +5,7 @@ import * as DocumentPicker from 'expo-document-picker';
 import * as ImagePicker from 'expo-image-picker';
 
 import filesService from '@/services/files.service';
+import { runWithPickerBypass } from '@/store/security.store';
 import { UploadResponse } from '@/types/file';
 
 export interface UploadBatchResult {
@@ -100,11 +101,13 @@ export function useFileUpload() {
   async function pickAndUpload(
     folderId?: string,
   ): Promise<UploadBatchResult | null> {
-    const result = await DocumentPicker.getDocumentAsync({
-      type: '*/*',
-      multiple: true,
-      copyToCacheDirectory: true,
-    });
+    const result = await runWithPickerBypass(() =>
+      DocumentPicker.getDocumentAsync({
+        type: '*/*',
+        multiple: true,
+        copyToCacheDirectory: true,
+      }),
+    );
 
     if (result.canceled || !result.assets?.length) return null;
 
@@ -170,22 +173,24 @@ async function resolveMediaFilename(
   async function pickPhotosAndUpload(
     folderId?: string,
   ): Promise<UploadBatchResult | null> {
-    const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (!perm.granted) {
-      Alert.alert(
-        'Photo Access Needed',
-        'Allow photo access to upload from your gallery. You can enable it anytime in your phone Settings.',
-      );
-      return null;
-    }
+    const result = await runWithPickerBypass(async () => {
+      const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (!perm.granted) {
+        Alert.alert(
+          'Photo Access Needed',
+          'Allow photo access to upload from your gallery. You can enable it anytime in your phone Settings.',
+        );
+        return null;
+      }
 
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ['images', 'videos'],
-      allowsMultipleSelection: true,
-      quality: 1,
+      return ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ['images', 'videos'],
+        allowsMultipleSelection: true,
+        quality: 1,
+      });
     });
 
-    if (result.canceled || !result.assets?.length) return null;
+    if (!result || result.canceled || !result.assets?.length) return null;
 
     const mappedAssets = await Promise.all(
       result.assets.map(async (a, i) => {

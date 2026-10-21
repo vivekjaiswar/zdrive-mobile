@@ -31,7 +31,7 @@ import authService from '@/services/auth.service';
 import biometricService from '@/services/biometric.service';
 import backupService from '@/services/backup.service';
 import { useAuthStore } from '@/store/auth.store';
-import { useSecurityStore } from '@/store/security.store';
+import { useSecurityStore, runWithPickerBypass } from '@/store/security.store';
 import { useBackupStore } from '@/store/backup.store';
 import { useTabBarHeight } from '@/hooks/useTabBarHeight';
 import { useTabBarScrollHandler } from '@/hooks/useTabBarScroll';
@@ -148,10 +148,12 @@ export default function SettingsScreen() {
   }
 
   async function handleChangeAvatar() {
-    const result = await DocumentPicker.getDocumentAsync({
-      type: 'image/*',
-      copyToCacheDirectory: true,
-    });
+    const result = await runWithPickerBypass(() =>
+      DocumentPicker.getDocumentAsync({
+        type: 'image/*',
+        copyToCacheDirectory: true,
+      }),
+    );
 
     if (result.canceled || !result.assets?.length) return;
 

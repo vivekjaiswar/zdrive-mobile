@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   Alert,
   KeyboardAvoidingView,
@@ -17,8 +17,10 @@ import GlassButton from '@/components/glass/GlassButton';
 import GlassInput from '@/components/glass/GlassInput';
 import Logo from '@/components/glass/Logo';
 import { useGoogleSignIn } from '@/hooks/useGoogleSignIn';
-import authService from '@/services/auth.service';
+import authService, { LoginUser } from '@/services/auth.service';
+import biometricService from '@/services/biometric.service';
 import { useAuthStore } from '@/store/auth.store';
+import { useSecurityStore } from '@/store/security.store';
 import { GlassTheme, useGlass } from '@/theme/glass';
 
 export default function LoginScreen() {
@@ -29,9 +31,90 @@ export default function LoginScreen() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const [bioTypeName, setBioTypeName] = useState('Biometrics');
+  const [hasBiometricLogin, setHasBiometricLogin] = useState(false);
 
   const setUser = useAuthStore((state) => state.setUser);
+  const {
+    biometricAvailable,
+    biometricEnabled,
+    savedBiometricEmail,
+    saveBiometricCredentials,
+    getBiometricCredentials,
+    clearBiometricCredentials,
+  } = useSecurityStore();
   const google = useGoogleSignIn();
+
+  useEffect(() => {
+    biometricService.getBiometricTypeName().then(setBioTypeName).catch(() => {});
+    if (savedBiometricEmail) {
+      setEmail((prev) => (prev ? prev : savedBiometricEmail));
+      setHasBiometricLogin(true);
+    }
+  }, [savedBiometricEmail]);
+
+  async function completeLoginFlow(
+    user: LoginUser,
+    userEmail: string,
+    userPassword?: string,
+  ) {
+    if (userPassword) {
+      await saveBiometricCredentials(userEmail, userPassword);
+    }
+    setUser(user);
+    router.replace('/(tabs)/dashboard');
+  }
+
+  async function handleBiometricLogin() {
+    try {
+      setLoading(true);
+      const authenticated = await biometricService.authenticate(
+        `Log in with ${bioTypeName}`,
+      );
+      if (!authenticated) {
+        setLoading(false);
+        return;
+      }
+
+      const creds = await getBiometricCredentials();
+      if (!creds || !creds.email || !creds.password) {
+        Alert.alert(
+          'Saved Login Expired',
+          'Please enter your password manually to log in and re-enable biometric access.',
+        );
+        setHasBiometricLogin(false);
+        setLoading(false);
+        return;
+      }
+
+      const response = await authService.login({
+        email: creds.email,
+        password: creds.password,
+      });
+
+      if (response.twoFactorRequired) {
+        router.push({
+          pathname: '/(auth)/two-factor',
+          params: { challengeToken: response.challengeToken },
+        });
+        return;
+      }
+
+      await completeLoginFlow(response.user, creds.email, creds.password);
+    } catch (error: any) {
+      Alert.alert(
+        'Biometric Login Failed',
+        error?.response?.data?.message ??
+          'Saved credentials could not be verified. Please enter your password.',
+      );
+      if (error?.response?.status === 401) {
+        await clearBiometricCredentials();
+        setHasBiometricLogin(false);
+      }
+    } finally {
+      setLoading(false);
+    }
+  }
 
   async function handleLogin() {
     if (!email.trim()) {
@@ -56,8 +139,36 @@ export default function LoginScreen() {
         return;
       }
 
-      setUser(response.user);
-      router.replace('/(tabs)/dashboard');
+      // Prompt for biometric verification upon login if device supports it and it is enabled
+      if (biometricAvailable && biometricEnabled) {
+        const bioOk = await biometricService.authenticate(
+          `Confirm with ${bioTypeName} to complete login`,
+        );
+
+        if (!bioOk) {
+          Alert.alert(
+            'Biometric Verification Required',
+            `Authentication with ${bioTypeName} is required to complete login.`,
+            [
+              {
+                text: 'Try Again',
+                onPress: async () => {
+                  const retry = await biometricService.authenticate(
+                    `Confirm with ${bioTypeName} to complete login`,
+                  );
+                  if (retry) {
+                    await completeLoginFlow(response.user, email.trim(), password);
+                  }
+                },
+              },
+              { text: 'Cancel', style: 'cancel' },
+            ],
+          );
+          return;
+        }
+      }
+
+      await completeLoginFlow(response.user, email.trim(), password);
     } catch (error: any) {
       Alert.alert(
         'Login Failed',
@@ -110,6 +221,16 @@ export default function LoginScreen() {
               </Pressable>
 
               <GlassButton title="Login" loading={loading} onPress={handleLogin} />
+
+              {hasBiometricLogin && biometricAvailable && biometricEnabled && (
+                <GlassButton
+                  title={`Login with ${bioTypeName}`}
+                  icon="fingerprint"
+                  variant="glass"
+                  loading={loading}
+                  onPress={handleBiometricLogin}
+                />
+              )}
 
               {google.available && (
                 <>

@@ -6,6 +6,7 @@ import * as DocumentPicker from 'expo-document-picker';
 
 import GlassCard from '@/components/glass/GlassCard';
 import filesService from '@/services/files.service';
+import { runWithPickerBypass } from '@/store/security.store';
 import { FileVersion } from '@/types/file';
 import { GlassTheme, useGlass } from '@/theme/glass';
 import { fonts } from '@/theme/typography';
@@ -61,7 +62,9 @@ export default function FileVersionModal({
   async function handleUploadNewVersion() {
     if (!fileId) return;
     try {
-      const result = await DocumentPicker.getDocumentAsync({ copyToCacheDirectory: true });
+      const result = await runWithPickerBypass(() =>
+        DocumentPicker.getDocumentAsync({ copyToCacheDirectory: true }),
+      );
       if (result.canceled || !result.assets?.length) return;
       const asset = result.assets[0];
       setUploadingVersion(true);
