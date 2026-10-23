@@ -7,6 +7,7 @@ import { useGlass } from '@/theme/glass';
 interface Props {
   children: ReactNode;
   style?: StyleProp<ViewStyle>;
+  contentStyle?: StyleProp<ViewStyle>;
   strong?: boolean;
   padding?: number;
   radius?: number;
@@ -15,11 +16,14 @@ interface Props {
 export default function GlassCard({
   children,
   style,
+  contentStyle,
   strong = false,
   padding = 20,
   radius = 24,
 }: Props) {
   const g = useGlass();
+  const flatStyle = StyleSheet.flatten(style) as ViewStyle | undefined;
+  const isFlex = flatStyle?.flex !== undefined;
 
   return (
     <View
@@ -52,7 +56,7 @@ export default function GlassCard({
           { backgroundColor: g.glassHighlight, opacity: 0.6 },
         ]}
       />
-      <View style={{ padding }}>{children}</View>
+      <View style={[{ padding }, isFlex && { flex: 1 }, contentStyle]}>{children}</View>
     </View>
   );
 }

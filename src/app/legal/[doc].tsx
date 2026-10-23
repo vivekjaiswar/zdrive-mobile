@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
   Pressable,
@@ -9,7 +9,6 @@ import {
 } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { WebView } from 'react-native-webview';
 import axios from 'axios';
 
 import GlassScreen from '@/components/glass/GlassScreen';
@@ -29,6 +28,58 @@ interface PolicyDoc {
   title: string;
   icon: keyof typeof MaterialCommunityIcons.glyphMap;
   url: string;
+}
+
+interface ParsedPolicy {
+  intro: string;
+  sections: { heading: string; body: string }[];
+}
+
+function stripHtml(html: string): string {
+  return html
+    .replace(/\[email&#160;protected\]/gi, 'security@ojidrive.com')
+    .replace(/<li[^>]*>/gi, '\n• ')
+    .replace(/<\/p>/gi, '\n\n')
+    .replace(/<br\s*\/?>/gi, '\n')
+    .replace(/<[^>]+>/g, '')
+    .replace(/&quot;/g, '"')
+    .replace(/&#x27;/g, "'")
+    .replace(/&#160;/g, ' ')
+    .replace(/&nbsp;/g, ' ')
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/https?:\/\/zhdrive\.in/gi, 'OJI Drive')
+    .replace(/zhdrive\.in/gi, 'OJI Drive')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim();
+}
+
+function parsePolicy(html: string): ParsedPolicy {
+  const mainMatch = html.match(/<main[\s\S]*?<\/main>/i);
+  const main = mainMatch ? mainMatch[0] : html;
+
+  const firstSecIdx = main.indexOf('<section');
+  const introHtml = firstSecIdx > -1 ? main.substring(0, firstSecIdx) : '';
+  const cleanIntro = stripHtml(introHtml)
+    .replace(/^Terms of Service\s*/i, '')
+    .replace(/^Privacy Policy\s*/i, '')
+    .replace(/^Security Policy\s*/i, '')
+    .replace(/^Last updated:[^\n]*\n*/i, '')
+    .trim();
+
+  const sections: { heading: string; body: string }[] = [];
+  const secRegex = /<section[\s\S]*?<h2[^>]*>([\s\S]*?)<\/h2>([\s\S]*?)<\/section>/gi;
+  let m: RegExpExecArray | null;
+  while ((m = secRegex.exec(main)) !== null) {
+    const heading = stripHtml(m[1]);
+    const body = stripHtml(m[2]);
+    if (heading && body) {
+      sections.push({ heading, body });
+    }
+  }
+
+  return { intro: cleanIntro, sections };
 }
 
 const POLICIES: PolicyDoc[] = [
@@ -148,7 +199,7 @@ export default function LegalDocScreen() {
         : 'terms';
 
   const [activeTab, setActiveTab] = useState<LegalTab>(initialTab);
-  const [liveHtmlMap, setLiveHtmlMap] = useState<Partial<Record<LegalTab, string>>>({});
+  const [livePolicyMap, setLivePolicyMap] = useState<Partial<Record<LegalTab, ParsedPolicy>>>({});
   const [fetching, setFetching] = useState(false);
 
   const currentPolicy = POLICIES.find((p) => p.id === activeTab) || POLICIES[0];
@@ -166,16 +217,9 @@ export default function LegalDocScreen() {
       setFetching(true);
       const res = await axios.get(policy.url, { timeout: 7000 });
       if (typeof res.data === 'string') {
-        const match = res.data.match(/<main[\s\S]*?<\/main>/i);
-        if (match) {
-          const clean = match[0]
-            .replace(/<header[\s\S]*?<\/header>/gi, '')
-            .replace(/<footer[\s\S]*?<\/footer>/gi, '')
-            .replace(/<button[^>]*>[\s\S]*?<\/button>/gi, '')
-            .replace(/https?:\/\/zhdrive\.in/gi, 'OJI Drive')
-            .replace(/zhdrive\.in/gi, 'OJI Drive')
-            .replace(/href="\/[^"]*"/g, 'href="#"');
-          setLiveHtmlMap((prev) => ({ ...prev, [tab]: clean }));
+        const parsed = parsePolicy(res.data);
+        if (parsed.sections.length > 0) {
+          setLivePolicyMap((prev) => ({ ...prev, [tab]: parsed }));
         }
       }
     } catch {
@@ -185,77 +229,10 @@ export default function LegalDocScreen() {
     }
   }
 
-  const isDark = g.scheme === 'dark';
-  const liveContent = liveHtmlMap[activeTab];
-
-  const htmlDocument = liveContent
-    ? `<!DOCTYPE html>
-<html>
-<head>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <style>
-    * { box-sizing: border-box; }
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-      margin: 0;
-      padding: 16px 12px 48px;
-      background-color: ${isDark ? '#140A05' : '#FFFBF7'};
-      color: ${isDark ? '#F5E6DC' : '#2A180E'};
-      line-height: 1.6;
-      font-size: 14px;
-      -webkit-font-smoothing: antialiased;
-    }
-    h1 {
-      font-size: 22px;
-      font-weight: 800;
-      color: ${isDark ? '#FFFFFF' : '#140A05'};
-      margin-top: 4px;
-      margin-bottom: 8px;
-      letter-spacing: -0.3px;
-    }
-    h2 {
-      font-size: 16px;
-      font-weight: 700;
-      color: #FF6A00;
-      margin-top: 22px;
-      margin-bottom: 8px;
-    }
-    p, li {
-      color: ${isDark ? '#D6C0B2' : '#5A3E2F'};
-      margin: 8px 0;
-    }
-    ul, ol {
-      padding-left: 20px;
-      margin: 8px 0;
-    }
-    li {
-      margin-bottom: 6px;
-    }
-    a {
-      color: #FF6A00;
-      text-decoration: underline;
-      pointer-events: none;
-    }
-    .text-muted-foreground {
-      color: ${isDark ? '#9B8172' : '#8A6D5E'} !important;
-      font-size: 12.5px;
-    }
-    header, footer, nav, button, [role="button"], a[href="/"] {
-      display: none !important;
-    }
-    .glass {
-      background: transparent !important;
-      border: none !important;
-      padding: 0 !important;
-      box-shadow: none !important;
-    }
-  </style>
-</head>
-<body>
-  ${liveContent}
-</body>
-</html>`
-    : null;
+  const parsedLive = livePolicyMap[activeTab];
+  const displaySections =
+    parsedLive && parsedLive.sections.length > 0 ? parsedLive.sections : bundled.sections;
+  const displayIntro = parsedLive?.intro;
 
   return (
     <GlassScreen edges={['top', 'left', 'right', 'bottom']}>
@@ -312,51 +289,40 @@ export default function LegalDocScreen() {
         })}
       </View>
 
-      {/* Content Card: Live HTML from site or Instant Bundled Fallback */}
+      {/* Content Card: Native Smooth Typography */}
       <GlassCard strong padding={0} radius={22} style={styles.docCard}>
-        {fetching && !liveContent ? (
-          <View style={styles.loadingContainer}>
-            <ActivityIndicator size="small" color={g.accent} />
-            <Text style={styles.loadingText}>Fetching latest policy…</Text>
-          </View>
-        ) : htmlDocument ? (
-          <WebView
-            key={activeTab}
-            source={{ html: htmlDocument, baseUrl: '' }}
-            style={styles.webView}
-            containerStyle={styles.webViewContainer}
-            originWhitelist={['*']}
-            showsVerticalScrollIndicator={false}
-            scrollEnabled={true}
-            onShouldStartLoadWithRequest={(request) => {
-              if (
-                !request.url ||
-                request.url === 'about:blank' ||
-                request.url.startsWith('data:') ||
-                request.url.startsWith('file:')
-              ) {
-                return true;
-              }
-              return false;
-            }}
-          />
-        ) : (
-          <ScrollView
-            style={styles.scroll}
-            contentContainerStyle={styles.scrollContent}
-            showsVerticalScrollIndicator={false}
-          >
-            <Text style={styles.docTitle}>{bundled.title}</Text>
-            <Text style={styles.docMeta}>Official Policy Document</Text>
-
-            {bundled.sections.map((sec, idx) => (
-              <View key={idx} style={styles.secBlock}>
-                <Text style={styles.secHeading}>{sec.heading}</Text>
-                <Text style={styles.secBody}>{sec.body}</Text>
+        <ScrollView
+          style={styles.scroll}
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+        >
+          <View style={styles.docHeaderRow}>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.docTitle}>{currentPolicy.title}</Text>
+              <Text style={styles.docMeta}>
+                {parsedLive ? 'Live Verified Policy • Auto-Updated' : 'Official Policy Document'}
+              </Text>
+            </View>
+            {fetching && (
+              <View style={styles.fetchingBadge}>
+                <ActivityIndicator size="small" color={g.accent} />
               </View>
-            ))}
-          </ScrollView>
-        )}
+            )}
+          </View>
+
+          {displayIntro ? (
+            <View style={styles.introBlock}>
+              <Text style={styles.introBody}>{displayIntro}</Text>
+            </View>
+          ) : null}
+
+          {displaySections.map((sec, idx) => (
+            <View key={idx} style={styles.secBlock}>
+              <Text style={styles.secHeading}>{sec.heading}</Text>
+              <Text style={styles.secBody}>{sec.body}</Text>
+            </View>
+          ))}
+        </ScrollView>
       </GlassCard>
     </GlassScreen>
   );
@@ -435,37 +401,26 @@ function getStyles(g: GlassTheme) {
       color: '#FFFFFF',
       fontFamily: fonts.semiBold,
     },
-    loadingContainer: {
-      flex: 1,
-      alignItems: 'center',
-      justifyContent: 'center',
-      padding: 32,
-      gap: 12,
-    },
-    loadingText: {
-      fontSize: 13,
-      fontFamily: fonts.medium,
-      color: g.textSecondary,
-    },
     docCard: {
       flex: 1,
       overflow: 'hidden',
       marginBottom: 8,
-    },
-    webView: {
-      flex: 1,
-      backgroundColor: g.scheme === 'dark' ? '#140A05' : '#FFFBF7',
-    },
-    webViewContainer: {
-      flex: 1,
-      backgroundColor: g.scheme === 'dark' ? '#140A05' : '#FFFBF7',
     },
     scroll: {
       flex: 1,
     },
     scrollContent: {
       padding: 20,
-      paddingBottom: 40,
+      paddingBottom: 48,
+    },
+    docHeaderRow: {
+      flexDirection: 'row',
+      alignItems: 'flex-start',
+      justifyContent: 'space-between',
+      marginBottom: 16,
+    },
+    fetchingBadge: {
+      padding: 4,
     },
     docTitle: {
       fontSize: 22,
@@ -478,13 +433,24 @@ function getStyles(g: GlassTheme) {
       fontSize: 12,
       fontFamily: fonts.medium,
       color: g.accent,
+    },
+    introBlock: {
       marginBottom: 20,
+      paddingBottom: 16,
+      borderBottomWidth: StyleSheet.hairlineWidth,
+      borderBottomColor: g.glassBorder,
+    },
+    introBody: {
+      fontSize: 13.5,
+      fontFamily: fonts.regular,
+      color: g.textSecondary,
+      lineHeight: 21,
     },
     secBlock: {
-      marginBottom: 18,
+      marginBottom: 20,
     },
     secHeading: {
-      fontSize: 15,
+      fontSize: 15.5,
       fontFamily: fonts.bold,
       color: g.text,
       marginBottom: 6,
