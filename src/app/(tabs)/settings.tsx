@@ -54,6 +54,8 @@ export default function SettingsScreen() {
   const tabBarHeight = useTabBarHeight();
   const onScroll = useTabBarScrollHandler();
   const logout = useAuthStore((state) => state.logout);
+  const user = useAuthStore((state) => state.user);
+  const isAdmin = user?.role === 'ADMIN';
 
   const biometricAvailable = useSecurityStore((state) => state.biometricAvailable);
   const biometricEnabled = useSecurityStore((state) => state.biometricEnabled);
@@ -469,34 +471,35 @@ export default function SettingsScreen() {
           />
         </View>
 
-        <Text style={styles.sectionLabel}>Developer & Admin</Text>
-        <View style={styles.card}>
-          <SettingsRow
-            icon="shield-crown-outline"
-            label="Admin & Release Console"
-            value="v1.9.4"
-            onPress={() => router.push('/admin' as any)}
-          />
-        </View>
+        {isAdmin && (
+          <>
+            <Text style={styles.sectionLabel}>Developer & Admin</Text>
+            <View style={styles.card}>
+              <SettingsRow
+                icon="shield-crown-outline"
+                label="Admin & Release Console"
+                value="v1.9.4"
+                onPress={() => router.push('/admin' as any)}
+              />
+            </View>
+          </>
+        )}
 
         <Text style={styles.sectionLabel}>Legal & Compliance</Text>
         <View style={styles.card}>
           <SettingsRow
             icon="file-document-outline"
             label="Terms of Service"
-            value="zhdrive.in/terms"
             onPress={() => router.push('/legal/terms')}
           />
           <SettingsRow
             icon="shield-lock-outline"
             label="Privacy Policy"
-            value="zhdrive.in/privacy"
             onPress={() => router.push('/legal/privacy')}
           />
           <SettingsRow
             icon="security"
             label="Security Policy"
-            value="zhdrive.in/security"
             onPress={() => router.push('/legal/security')}
           />
         </View>
