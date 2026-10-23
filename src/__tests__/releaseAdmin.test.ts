@@ -4,7 +4,7 @@ describe('useReleaseAdminStore', () => {
   beforeEach(() => {
     // Reset to initial state
     useReleaseAdminStore.setState({
-      appVersion: '1.9.4',
+      appVersion: '1.9.5',
       buildNumber: '17',
       releaseChannel: 'production',
       releaseStatus: 'STABLE',

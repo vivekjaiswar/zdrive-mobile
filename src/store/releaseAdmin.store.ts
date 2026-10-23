@@ -61,7 +61,7 @@ interface ReleaseAdminStore {
 }
 
 export const useReleaseAdminStore = create<ReleaseAdminStore>((set, get) => ({
-  appVersion: '1.9.4',
+  appVersion: '1.9.5',
   buildNumber: '17',
   releaseChannel: 'production',
   releaseStatus: 'STABLE',

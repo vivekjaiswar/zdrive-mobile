@@ -478,7 +478,7 @@ export default function SettingsScreen() {
               <SettingsRow
                 icon="shield-crown-outline"
                 label="Admin & Release Console"
-                value="v1.9.4"
+                value="v1.9.5"
                 onPress={() => router.push('/admin' as any)}
               />
             </View>
