@@ -8,14 +8,18 @@ export const GOOGLE_WEB_CLIENT_ID =
   process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID || DEFAULT_WEB_CLIENT_ID;
 
 export const GOOGLE_IOS_CLIENT_ID =
-  process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID ?? undefined;
+  process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID || GOOGLE_WEB_CLIENT_ID;
 
 export const isGoogleSignInConfigured = true;
 
 export function configureGoogleSignin() {
-  GoogleSignin.configure({
-    webClientId: GOOGLE_WEB_CLIENT_ID,
-    iosClientId: GOOGLE_IOS_CLIENT_ID,
-    offlineAccess: false,
-  });
+  try {
+    GoogleSignin.configure({
+      webClientId: GOOGLE_WEB_CLIENT_ID,
+      iosClientId: GOOGLE_IOS_CLIENT_ID,
+      offlineAccess: false,
+    });
+  } catch (error) {
+    console.warn('Google Sign-In configuration error:', error);
+  }
 }

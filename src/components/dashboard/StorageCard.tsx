@@ -48,37 +48,40 @@ export default function StorageCard({
       fileTypeBreakdown.Other
     : 0;
 
-  // OJI Brand palette breakdown
+  // Apple iOS 27-Style System Categorization
   const segments =
     fileTypeBreakdown && totalBreakdownFiles > 0
       ? [
           {
             label: 'Images',
             count: fileTypeBreakdown.Images,
-            color: '#FF6A00',
+            color: '#007AFF',
             widthPct: Math.max((fileTypeBreakdown.Images / totalBreakdownFiles) * pct, 2),
           },
           {
             label: 'Videos',
             count: fileTypeBreakdown.Videos,
-            color: '#D85604',
+            color: '#AF52DE',
             widthPct: Math.max((fileTypeBreakdown.Videos / totalBreakdownFiles) * pct, 2),
           },
           {
             label: 'Documents',
             count: fileTypeBreakdown.Documents,
-            color: '#9A3412',
+            color: '#FF9500',
             widthPct: Math.max((fileTypeBreakdown.Documents / totalBreakdownFiles) * pct, 2),
           },
         ].filter((s) => s.count > 0)
       : [
-          { label: 'Files', count: fileCount, color: '#FF6A00', widthPct: Math.max(pct * 0.55, 4) },
-          { label: 'Folders', count: folderCount, color: '#D85604', widthPct: Math.max(pct * 0.30, 3) },
-          { label: 'Shared', count: sharedCount, color: '#9A3412', widthPct: Math.max(pct * 0.15, 2) },
+          { label: 'Files', count: fileCount, color: '#007AFF', widthPct: Math.max(pct * 0.55, 4) },
+          { label: 'Folders', count: folderCount, color: '#FF9500', widthPct: Math.max(pct * 0.30, 3) },
+          { label: 'Shared', count: sharedCount, color: '#AF52DE', widthPct: Math.max(pct * 0.15, 2) },
         ];
 
   return (
-    <Pressable onPress={() => router.push('/(tabs)/settings')}>
+    <Pressable
+      style={({ pressed }) => [pressed && styles.cardPressed]}
+      onPress={() => router.push('/(tabs)/settings')}
+    >
       <GlassCard radius={26} padding={22} style={styles.card}>
         {/* Top Header Row */}
         <View style={styles.topRow}>
@@ -131,6 +134,10 @@ function getStyles(g: GlassTheme) {
   return StyleSheet.create({
     card: {
       marginBottom: 22,
+    },
+    cardPressed: {
+      opacity: 0.92,
+      transform: [{ scale: 0.985 }],
     },
     topRow: {
       flexDirection: 'row',
@@ -185,6 +192,8 @@ function getStyles(g: GlassTheme) {
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'space-between',
+      flexWrap: 'wrap',
+      gap: 8,
     },
     legendItem: {
       flexDirection: 'row',

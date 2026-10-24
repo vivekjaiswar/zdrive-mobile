@@ -12,6 +12,7 @@ interface Props {
   loading?: boolean;
   destructive?: boolean;
   showChevron?: boolean;
+  isLast?: boolean;
   // Toggle mode: when provided, a Switch replaces the value/chevron
   // and the row itself is no longer independently pressable (avoids
   // the row's own tap and the Switch's tap firing two toggles at
@@ -28,11 +29,13 @@ export default function SettingsRow({
   loading = false,
   destructive = false,
   showChevron = true,
+  isLast = false,
   toggleValue,
   onToggleChange,
 }: Props) {
   const colors = useColors();
   const styles = getStyles(colors);
+  const isDark = colors.statusBarStyle === 'light';
   const color = destructive ? colors.danger : colors.primary;
   const isToggle = toggleValue !== undefined;
 
@@ -40,7 +43,11 @@ export default function SettingsRow({
     <Pressable
       onPress={isToggle ? undefined : onPress}
       disabled={isToggle || !onPress || loading}
-      style={({ pressed }) => [styles.row, pressed && onPress && !isToggle && styles.pressed]}
+      style={({ pressed }) => [
+        styles.row,
+        isLast && styles.rowLast,
+        pressed && onPress && !isToggle && styles.pressed,
+      ]}
     >
       <View style={styles.iconCircle}>
         <MaterialCommunityIcons name={icon} size={19} color={color} />
@@ -56,8 +63,12 @@ export default function SettingsRow({
         <Switch
           value={toggleValue}
           onValueChange={onToggleChange}
-          trackColor={{ false: colors.border, true: colors.primary }}
+          trackColor={{
+            false: isDark ? 'rgba(255, 255, 255, 0.18)' : '#E5E5EA',
+            true: '#34C759',
+          }}
           thumbColor="#FFFFFF"
+          ios_backgroundColor={isDark ? 'rgba(255, 255, 255, 0.18)' : '#E5E5EA'}
         />
       ) : value ? (
         <Text style={styles.value} numberOfLines={1}>
@@ -75,24 +86,28 @@ export default function SettingsRow({
 import { fonts } from '@/theme/typography';
 
 function getStyles(colors: ColorPalette) {
+  const isDark = colors.statusBarStyle === 'light';
   return StyleSheet.create({
     row: {
       flexDirection: 'row',
       alignItems: 'center',
-      paddingVertical: 15,
-      borderBottomWidth: 1,
-      borderBottomColor: colors.border,
+      paddingVertical: 14,
+      borderBottomWidth: StyleSheet.hairlineWidth,
+      borderBottomColor: isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(15, 23, 42, 0.06)',
       gap: 12,
+    },
+    rowLast: {
+      borderBottomWidth: 0,
     },
 
     pressed: {
-      opacity: 0.6,
+      opacity: 0.65,
     },
 
     iconCircle: {
       width: 36,
       height: 36,
-      borderRadius: 18,
+      borderRadius: 12,
       backgroundColor: colors.primarySoft,
       justifyContent: 'center',
       alignItems: 'center',

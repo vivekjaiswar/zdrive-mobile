@@ -184,14 +184,19 @@ function RootLayout() {
   }, []);
 
   useEffect(() => {
+    const timer = setTimeout(() => {
+      SplashScreen.hideAsync().catch(() => {});
+    }, 2000);
+
     if (fontsLoaded) {
       SplashScreen.hideAsync().catch(() => {});
     }
+
+    return () => clearTimeout(timer);
   }, [fontsLoaded]);
 
-  if (!fontsLoaded) {
-    return null;
-  }
+  // Allow fallback system fonts so app UI is never blocked on a blank splash
+  // if (!fontsLoaded) return null;
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>

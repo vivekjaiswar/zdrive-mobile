@@ -28,43 +28,49 @@ export default function DashboardHeader({ userName, avatarUrl }: Props) {
 
   return (
     <View style={styles.container}>
-      <View style={styles.left}>
+      {/* Top Action Bar */}
+      <View style={styles.topRow}>
         <View style={styles.brandRow}>
-          <Logo size={36} showTagline={false} />
+          <Logo size={32} showTagline={false} />
         </View>
 
-        <Text style={styles.greetingText} numberOfLines={1}>
-          Welcome, <Text style={styles.nameText}>{userName || 'User'}</Text>
-        </Text>
+        <View style={styles.rightActions}>
+          <Pressable
+            style={({ pressed }) => [styles.iconBtn, pressed && styles.btnPressed]}
+            onPress={() => router.push('/(tabs)/files')}
+            hitSlop={8}
+            accessibilityLabel="Search Files"
+          >
+            <MaterialCommunityIcons name="magnify" size={21} color={g.text} />
+          </Pressable>
+
+          <Pressable
+            style={({ pressed }) => [styles.avatarBtn, pressed && styles.btnPressed]}
+            onPress={() => router.push('/(tabs)/settings')}
+            hitSlop={8}
+            accessibilityLabel="Profile Settings"
+          >
+            {avatarUrl ? (
+              <Image
+                source={{ uri: avatarUrl }}
+                style={styles.avatarImg}
+                contentFit="cover"
+                transition={150}
+              />
+            ) : (
+              <View style={styles.initialsWrap}>
+                <Text style={styles.initialsText}>{initials}</Text>
+              </View>
+            )}
+          </Pressable>
+        </View>
       </View>
 
-      <View style={styles.rightActions}>
-        <Pressable
-          style={styles.iconBtn}
-          onPress={() => router.push('/(tabs)/files')}
-          hitSlop={8}
-        >
-          <MaterialCommunityIcons name="magnify" size={22} color={g.accent} />
-        </Pressable>
-
-        <Pressable
-          style={styles.avatarBtn}
-          onPress={() => router.push('/(tabs)/settings')}
-          hitSlop={8}
-        >
-          {avatarUrl ? (
-            <Image
-              source={{ uri: avatarUrl }}
-              style={styles.avatarImg}
-              contentFit="cover"
-              transition={150}
-            />
-          ) : (
-            <View style={styles.initialsWrap}>
-              <Text style={styles.initialsText}>{initials}</Text>
-            </View>
-          )}
-        </Pressable>
+      {/* Full-Width Adaptive Greeting: never truncates names */}
+      <View style={styles.greetingRow}>
+        <Text style={styles.greetingText}>
+          Welcome, <Text style={styles.nameText}>{userName || 'User'}</Text>
+        </Text>
       </View>
     </View>
   );
@@ -73,33 +79,36 @@ export default function DashboardHeader({ userName, avatarUrl }: Props) {
 function getStyles(g: GlassTheme) {
   return StyleSheet.create({
     container: {
+      marginTop: 4,
+      marginBottom: 16,
+    },
+    topRow: {
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'space-between',
-      marginTop: 8,
-      marginBottom: 20,
-    },
-    left: {
-      flex: 1,
-      paddingRight: 12,
+      marginBottom: 8,
     },
     brandRow: {
       flexDirection: 'row',
       alignItems: 'center',
-      gap: 10,
-      marginBottom: 4,
+    },
+    greetingRow: {
+      width: '100%',
+      marginTop: 2,
     },
     greetingText: {
-      fontSize: 22,
-      fontFamily: fonts.heading,
+      fontSize: 24,
+      lineHeight: 30,
+      fontFamily: fonts.bold,
       color: g.text,
-      letterSpacing: -0.2,
+      letterSpacing: -0.4,
     },
     nameText: {
-      fontSize: 23,
-      fontFamily: fonts.heading,
+      fontSize: 24,
+      lineHeight: 30,
+      fontFamily: fonts.bold,
       color: g.accent,
-      letterSpacing: -0.2,
+      letterSpacing: -0.4,
     },
     rightActions: {
       flexDirection: 'row',
@@ -107,19 +116,23 @@ function getStyles(g: GlassTheme) {
       gap: 10,
     },
     iconBtn: {
-      width: 42,
-      height: 42,
-      borderRadius: 21,
+      width: 40,
+      height: 40,
+      borderRadius: 20,
       backgroundColor: g.glassFill,
       borderWidth: 1,
       borderColor: g.glassBorder,
       alignItems: 'center',
       justifyContent: 'center',
     },
+    btnPressed: {
+      opacity: 0.8,
+      transform: [{ scale: 0.94 }],
+    },
     avatarBtn: {
-      width: 46,
-      height: 46,
-      borderRadius: 23,
+      width: 42,
+      height: 42,
+      borderRadius: 21,
       backgroundColor: g.glassFill,
       borderWidth: 1.5,
       borderColor: g.accent,
@@ -139,7 +152,7 @@ function getStyles(g: GlassTheme) {
       justifyContent: 'center',
     },
     initialsText: {
-      fontSize: 16,
+      fontSize: 15,
       fontFamily: fonts.bold,
       color: g.accent,
     },

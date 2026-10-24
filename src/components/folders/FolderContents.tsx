@@ -199,7 +199,7 @@ export default function FolderContents({
               </Text>
             )}
           </View>
-        ) : null
+        ) : undefined
       }
       renderItem={({ item }) => {
         const onPress = () =>

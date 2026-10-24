@@ -60,7 +60,7 @@ export default function RecentActivity({
         </Pressable>
       </View>
 
-      <GlassCard strong padding={6} radius={24}>
+      <GlassCard padding={6} radius={22}>
         {!hasItems ? (
           <View style={styles.empty}>
             <MaterialCommunityIcons name="cloud-upload-outline" size={28} color={g.textFaint} />

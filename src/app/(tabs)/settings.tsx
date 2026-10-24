@@ -14,6 +14,7 @@ import * as DocumentPicker from 'expo-document-picker';
 import * as Sentry from '@sentry/react-native';
 
 import Screen from '@/components/Layout/Screen';
+import GlassCard from '@/components/glass/GlassCard';
 import SettingsSkeleton from '@/components/settings/SettingsSkeleton';
 import ProfileHeader from '@/components/settings/ProfileHeader';
 import SettingsRow from '@/components/settings/SettingsRow';
@@ -321,17 +322,18 @@ export default function SettingsScreen() {
         />
 
         <Text style={styles.sectionLabel}>Storage</Text>
-        <View style={styles.card}>
+        <GlassCard padding={0} radius={22} style={styles.card}>
           <SettingsRow
             icon="database-outline"
             label="Used"
             value={`${formatBytes(profile.storageUsed)} of ${formatBytes(profile.storageLimit)}`}
             showChevron={false}
+            isLast
           />
-        </View>
+        </GlassCard>
 
         <Text style={styles.sectionLabel}>Subscription</Text>
-        <View style={styles.card}>
+        <GlassCard padding={0} radius={22} style={styles.card}>
           <SettingsRow
             icon="crown-outline"
             label="Current Plan"
@@ -370,13 +372,14 @@ export default function SettingsScreen() {
             label="Tax & Billing Details"
             value={profile.gstin ? 'Configured' : 'Not set'}
             onPress={() => setBillingDetailsModalVisible(true)}
+            isLast
           />
-        </View>
+        </GlassCard>
 
         {referralInfo && (
           <>
             <Text style={styles.sectionLabel}>Referrals & Rewards</Text>
-            <View style={styles.card}>
+            <GlassCard padding={0} radius={22} style={styles.card}>
               <SettingsRow
                 icon="gift-outline"
                 label="Referral Code"
@@ -392,13 +395,14 @@ export default function SettingsScreen() {
                 label="Friends Referred"
                 value={`${referralInfo.referredCount} (Bonus: ${formatBytes(referralInfo.bonusStorageBytes)})`}
                 showChevron={false}
+                isLast
               />
-            </View>
+            </GlassCard>
           </>
         )}
 
         <Text style={styles.sectionLabel}>Photo Backup & Permissions</Text>
-        <View style={styles.card}>
+        <GlassCard padding={0} radius={22} style={styles.card}>
           <SettingsRow
             icon="cloud-sync-outline"
             label="Auto Photo Backup"
@@ -417,11 +421,12 @@ export default function SettingsScreen() {
             label="System Permissions"
             value="Gallery, Files, Camera"
             onPress={() => setPermissionsModalVisible(true)}
+            isLast
           />
-        </View>
+        </GlassCard>
 
         <Text style={styles.sectionLabel}>Security</Text>
-        <View style={styles.card}>
+        <GlassCard padding={0} radius={22} style={styles.card}>
           {biometricAvailable && (
             <SettingsRow
               icon="fingerprint"
@@ -445,11 +450,12 @@ export default function SettingsScreen() {
             icon="monitor-cellphone"
             label="Link Desktop App"
             onPress={() => setDeviceModalVisible(true)}
+            isLast
           />
-        </View>
+        </GlassCard>
 
         <Text style={styles.sectionLabel}>Account</Text>
-        <View style={styles.card}>
+        <GlassCard padding={0} radius={22} style={styles.card}>
           <SettingsRow
             icon="lock-outline"
             label="Change Password"
@@ -468,25 +474,27 @@ export default function SettingsScreen() {
             destructive
             showChevron={false}
             onPress={() => setDeleteModalVisible(true)}
+            isLast
           />
-        </View>
+        </GlassCard>
 
         {isAdmin && (
           <>
             <Text style={styles.sectionLabel}>Developer & Admin</Text>
-            <View style={styles.card}>
+            <GlassCard padding={0} radius={22} style={styles.card}>
               <SettingsRow
                 icon="shield-crown-outline"
                 label="Admin & Release Console"
                 value="v1.9.5"
                 onPress={() => router.push('/admin' as any)}
+                isLast
               />
-            </View>
+            </GlassCard>
           </>
         )}
 
         <Text style={styles.sectionLabel}>Legal & Compliance</Text>
-        <View style={styles.card}>
+        <GlassCard padding={0} radius={22} style={styles.card}>
           <SettingsRow
             icon="file-document-outline"
             label="Terms of Service"
@@ -501,8 +509,9 @@ export default function SettingsScreen() {
             icon="security"
             label="Security Policy"
             onPress={() => router.push('/legal/security')}
+            isLast
           />
-        </View>
+        </GlassCard>
       </ScrollView>
 
       <TextPromptModal
@@ -583,21 +592,18 @@ import { fonts } from '@/theme/typography';
 function getStyles(colors: ColorPalette) {
   return StyleSheet.create({
     sectionLabel: {
-      marginTop: 8,
+      marginTop: 14,
       marginBottom: 8,
+      marginLeft: 4,
       fontSize: 12,
-      fontFamily: fonts.bold,
+      fontFamily: fonts.semiBold,
       color: colors.textSecondary,
       textTransform: 'uppercase',
       letterSpacing: 0.8,
     },
     card: {
-      backgroundColor: colors.surface,
-      borderRadius: 22,
       paddingHorizontal: 16,
-      marginBottom: 20,
-      borderWidth: 1,
-      borderColor: colors.border,
+      marginBottom: 16,
     },
   });
 }

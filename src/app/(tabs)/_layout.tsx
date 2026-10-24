@@ -30,7 +30,7 @@ export default function TabsLayout() {
               <MaterialCommunityIcons
                 name={focused ? 'home-variant' : 'home-variant-outline'}
                 size={size}
-                color={color}
+                color={color as string}
               />
             ),
           }}
@@ -43,7 +43,7 @@ export default function TabsLayout() {
               <MaterialCommunityIcons
                 name={focused ? 'folder' : 'folder-outline'}
                 size={size}
-                color={color}
+                color={color as string}
               />
             ),
           }}
@@ -56,7 +56,7 @@ export default function TabsLayout() {
               <MaterialCommunityIcons
                 name={focused ? 'share-variant' : 'share-variant-outline'}
                 size={size}
-                color={color}
+                color={color as string}
               />
             ),
           }}
@@ -69,7 +69,7 @@ export default function TabsLayout() {
               <MaterialCommunityIcons
                 name={focused ? 'cog' : 'cog-outline'}
                 size={size}
-                color={color}
+                color={color as string}
               />
             ),
           }}

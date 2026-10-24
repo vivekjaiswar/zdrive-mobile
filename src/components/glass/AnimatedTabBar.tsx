@@ -5,48 +5,52 @@ import Animated, {
   interpolate,
   Extrapolation,
 } from 'react-native-reanimated';
-import { LinearGradient } from 'expo-linear-gradient';
+import { BlurView } from 'expo-blur';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { GlassTheme, useGlass } from '@/theme/glass';
 import { fonts } from '@/theme/typography';
 
-const BAR_HEIGHT = 62;
+export const TAB_BAR_HEIGHT = 64;
 
 interface Props {
   state: any;
   descriptors: any;
-  navigation: any;
-  visible: SharedValue<number>;
+  navigation?: any;
+  navigateToTab?: (routeKey: string) => void;
+  emitter?: any;
+  visible?: SharedValue<number>;
 }
 
-export default function AnimatedTabBar({ state, descriptors, navigation, visible }: Props) {
+export default function AnimatedTabBar(props: Props) {
+  const { state, descriptors, navigation, navigateToTab, visible } = props;
   const g = useGlass();
   const insets = useSafeAreaInsets();
   const isDark = g.scheme === 'dark';
 
-  // Generous clearance for Android 3-button navigation (42dp bar) and gesture insets
-  const navBarOffset = Math.max(insets.bottom, Platform.OS === 'android' ? 46 : 20) + 10;
-  const styles = getStyles(g, navBarOffset);
+  const bottomOffset = insets.bottom > 0 ? insets.bottom + 6 : 16;
+  const styles = getStyles(g, bottomOffset);
 
   const animStyle = useAnimatedStyle(() => {
-    // When scrolling down, navbar smoothly shrinks in scale and slides down
+    if (!visible) return {};
+
+    // Instagram / iOS Dynamic Capsule Scroll Shrink
     const scale = interpolate(
       visible.value,
       [0, 1],
-      [0.78, 1],
+      [0.82, 1],
       Extrapolation.CLAMP,
     );
     const translateY = interpolate(
       visible.value,
       [0, 1],
-      [BAR_HEIGHT + navBarOffset + 30, 0],
+      [TAB_BAR_HEIGHT + bottomOffset + 24, 0],
       Extrapolation.CLAMP,
     );
     const opacity = interpolate(
       visible.value,
-      [0, 0.35, 1],
-      [0, 0.5, 1],
+      [0, 0.4, 1],
+      [0, 0.6, 1],
       Extrapolation.CLAMP,
     );
 
@@ -58,58 +62,88 @@ export default function AnimatedTabBar({ state, descriptors, navigation, visible
 
   return (
     <View style={styles.outerContainer} pointerEvents="box-none">
-      <Animated.View style={[styles.wrap, animStyle]} pointerEvents="auto">
-        {/* Instagram-Style Sunset Gradient Border */}
-        <LinearGradient
-          colors={['#FF6A00', '#FF385C', '#D85604', '#FFA000']}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 0.8 }}
-          style={styles.gradientBorder}
-        >
-          {/* Inner Content with opaque background to prevent text bleed-through */}
+      <Animated.View style={[styles.capsuleWrap, animStyle]} pointerEvents="auto">
+        {/* iOS 27 Liquid Glass Background */}
+        <View style={styles.glassContainer}>
+          <BlurView
+            intensity={Platform.OS === 'ios' ? 85 : 40}
+            tint={isDark ? 'dark' : 'light'}
+            style={StyleSheet.absoluteFill}
+          />
           <View
             style={[
-              styles.innerContent,
+              StyleSheet.absoluteFill,
               {
                 backgroundColor: isDark
-                  ? 'rgba(20, 10, 5, 0.98)'
-                  : 'rgba(255, 255, 255, 0.98)',
+                  ? 'rgba(28, 28, 30, 0.85)'
+                  : 'rgba(255, 255, 255, 0.88)',
               },
             ]}
-          >
+          />
+
+          {/* Hairline Glass Highlight Border */}
+          <View
+            style={[
+              styles.glassBorder,
+              {
+                borderColor: isDark
+                  ? 'rgba(255, 255, 255, 0.16)'
+                  : 'rgba(0, 0, 0, 0.08)',
+              },
+            ]}
+          />
+
+          {/* Tabs Content */}
+          <View style={styles.tabsRow}>
             {state.routes.map((route: { key: string; name: string }, index: number) => {
               const { options } = descriptors[route.key];
               const focused = state.index === index;
-              const color = focused ? g.accent : g.textFaint;
+              const color = focused ? g.accent : (isDark ? '#8E8E93' : '#6C6C70');
               const label = (options.title ?? route.name) as string;
 
               const onPress = () => {
-                const event = navigation.emit({
-                  type: 'tabPress',
-                  target: route.key,
-                  canPreventDefault: true,
-                });
-                if (!focused && !event.defaultPrevented) {
-                  navigation.navigate(route.name);
+                if (navigateToTab) {
+                  navigateToTab(route.key);
+                } else if (navigation) {
+                  const event = navigation.emit({
+                    type: 'tabPress',
+                    target: route.key,
+                    canPreventDefault: true,
+                  });
+                  if (!focused && !event.defaultPrevented) {
+                    navigation.navigate(route.name);
+                  }
                 }
               };
 
               return (
                 <Pressable
                   key={route.key}
-                  style={styles.tab}
+                  style={({ pressed }) => [
+                    styles.tab,
+                    pressed && styles.tabPressed,
+                  ]}
                   onPress={onPress}
                   hitSlop={8}
                 >
-                  <View style={styles.iconWrap}>
-                    {options.tabBarIcon?.({ focused, color, size: 22 })}
+                  <View
+                    style={[
+                      styles.iconWrap,
+                      focused && {
+                        backgroundColor: isDark
+                          ? 'rgba(255, 94, 30, 0.16)'
+                          : 'rgba(255, 94, 30, 0.10)',
+                      },
+                    ]}
+                  >
+                    {options.tabBarIcon?.({ focused, color, size: 23 })}
                   </View>
                   <Text
                     style={[
                       styles.label,
                       {
-                        color: focused ? g.accent : g.textFaint,
-                        fontFamily: focused ? fonts.bold : fonts.medium,
+                        color,
+                        fontFamily: focused ? fonts.semiBold : fonts.medium,
                       },
                     ]}
                     numberOfLines={1}
@@ -120,13 +154,15 @@ export default function AnimatedTabBar({ state, descriptors, navigation, visible
               );
             })}
           </View>
-        </LinearGradient>
+        </View>
       </Animated.View>
     </View>
   );
 }
 
-function getStyles(g: GlassTheme, bottomOffset: number = 0) {
+function getStyles(g: GlassTheme, bottomOffset: number) {
+  const isDark = g.scheme === 'dark';
+
   return StyleSheet.create({
     outerContainer: {
       position: 'absolute',
@@ -135,24 +171,30 @@ function getStyles(g: GlassTheme, bottomOffset: number = 0) {
       right: 0,
       alignItems: 'center',
     },
-    wrap: {
+    capsuleWrap: {
       width: '92%',
-      maxWidth: 440,
-      height: BAR_HEIGHT,
-      shadowColor: '#FF6A00',
-      shadowOpacity: 0.22,
+      maxWidth: 420,
+      height: TAB_BAR_HEIGHT,
+      borderRadius: 32,
+      shadowColor: '#000000',
+      shadowOffset: { width: 0, height: 8 },
+      shadowOpacity: isDark ? 0.35 : 0.12,
       shadowRadius: 18,
-      shadowOffset: { width: 0, height: 6 },
       elevation: 10,
     },
-    gradientBorder: {
+    glassContainer: {
       flex: 1,
-      borderRadius: 36,
-      padding: 1.8,
+      borderRadius: 32,
+      overflow: 'hidden',
     },
-    innerContent: {
+    glassBorder: {
+      ...StyleSheet.absoluteFill,
+      borderRadius: 32,
+      borderWidth: 1,
+      pointerEvents: 'none',
+    },
+    tabsRow: {
       flex: 1,
-      borderRadius: 34.2,
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'space-around',
@@ -162,19 +204,23 @@ function getStyles(g: GlassTheme, bottomOffset: number = 0) {
       flex: 1,
       alignItems: 'center',
       justifyContent: 'center',
-      gap: 3,
-      height: '100%',
+      paddingVertical: 4,
+    },
+    tabPressed: {
+      transform: [{ scale: 0.92 }],
+      opacity: 0.85,
     },
     iconWrap: {
       width: 44,
-      height: 28,
-      borderRadius: 14,
+      height: 30,
+      borderRadius: 15,
       alignItems: 'center',
       justifyContent: 'center',
+      marginBottom: 2,
     },
     label: {
       fontSize: 10.5,
-      letterSpacing: 0.1,
+      letterSpacing: -0.1,
     },
   });
 }

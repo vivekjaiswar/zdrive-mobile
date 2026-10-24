@@ -23,38 +23,38 @@ export default function QuickActions({
   const g = useGlass();
   const styles = getStyles(g);
 
-  // OJI Brand Folder Cards
+  // Apple iOS 27 System Folder Cards
   const folderCards = [
     {
       title: 'All Files',
       subtitle: `${fileCount} items`,
       icon: 'folder' as const,
-      color: '#FF6A00',
-      bgColor: 'rgba(255, 106, 0, 0.15)',
+      color: '#007AFF',
+      bgColor: 'rgba(0, 122, 255, 0.12)',
       onPress: () => router.push('/(tabs)/files'),
     },
     {
       title: 'Photos',
       subtitle: 'Media gallery',
       icon: 'image-multiple' as const,
-      color: '#D85604',
-      bgColor: 'rgba(216, 86, 4, 0.15)',
+      color: '#FF2D55',
+      bgColor: 'rgba(255, 45, 85, 0.12)',
       onPress: () => router.push('/photos'),
     },
     {
       title: 'Shared Links',
       subtitle: `${sharedCount} links`,
       icon: 'share-variant' as const,
-      color: '#EA580C',
-      bgColor: 'rgba(234, 88, 12, 0.15)',
+      color: '#AF52DE',
+      bgColor: 'rgba(175, 82, 222, 0.12)',
       onPress: () => router.push('/(tabs)/shared'),
     },
     {
       title: 'Trash',
       subtitle: 'Deleted items',
       icon: 'trash-can' as const,
-      color: '#9A3412',
-      bgColor: 'rgba(154, 52, 18, 0.15)',
+      color: '#FF9500',
+      bgColor: 'rgba(255, 149, 0, 0.12)',
       onPress: () => router.push('/trash'),
     },
   ];
@@ -86,7 +86,7 @@ export default function QuickActions({
         {folderCards.map((card) => (
           <Pressable
             key={card.title}
-            style={styles.gridCard}
+            style={({ pressed }) => [styles.gridCard, pressed && styles.cardPressed]}
             onPress={card.onPress}
           >
             <GlassCard radius={22} padding={16}>
@@ -152,8 +152,12 @@ function getStyles(g: GlassTheme) {
       gap: 12,
     },
     gridCard: {
-      width: '48%',
+      flexBasis: '47%',
       flexGrow: 1,
+    },
+    cardPressed: {
+      opacity: 0.88,
+      transform: [{ scale: 0.97 }],
     },
     cardHeader: {
       flexDirection: 'row',

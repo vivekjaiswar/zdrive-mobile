@@ -3,6 +3,7 @@ import {
   Alert,
   Linking,
   Modal,
+  Platform,
   Pressable,
   StyleSheet,
   Text,
@@ -44,6 +45,20 @@ export default function PermissionsModal({ visible, onClose }: Props) {
     }
   }
 
+  async function handleOpenSettings() {
+    try {
+      await Linking.openSettings();
+    } catch {
+      if (Platform.OS === 'ios') {
+        try {
+          await Linking.openURL('App-Prefs:');
+        } catch {
+          // ignore
+        }
+      }
+    }
+  }
+
   async function handleRequestPhotos() {
     try {
       const res = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -51,12 +66,12 @@ export default function PermissionsModal({ visible, onClose }: Props) {
         setPhotoStatus('Granted');
         Alert.alert('Permission Granted', 'Photo & Gallery access is active.');
       } else if (!res.canAskAgain) {
-        Linking.openSettings();
+        handleOpenSettings();
       } else {
         setPhotoStatus('Not Granted');
       }
     } catch {
-      Linking.openSettings();
+      handleOpenSettings();
     }
   }
 
@@ -67,12 +82,12 @@ export default function PermissionsModal({ visible, onClose }: Props) {
         setCameraStatus('Granted');
         Alert.alert('Permission Granted', 'Camera access is active.');
       } else if (!res.canAskAgain) {
-        Linking.openSettings();
+        handleOpenSettings();
       } else {
         setCameraStatus('Not Granted');
       }
     } catch {
-      Linking.openSettings();
+      handleOpenSettings();
     }
   }
 
@@ -128,7 +143,9 @@ export default function PermissionsModal({ visible, onClose }: Props) {
                     <Text style={styles.rowDesc}>Access document picker for PDF, ZIP & code files</Text>
                   </View>
                   <View style={styles.badge}>
-                    <Text style={[styles.badgeText, { color: g.success }]}>Active (SAF)</Text>
+                    <Text style={[styles.badgeText, { color: g.success }]}>
+                      {Platform.OS === 'android' ? 'Active (SAF)' : 'Active'}
+                    </Text>
                   </View>
                 </Pressable>
               </GlassCard>
@@ -151,10 +168,12 @@ export default function PermissionsModal({ visible, onClose }: Props) {
                 </Pressable>
               </GlassCard>
 
-              {/* Open Android System Settings */}
-              <Pressable style={styles.openSettingsBtn} onPress={() => Linking.openSettings()}>
-                <MaterialCommunityIcons name="cog-outline" size={18} color={g.accent} />
-                <Text style={styles.openSettingsText}>Open Android System Settings</Text>
+              {/* Open System Settings */}
+              <Pressable style={styles.openSettingsBtn} onPress={handleOpenSettings}>
+                <MaterialCommunityIcons name="cog-outline" size={19} color="#FFFFFF" />
+                <Text style={styles.openSettingsText}>
+                  {Platform.OS === 'ios' ? 'Open iOS Settings' : 'Open System Settings'}
+                </Text>
               </Pressable>
             </View>
           </View>
@@ -270,22 +289,24 @@ function getStyles(g: GlassTheme) {
       color: g.textSecondary,
     },
     openSettingsBtn: {
-      marginTop: 8,
+      marginTop: 10,
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'center',
       gap: 8,
-      paddingVertical: 12,
-      borderRadius: 16,
-      backgroundColor: g.accentSoft,
-      borderWidth: 1,
-      borderColor: g.glassBorder,
+      paddingVertical: 14,
+      borderRadius: 18,
+      backgroundColor: g.accent,
+      shadowColor: g.accent,
+      shadowOpacity: 0.28,
+      shadowRadius: 14,
+      shadowOffset: { width: 0, height: 6 },
     },
     openSettingsText: {
       fontFamily: fonts.bold,
-      fontSize: 13.5,
+      fontSize: 14,
       fontWeight: '700',
-      color: g.accent,
+      color: '#FFFFFF',
     },
   });
 }

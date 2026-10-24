@@ -1,10 +1,11 @@
 export const fonts = {
-  heading: 'Forum_400Regular',
-  regular: 'DMSans_400Regular',
-  medium: 'DMSans_500Medium',
-  semiBold: 'DMSans_500Medium',
-  bold: 'DMSans_700Bold',
-  extraBold: 'DMSans_700Bold',
+  heading: 'PlusJakartaSans_700Bold',
+  headingSemiBold: 'PlusJakartaSans_600SemiBold',
+  regular: 'PlusJakartaSans_400Regular',
+  medium: 'PlusJakartaSans_500Medium',
+  semiBold: 'PlusJakartaSans_600SemiBold',
+  bold: 'PlusJakartaSans_700Bold',
+  extraBold: 'PlusJakartaSans_800ExtraBold',
 };
 
 export const typography = {

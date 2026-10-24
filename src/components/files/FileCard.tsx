@@ -193,7 +193,7 @@ function getStyles(colors: ColorPalette) {
       borderWidth: 1,
       borderColor: colors.border,
     },
-    pressed: { opacity: 0.85 },
+    pressed: { opacity: 0.85, transform: [{ scale: 0.985 }] },
     cardSelected: {
       borderColor: colors.primary,
       backgroundColor: colors.primarySoft,

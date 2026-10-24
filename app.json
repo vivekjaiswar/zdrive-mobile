@@ -87,7 +87,15 @@
       ],
       "./plugins/withGradleWrapperFix.js",
       "./plugins/withGradleJavaHomeFix.js",
-      "./plugins/withGradleMemoryFix.js"
+      "./plugins/withGradleMemoryFix.js",
+      "expo-audio",
+      "expo-image",
+      "expo-web-browser",
+      "@sentry/react-native",
+      "expo-asset",
+      "expo-font",
+      "expo-status-bar",
+      "expo-video"
     ],
     "experiments": {
       "typedRoutes": true,

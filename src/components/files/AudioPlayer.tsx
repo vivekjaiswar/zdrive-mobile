@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useAudioPlayer, useAudioPlayerStatus } from 'expo-audio';
@@ -17,16 +18,11 @@ function formatTime(seconds: number) {
   return `${mins}:${secs.toString().padStart(2, '0')}`;
 }
 
-// expo-audio has no built-in playback UI (unlike expo-video's
-// nativeControls), so this builds the minimum viable player: a big
-// play/pause button, a static progress bar (no drag-to-seek yet -
-// good enough for a v1, same tradeoff ZoomableImage's pan-clamping
-// comment already established for this codebase), and elapsed/total
-// time.
 export default function AudioPlayer({ uri, name }: Props) {
   const colors = useColors();
   const styles = getStyles(colors);
 
+  const [trackWidth, setTrackWidth] = useState(0);
   const player = useAudioPlayer(uri);
   const status = useAudioPlayerStatus(player);
 
@@ -38,9 +34,6 @@ export default function AudioPlayer({ uri, name }: Props) {
     if (status.playing) {
       player.pause();
     } else {
-      // Restart from the beginning once playback has run to the end,
-      // rather than leaving the button stuck on "play" at a finished
-      // 100% progress bar with nothing happening on tap.
       if (status.didJustFinish) {
         player.seekTo(0);
       }
@@ -48,9 +41,17 @@ export default function AudioPlayer({ uri, name }: Props) {
     }
   }
 
+  function handleSeek(e: any) {
+    if (trackWidth > 0 && duration > 0) {
+      const x = e.nativeEvent.locationX;
+      const pct = Math.max(0, Math.min(1, x / trackWidth));
+      player.seekTo(pct * duration);
+    }
+  }
+
   return (
     <View style={styles.container}>
-      <View style={styles.artCircle}>
+      <View style={[styles.artCircle, status.playing && styles.artCirclePlaying]}>
         <MaterialCommunityIcons name="music" size={44} color={colors.primary} />
       </View>
 
@@ -58,9 +59,19 @@ export default function AudioPlayer({ uri, name }: Props) {
         {name}
       </Text>
 
-      <View style={styles.progressTrack}>
-        <View style={[styles.progressFill, { width: `${progress * 100}%` }]} />
-      </View>
+      {/* Interactive Apple-Style Audio Slider Scrubber */}
+      <Pressable
+        style={styles.progressTouchZone}
+        onLayout={(e) => setTrackWidth(e.nativeEvent.layout.width)}
+        onPress={handleSeek}
+        hitSlop={{ top: 12, bottom: 12 }}
+      >
+        <View style={styles.progressTrack}>
+          <View style={[styles.progressFill, { width: `${progress * 100}%` }]}>
+            <View style={styles.scrubberThumb} />
+          </View>
+        </View>
+      </Pressable>
 
       <View style={styles.timeRow}>
         <Text style={styles.time}>{formatTime(currentTime)}</Text>
@@ -102,6 +113,14 @@ function getStyles(colors: ColorPalette) {
       marginBottom: 28,
     },
 
+    artCirclePlaying: {
+      shadowColor: colors.primary,
+      shadowOpacity: 0.35,
+      shadowRadius: 20,
+      shadowOffset: { width: 0, height: 8 },
+      transform: [{ scale: 1.04 }],
+    },
+
     name: {
       fontFamily: fonts.bold,
       fontSize: 16,
@@ -112,18 +131,39 @@ function getStyles(colors: ColorPalette) {
       letterSpacing: -0.2,
     },
 
+    progressTouchZone: {
+      width: '100%',
+      paddingVertical: 8,
+      justifyContent: 'center',
+    },
+
     progressTrack: {
       width: '100%',
       height: 6,
       borderRadius: 3,
       backgroundColor: colors.progressBackground,
-      overflow: 'hidden',
     },
 
     progressFill: {
       height: 6,
       borderRadius: 3,
       backgroundColor: colors.progressFill,
+      position: 'relative',
+    },
+
+    scrubberThumb: {
+      position: 'absolute',
+      right: -6,
+      top: -4,
+      width: 14,
+      height: 14,
+      borderRadius: 7,
+      backgroundColor: '#FFFFFF',
+      shadowColor: '#000000',
+      shadowOpacity: 0.25,
+      shadowRadius: 4,
+      shadowOffset: { width: 0, height: 2 },
+      elevation: 4,
     },
 
     timeRow: {
@@ -148,15 +188,16 @@ function getStyles(colors: ColorPalette) {
       justifyContent: 'center',
       alignItems: 'center',
 
-      shadowColor: colors.shadow,
-      shadowOpacity: 0.18,
-      shadowRadius: 12,
+      shadowColor: colors.primary,
+      shadowOpacity: 0.35,
+      shadowRadius: 16,
       shadowOffset: { width: 0, height: 6 },
       elevation: 5,
     },
 
     playButtonPressed: {
-      opacity: 0.9,
+      opacity: 0.88,
+      transform: [{ scale: 0.94 }],
     },
   });
 }

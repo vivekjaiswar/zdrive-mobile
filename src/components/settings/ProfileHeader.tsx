@@ -75,6 +75,10 @@ function getStyles(colors: ColorPalette) {
     avatarWrap: {
       width: 92,
       height: 92,
+      shadowColor: colors.primary,
+      shadowOpacity: 0.25,
+      shadowRadius: 16,
+      shadowOffset: { width: 0, height: 6 },
     },
 
     avatar: {
@@ -82,6 +86,8 @@ function getStyles(colors: ColorPalette) {
       height: 92,
       borderRadius: 46,
       backgroundColor: colors.primarySoft,
+      borderWidth: 2,
+      borderColor: colors.border,
     },
 
     avatarFallback: {
@@ -91,6 +97,8 @@ function getStyles(colors: ColorPalette) {
       backgroundColor: colors.primary,
       justifyContent: 'center',
       alignItems: 'center',
+      borderWidth: 2,
+      borderColor: colors.border,
     },
 
     initials: {
