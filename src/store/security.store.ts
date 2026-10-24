@@ -83,6 +83,7 @@ export const useSecurityStore = create<SecurityStore>((set) => ({
       await SecureStore.setItemAsync(
         BIOMETRIC_CREDENTIALS_KEY,
         JSON.stringify({ email, password: password ?? '', timestamp: Date.now() }),
+        { keychainAccessible: SecureStore.WHEN_UNLOCKED_THIS_DEVICE_ONLY },
       );
       set({ savedBiometricEmail: email });
     } catch {}

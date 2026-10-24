@@ -1,5 +1,4 @@
 import { create } from 'zustand';
-import * as SecureStore from 'expo-secure-store';
 
 import authService from '@/services/auth.service';
 
@@ -35,11 +34,6 @@ interface AuthStore {
   hydrate: () => Promise<void>;
 }
 
-// Legacy key from the pre-v1.2.1 Bearer-token build. Nothing reads this
-// anymore, but older installs may still have a stale value sitting in
-// SecureStore - clean it up opportunistically so it doesn't linger.
-const LEGACY_TOKEN_KEY = 'accessToken';
-
 export const useAuthStore = create<AuthStore>((set) => ({
   user: null,
   isHydrated: false,
@@ -47,36 +41,26 @@ export const useAuthStore = create<AuthStore>((set) => ({
   setUser: (user) => set({ user }),
 
   logout: async () => {
-    // Best-effort server-side revocation (bumps tokenVersion and clears
-    // the zd_session cookie). Wrapped so a network failure (offline,
-    // server down) never blocks the local logout - the user should
-    // always be able to log out of the app on their own device
-    // regardless of connectivity.
+    // Best-effort server-side revocation (clears zd_session cookie).
     try {
       await authService.logout();
     } catch {
       // Ignored - local session is cleared below regardless.
     }
 
-    await SecureStore.deleteItemAsync(LEGACY_TOKEN_KEY).catch(() => {});
     set({ user: null });
   },
 
   // Called once on app boot (see src/app/index.tsx). There's no local
   // token to read anymore - the httpOnly cookie (if any) is already
-  // attached automatically by the native networking layer, so the only
-  // way to know whether a session is actually still valid is to just
-  // ask the server.
+  // attached automatically by the native networking layer.
   hydrate: async () => {
-    await SecureStore.deleteItemAsync(LEGACY_TOKEN_KEY).catch(() => {});
-
     try {
       const user = await authService.me();
 
       set({ user, isHydrated: true });
     } catch (e) {
-      // No cookie, or an expired/revoked one - fall back to a clean
-      // logged-out state rather than stranding the user.
+      // No cookie, or an expired/revoked one - fall back to logged-out state.
       set({ user: null, isHydrated: true });
     }
   },

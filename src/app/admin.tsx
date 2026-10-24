@@ -10,7 +10,7 @@ import {
   TextInput,
   View,
 } from 'react-native';
-import { useRouter } from 'expo-router';
+import { Redirect, useRouter } from 'expo-router';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import * as Clipboard from 'expo-clipboard';
 
@@ -18,6 +18,7 @@ import GlassScreen from '@/components/glass/GlassScreen';
 import GlassCard from '@/components/glass/GlassCard';
 import { GlassTheme, useGlass } from '@/theme/glass';
 import { fonts } from '@/theme/typography';
+import { useAuthStore } from '@/store/auth.store';
 import {
   useReleaseAdminStore,
   ReleaseStatus,
@@ -28,6 +29,12 @@ import {
 
 export default function AdminPortalScreen() {
   const router = useRouter();
+  const user = useAuthStore((state) => state.user);
+
+  if (user?.role !== 'ADMIN') {
+    return <Redirect href="/(tabs)/dashboard" />;
+  }
+
   const g = useGlass();
   const styles = getStyles(g);
 
